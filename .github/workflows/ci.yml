@@ -76,6 +76,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
+          cache: pnpm
+      - name: Install dependencies
+        # oxfmt (hoisted to root node_modules/.bin by node-linker=hoisted)
+        # normalizes the TS artifacts; without install the generator fails.
+        working-directory: .
+        run: pnpm install --frozen-lockfile
       - name: Verify sync catalog is in sync
         working-directory: .
         run: pnpm sync-catalog:gen-check
