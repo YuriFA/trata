@@ -2,7 +2,13 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useQueryCache } from '@pinia/colada'
 import { sessionApi } from '../api/session-api'
-import type { AuthResult, AuthStatus, PendingOwnershipGate, RestoreOutcome, User } from '../model/types'
+import type {
+  AuthResult,
+  AuthStatus,
+  PendingOwnershipGate,
+  RestoreOutcome,
+  User,
+} from '../model/types'
 import { getLocalDbApi } from '@/shared/lib/local-db'
 import { ownershipGateDecision } from '@expense-tracker/local-data'
 import { UnauthorizedError } from '@expense-tracker/api'

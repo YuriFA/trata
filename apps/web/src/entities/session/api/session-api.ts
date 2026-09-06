@@ -49,16 +49,16 @@ const authSignal = () => AbortSignal.timeout(AUTH_REQUEST_TIMEOUT_MS)
 export const sessionApi = {
   async register(email: string, password: string): Promise<User> {
     const { data } = await apiClient.POST('/api/auth/register', {
-    body: { email, password },
-    signal: authSignal(),
-  })
+      body: { email, password },
+      signal: authSignal(),
+    })
     return toUser(requireData(data))
   },
   async login(email: string, password: string): Promise<User> {
     const { data } = await apiClient.POST('/api/auth/login', {
-    body: { email, password },
-    signal: authSignal(),
-  })
+      body: { email, password },
+      signal: authSignal(),
+    })
     return toUser(requireData(data))
   },
   async logout(): Promise<void> {
