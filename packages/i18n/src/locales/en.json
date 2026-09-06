@@ -322,6 +322,7 @@
     "confirmModeOption": "{label} — {caption}"
   },
   "transactions": {
+    "noDescription": "No description",
     "filter": "Filter",
     "filtersTitle": "Filters",
     "reset": "Reset",

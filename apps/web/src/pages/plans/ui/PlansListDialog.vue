@@ -101,7 +101,7 @@ const openConfirm = (plan: PlannedPayment) => {
   >
     <template #title>{{ title }}</template>
 
-    <div class="max-h-96 overflow-y-auto px-4">
+    <div class="max-h-96 overflow-y-auto px-4 pt-4">
       <EmptyState v-if="sorted.length === 0" :title="t('plans.empty')" />
       <ul v-else class="divide-y divide-border/60">
         <li v-for="plan in sorted" :key="plan.id" class="py-1.5 first:pt-0">

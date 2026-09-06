@@ -12,14 +12,17 @@ import {
 } from '@expense-tracker/dates'
 import type { Category, Transaction } from '@expense-tracker/api'
 import type { AnalyticsDirection } from '@/entities/analytics'
+import { useAccounts } from '@/entities/account'
 import { useTransactions } from '@/entities/transaction'
 import { EditTransactionDialog } from '@/features/transaction/edit'
 import { DeleteTransactionDialog } from '@/features/transaction/delete'
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
 import { Button } from '@/shared/ui/button'
 import { EmptyState } from '@/shared/ui/empty-state'
-import { ChevronLeft, ChevronRight, Trash2 } from '@lucide/vue'
+import { ArrowDownUp, ChevronLeft, ChevronRight, Trash2 } from '@lucide/vue'
 import { DEFAULT_CURRENCY, formatMoney } from '@/shared/lib/money'
+import { CategoryAvatar } from '@/shared/ui/category-avatar'
+import { useDateFormat } from '@vueuse/core'
 
 // Category drill-down (analytics capability): the selected category's
 // transactions for the detail screen's period, with the period navigable
@@ -48,6 +51,7 @@ const queryOptions = computed(() => ({
   ...periodToUtcDayRange(localCursor.value),
 }))
 const { data } = useTransactions(queryOptions, { enabled: computed(() => open.value) })
+const { data: accounts } = useAccounts()
 
 // Repository day filters are a UTC superset; exact membership stays local.
 const transactions = computed(() => transactionsInPeriod(data.value ?? [], localCursor.value))
@@ -58,7 +62,7 @@ const rangeLabel = computed(() => periodRangeLabel(localCursor.value, locale.val
 interface DayGroup {
   key: string
   title: string
-  transactions: Transaction[]
+  transactions: Array<Transaction & { time: string }>
 }
 
 const groups = computed<DayGroup[]>(() => {
@@ -67,10 +71,11 @@ const groups = computed<DayGroup[]>(() => {
       ? b.occurredAt.localeCompare(a.occurredAt) || b.id.localeCompare(a.id)
       : a.occurredAt.localeCompare(b.occurredAt) || a.id.localeCompare(b.id),
   )
-  const byDay = new Map<string, Transaction[]>()
+  const byDay = new Map<string, Array<Transaction & { time: string }>>()
   for (const tx of sorted) {
     const key = calendarDayKey(new Date(tx.occurredAt))
-    byDay.set(key, [...(byDay.get(key) ?? []), tx])
+    const time = useDateFormat(tx.occurredAt, 'HH:mm', { locales: locale.value }).value
+    byDay.set(key, [...(byDay.get(key) ?? []), { ...tx, time }])
   }
   return [...byDay.entries()].map(([key, dayTransactions]) => ({
     key,
@@ -93,6 +98,16 @@ const emptyText = computed(() => {
 const totalWord = computed(() =>
   props.direction === 'expense' ? t('analytics.spentWord') : t('analytics.receivedWord'),
 )
+
+// Meta line: account display name; account-less cashflow stays named.
+const accountName = (transaction: Transaction) =>
+  'accountId' in transaction
+    ? (accounts.value?.find((account) => account.id === transaction.accountId)?.name ??
+      t('accounts.noAccount'))
+    : t('transactions.types.transfer')
+
+// Bullet separator kept as a script constant (i18n lint bans raw glyphs).
+const SEPARATOR = '•'
 
 function stepPeriod(steps: number) {
   localCursor.value = shiftPeriod(localCursor.value, steps)
@@ -117,76 +132,116 @@ const openDelete = (transaction: Transaction) => {
 </script>
 
 <template>
-  <ResponsiveDialog v-model:open="open" class="sm:max-w-md" data-testid="category-cashflow-dialog">
-    <template #title>{{ category.name || t('analytics.category') }}</template>
+  <ResponsiveDialog
+    v-model:open="open"
+    class="sm:max-w-md"
+    body-variant="flush"
+    data-testid="category-cashflow-dialog"
+  >
+    <template #title>
+      <span class="flex min-w-0 items-center gap-2.5">
+        <CategoryAvatar
+          :icon="category.icon"
+          :color="category.color"
+          class="size-7 shrink-0 text-sm"
+        />
+        <span class="truncate">{{ category.name || t('analytics.category') }}</span>
+      </span>
+    </template>
 
-    <div class="flex items-center justify-between gap-2">
-      <Button
-        variant="outline"
-        size="icon"
-        :aria-label="t('analytics.prevPeriod')"
-        data-testid="category-cashflow-prev"
-        @click="stepPeriod(-1)"
+    <div class="flex flex-col items-center gap-2 pt-6">
+      <div
+        class="inline-flex items-center gap-0.5 rounded-full border border-border py-0.5 pl-1 pr-2.5"
       >
-        <ChevronLeft class="size-4" />
-      </Button>
-      <div class="text-center">
-        <p class="text-sm font-medium" data-testid="category-cashflow-range">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          class="size-7 rounded-full"
+          :aria-label="t('analytics.prevPeriod')"
+          data-testid="category-cashflow-prev"
+          @click="stepPeriod(-1)"
+        >
+          <ChevronLeft class="size-4" />
+        </Button>
+        <span class="text-sm font-medium" data-testid="category-cashflow-range">
           {{ rangeLabel }}
-        </p>
-        <p class="text-xs text-muted-foreground">{{ totalText }} {{ totalWord }}</p>
+        </span>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          class="size-7 rounded-full"
+          :aria-label="t('analytics.nextPeriod')"
+          data-testid="category-cashflow-next"
+          @click="stepPeriod(1)"
+        >
+          <ChevronRight class="size-4" />
+        </Button>
       </div>
+      <p class="text-sm text-muted-foreground">
+        <span class="font-semibold text-foreground">{{ totalText }}</span>
+        {{ totalWord }}
+      </p>
+    </div>
+
+    <div class="mt-5 px-6">
       <Button
-        variant="outline"
-        size="icon"
-        :aria-label="t('analytics.nextPeriod')"
-        data-testid="category-cashflow-next"
-        @click="stepPeriod(1)"
+        variant="link"
+        size="sm"
+        class="text-muted-foreground"
+        data-testid="category-cashflow-sort"
+        @click="newestFirst = !newestFirst"
       >
-        <ChevronRight class="size-4" />
+        <ArrowDownUp class="size-3.5" />
+        {{ newestFirst ? t('analytics.sortNewestFirst') : t('analytics.sortOldestFirst') }}
       </Button>
     </div>
 
-    <Button
-      variant="ghost"
-      size="sm"
-      class="self-start text-muted-foreground"
-      data-testid="category-cashflow-sort"
-      @click="newestFirst = !newestFirst"
-    >
-      {{ newestFirst ? t('analytics.sortNewestFirst') : t('analytics.sortOldestFirst') }}
-    </Button>
-
-    <div class="max-h-80 space-y-4 overflow-y-auto">
+    <div class="mt-5">
       <EmptyState v-if="groups.length === 0" :title="emptyText" />
-      <div
-        v-for="group in groups"
-        :key="group.key"
-        :data-testid="`category-cashflow-day-${group.key}`"
-      >
-        <p class="text-xs font-medium uppercase text-muted-foreground">{{ group.title }}</p>
-        <div class="mt-1 space-y-1">
+      <template v-for="(group, gi) in groups" :key="group.key">
+        <div
+          class="sticky top-[-1px] z-10 border-y border-border bg-muted px-6 py-2.5"
+          :class="gi === 0 && 'border-t-0'"
+          :data-testid="`category-cashflow-day-${group.key}`"
+        >
+          <span class="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+            {{ group.title }}
+          </span>
+        </div>
+        <div class="divide-y divide-border/60">
           <div
             v-for="transaction in group.transactions"
             :key="transaction.id"
-            class="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted/70"
+            class="group flex items-center gap-2 px-6 py-3.5"
             :data-testid="`category-cashflow-tx-${transaction.id}`"
           >
             <button
               type="button"
-              class="min-w-0 flex-1 truncate text-left text-sm"
+              class="min-w-0 flex-1 text-left"
               :aria-label="`${t('editTransaction.trigger')}: ${transaction.description || category.name}`"
               @click="openEdit(transaction)"
             >
-              {{ transaction.description || category.name }}
+              <p
+                class="truncate text-sm font-medium"
+                :class="{ 'text-muted-foreground': !transaction.description }"
+              >
+                {{ transaction.description || t('transactions.noDescription') }}
+              </p>
+              <p class="truncate text-xs text-muted-foreground">
+                {{ accountName(transaction) }} {{ SEPARATOR }} {{ transaction.time }}
+              </p>
             </button>
-            <span class="text-sm font-medium">{{
-              formatMoney(transaction.amount, displayCurrency, locale)
-            }}</span>
+            <span
+              class="text-sm font-semibold tabular-nums"
+              :class="direction === 'expense' ? 'text-destructive' : 'text-success'"
+            >
+              <span v-if="direction === 'expense'">-</span>
+              <span v-else>+</span>{{ formatMoney(transaction.amount, displayCurrency, locale) }}
+            </span>
             <Button
               variant="ghost"
               size="icon"
-              class="size-7"
+              class="size-7 text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive"
               :aria-label="t('deleteTransaction.trigger')"
               @click="openDelete(transaction)"
             >
@@ -194,7 +249,7 @@ const openDelete = (transaction: Transaction) => {
             </Button>
           </div>
         </div>
-      </div>
+      </template>
     </div>
 
     <EditTransactionDialog

@@ -5,7 +5,7 @@
       "targetKind": "existing-ui",
       "projectId": "e8178e09-b9a9-48f6-af10-99060c3efede",
       "baselineDraftId": "218ec55b-8c4f-434e-b975-9b2a75dd6951",
-      "activeDraftId": "73ef9770-3dbb-4ab9-9cf1-aebbeb111d99",
+      "activeDraftId": "c6015f6c-22e0-473e-9edc-9ef834aa7545",
       "designSystemPath": ".superdesign/design-system.md",
       "contextFiles": [
         ".superdesign/design-system.md",
@@ -25,27 +25,33 @@
         "apps/web/src/widgets/mobile-shell/ui/SpeedDialFab.vue",
         "apps/web/src/pages/dashboard/ui/PeriodNav.vue",
         "apps/web/src/widgets/mobile-shell/ui/MobileTopBar.vue",
-        "apps/web/src/widgets/mobile-shell/ui/BottomTabBar.vue"
+        "apps/web/src/widgets/mobile-shell/ui/BottomTabBar.vue",
+        "apps/web/src/widgets/category-cashflow-dialog/ui/CategoryCashflowDialog.vue",
+        "apps/web/src/pages/debts/ui/DebtorHistoryDialog.vue",
+        "apps/web/src/shared/ui/responsive-dialog/ResponsiveDialog.vue"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "847e0cc4bd1e85306fdeb49cbf9140425c596a101a8ff1f61d591778918c2294",
-        "apps/web/src/app/layout/AppShell.vue": "fecab6c3c90f9d55463fa36cc3c1d725a295953e8f6d87e2ef90f8f7887d94c3",
-        "apps/web/src/app/layout/AppSidebarNav.vue": "d175a55d45e471269212bccb1c3f2da37e945873b73a47b9d39c5136564b0bd9",
-        "apps/web/src/pages/dashboard/ui/DashboardPage.vue": "1deeca777ab3c52f041b74ecd88b0e6e233a67634b1064beaca805e169661793",
-        "apps/web/src/pages/dashboard/ui/StatCard.vue": "0c196f47960684811a5bd759cc0cabd35139ec61def7aae91646bfcf622abd4c",
-        "apps/web/src/pages/dashboard/ui/CategoryBreakdownCard.vue": "4b59d19f7895785fa5d27dc86a2eef1b3739e57a4806f43eb267618d017dabf1",
-        "apps/web/src/pages/dashboard/ui/AccountsCard.vue": "5fa7bc9ae018b65e600fddec4431ebcb39a1bee57278d38260f57cc6fdd95fa9",
-        "apps/web/src/entities/transaction/ui/TransactionListItem.vue": "62b0b70c69f6ab66f7c8b7d91479fb0aa00782cb153d9c3f932f352cf20d6c19",
+        ".superdesign/design-system.md": "50c6b28f20d1889b17333fa5305129cd93cb84b79703ac5ed11b6ce2965e13ba",
+        "apps/web/src/app/layout/AppShell.vue": "f711be4f1cb375d88593c3c63802903ad68f5461eae63ffe6e869f1e4ca797d5",
+        "apps/web/src/app/layout/AppSidebarNav.vue": "892aa840f12cf017e1451edf114f66097a53b0883d8a8a43178c1a1e5e80fb13",
+        "apps/web/src/pages/dashboard/ui/DashboardPage.vue": "bbf43d1a5dc1c69d23353dcb92d1edd24dc0c6028668ecea84d4a81cffe40fef",
+        "apps/web/src/pages/dashboard/ui/StatCard.vue": "4b3c2fddaa00471ea6afc82709d9b6889dda73f59c32193710d859d8a00785ac",
+        "apps/web/src/pages/dashboard/ui/CategoryBreakdownCard.vue": "0b9262d7a1b34bba6dc34e77d1e46afb6be2c67c7db90bf27d520f262de78ca2",
+        "apps/web/src/pages/dashboard/ui/AccountsCard.vue": "ff706423a74c61a80c137ed32464f6f21a848a7ac310b538a39fc6285ec9143b",
+        "apps/web/src/entities/transaction/ui/TransactionListItem.vue": "f98369afc3b6b0c93260769dd46f7ac0f6ab4fa9b5201eb3353e37545a994869",
         "apps/web/src/shared/ui/card/Card.vue": "21b4e17480df5e7efb707a5f4d93805b4e5136a50de7ccc78e9241db879718ed",
         "apps/web/src/shared/ui/button/Button.vue": "8c7afb939b83f8e7dcb33575013d0064674282b140380ef8841c2effeeee469c",
         "apps/web/src/pages/dashboard/ui/DashboardCard.vue": "ffb6082a6de6b2362b7867621838069284120166288a32ec4d17e7f700a6bd8f",
-        "apps/web/src/pages/dashboard/ui/RecentTransactionsCard.vue": "879e8cda1713714531b39a1224ae33d1356c3fec39cdb285fc794ccf616ba40a",
-        "apps/web/src/pages/dashboard/ui/DebtsCard.vue": "41c9ba1e20d41c85cb4f1a5eb572f4e9cc5583f22303122984ca0aae7c07a25c",
-        "apps/web/src/features/transaction/add/ui/AddTransactionTabs.vue": "b956264a9bd646aef553d9c27e05089b0ac95933a0c3e7d5e14baf8b67859ac8",
-        "apps/web/src/widgets/mobile-shell/ui/SpeedDialFab.vue": "3ce0baafe8b5ef2cc34a6c38fba8168bb7b5f0b567beafa8b07bf3c66b6b1d2f",
+        "apps/web/src/pages/dashboard/ui/RecentTransactionsCard.vue": "6b39cd650ecf984d06131a78f3e1c5f5ff27e2dc75c185f657dbe7eaefd260d2",
+        "apps/web/src/pages/dashboard/ui/DebtsCard.vue": "3b936acf044c1a1e16f4c91c16a0b0790c514be8aeca793b0aaf7c162670ae90",
+        "apps/web/src/features/transaction/add/ui/AddTransactionTabs.vue": "b53625d1b6476bdbfc5d0dd4ca15bcecf162adaa71a853bf17506537859a8d2e",
+        "apps/web/src/widgets/mobile-shell/ui/SpeedDialFab.vue": "7a2042e66dcc1d681489bb63ade4d5849496e3b0617a247d3e8942f6517b65ff",
         "apps/web/src/pages/dashboard/ui/PeriodNav.vue": "8d1186d64740505691372abbf36112de3ad687b845e6543f72bf141d29aa6dd5",
-        "apps/web/src/widgets/mobile-shell/ui/MobileTopBar.vue": "55d8f8527a9f95cacd168743176a52910b633f72d4e7f90574e26a917a0a0ab4",
-        "apps/web/src/widgets/mobile-shell/ui/BottomTabBar.vue": "d9d17c50bc8a886cc0f9536294ebd4ef00f05e7799d36bd49b25772de8feaa8c"
+        "apps/web/src/widgets/mobile-shell/ui/MobileTopBar.vue": "46d63b67ebc4ef3123466a0cfff09693834880e3137731c12448c726fb80349e",
+        "apps/web/src/widgets/mobile-shell/ui/BottomTabBar.vue": "d9d17c50bc8a886cc0f9536294ebd4ef00f05e7799d36bd49b25772de8feaa8c",
+        "apps/web/src/widgets/category-cashflow-dialog/ui/CategoryCashflowDialog.vue": "3b9f5e2769a36246ad84a56f5542948ec4e3593f60f832367a85e9d804d3d964",
+        "apps/web/src/pages/debts/ui/DebtorHistoryDialog.vue": "df996323ef6d49a392a8bd32c0cf9530fdb7ea8a2ffdb1c7b3fa57ecb8f1fa78",
+        "apps/web/src/shared/ui/responsive-dialog/ResponsiveDialog.vue": "dde0e71431e8115df308faa00c1b81c96dfd6c35499044d5c6bd6a271cef780b"
       },
       "components": [
         {
@@ -165,9 +171,15 @@
           "title": "Аналитика детальная",
           "visualDirection": "Бумага; заголовок приведён к канону 32px tracking-tight",
           "currentVersion": 3
+        },
+        "c6015f6c-22e0-473e-9edc-9ef834aa7545": {
+          "title": "Кошелёк — Drill-down с липкими датами",
+          "visualDirection": "dark-theme dashboard variant with the category drill-down modal open: category avatar header + hairline, compact pill period nav with total, flush link sort chip, DEBTS-STYLE full-bleed sticky day bands (border-y, opaque muted fill, 11px bold uppercase label, sticky -1px z-10) with full-bleed px-6 py-3.5 rows divided by border/60, signed red amounts, dimmed danger-ghost trash",
+          "parentDraftId": "73ef9770-3dbb-4ab9-9cf1-aebbeb111d99",
+          "currentVersion": 2
         }
       },
-      "updatedAt": "2026-09-02T22:04:32Z"
+      "updatedAt": "2026-09-06T09:22:34Z"
     },
     "/analytics": {
       "targetKind": "flow-page",
@@ -190,9 +202,9 @@
         "apps/web/src/shared/ui/button/Button.vue"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "d628e443732cd7176cb6e9b0e1f620070f9e681761a4f10abce30d30e0e8b90a",
+        ".superdesign/design-system.md": "50c6b28f20d1889b17333fa5305129cd93cb84b79703ac5ed11b6ce2965e13ba",
         "apps/web/src/app/layout/AppShell.vue": "c091dac8b61c357bfbed1d63e12dc2e3543384a21b5ec70e2ca4ef9a3c0f7b95",
-        "apps/web/src/app/layout/AppSidebarNav.vue": "851f2f23a8ce99f90d90ba3c9417470e77d27fe563a95559866a5ac4d1b1cf4d",
+        "apps/web/src/app/layout/AppSidebarNav.vue": "892aa840f12cf017e1451edf114f66097a53b0883d8a8a43178c1a1e5e80fb13",
         "apps/web/src/pages/dashboard/ui/DashboardPage.vue": "97d4e4e085c0ba56dc294bd8e8cf5e48f8081f6c2f77cd93308d360d275a0974",
         "apps/web/src/pages/dashboard/ui/StatCard.vue": "69be2e27b2205d7771f1227d1043272aa15a7986e234d2c12b3b495f1284f96c",
         "apps/web/src/pages/dashboard/ui/CategoryBreakdownCard.vue": "e396cebd576ff3188c51eefb1379f8820beb3eab392a3bfc2f4da9168b93799e",
@@ -238,9 +250,9 @@
         "apps/web/src/shared/ui/button/Button.vue"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "d628e443732cd7176cb6e9b0e1f620070f9e681761a4f10abce30d30e0e8b90a",
+        ".superdesign/design-system.md": "50c6b28f20d1889b17333fa5305129cd93cb84b79703ac5ed11b6ce2965e13ba",
         "apps/web/src/app/layout/AppShell.vue": "c091dac8b61c357bfbed1d63e12dc2e3543384a21b5ec70e2ca4ef9a3c0f7b95",
-        "apps/web/src/app/layout/AppSidebarNav.vue": "851f2f23a8ce99f90d90ba3c9417470e77d27fe563a95559866a5ac4d1b1cf4d",
+        "apps/web/src/app/layout/AppSidebarNav.vue": "892aa840f12cf017e1451edf114f66097a53b0883d8a8a43178c1a1e5e80fb13",
         "apps/web/src/pages/dashboard/ui/DashboardPage.vue": "97d4e4e085c0ba56dc294bd8e8cf5e48f8081f6c2f77cd93308d360d275a0974",
         "apps/web/src/pages/dashboard/ui/StatCard.vue": "69be2e27b2205d7771f1227d1043272aa15a7986e234d2c12b3b495f1284f96c",
         "apps/web/src/pages/dashboard/ui/CategoryBreakdownCard.vue": "e396cebd576ff3188c51eefb1379f8820beb3eab392a3bfc2f4da9168b93799e",
@@ -286,9 +298,9 @@
         "apps/web/src/shared/ui/button/Button.vue"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "d628e443732cd7176cb6e9b0e1f620070f9e681761a4f10abce30d30e0e8b90a",
+        ".superdesign/design-system.md": "50c6b28f20d1889b17333fa5305129cd93cb84b79703ac5ed11b6ce2965e13ba",
         "apps/web/src/app/layout/AppShell.vue": "c091dac8b61c357bfbed1d63e12dc2e3543384a21b5ec70e2ca4ef9a3c0f7b95",
-        "apps/web/src/app/layout/AppSidebarNav.vue": "851f2f23a8ce99f90d90ba3c9417470e77d27fe563a95559866a5ac4d1b1cf4d",
+        "apps/web/src/app/layout/AppSidebarNav.vue": "892aa840f12cf017e1451edf114f66097a53b0883d8a8a43178c1a1e5e80fb13",
         "apps/web/src/pages/dashboard/ui/DashboardPage.vue": "97d4e4e085c0ba56dc294bd8e8cf5e48f8081f6c2f77cd93308d360d275a0974",
         "apps/web/src/pages/dashboard/ui/StatCard.vue": "69be2e27b2205d7771f1227d1043272aa15a7986e234d2c12b3b495f1284f96c",
         "apps/web/src/pages/dashboard/ui/CategoryBreakdownCard.vue": "e396cebd576ff3188c51eefb1379f8820beb3eab392a3bfc2f4da9168b93799e",
@@ -334,9 +346,9 @@
         "apps/web/src/shared/ui/button/Button.vue"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "d628e443732cd7176cb6e9b0e1f620070f9e681761a4f10abce30d30e0e8b90a",
+        ".superdesign/design-system.md": "50c6b28f20d1889b17333fa5305129cd93cb84b79703ac5ed11b6ce2965e13ba",
         "apps/web/src/app/layout/AppShell.vue": "c091dac8b61c357bfbed1d63e12dc2e3543384a21b5ec70e2ca4ef9a3c0f7b95",
-        "apps/web/src/app/layout/AppSidebarNav.vue": "851f2f23a8ce99f90d90ba3c9417470e77d27fe563a95559866a5ac4d1b1cf4d",
+        "apps/web/src/app/layout/AppSidebarNav.vue": "892aa840f12cf017e1451edf114f66097a53b0883d8a8a43178c1a1e5e80fb13",
         "apps/web/src/pages/dashboard/ui/DashboardPage.vue": "97d4e4e085c0ba56dc294bd8e8cf5e48f8081f6c2f77cd93308d360d275a0974",
         "apps/web/src/pages/dashboard/ui/StatCard.vue": "69be2e27b2205d7771f1227d1043272aa15a7986e234d2c12b3b495f1284f96c",
         "apps/web/src/pages/dashboard/ui/CategoryBreakdownCard.vue": "e396cebd576ff3188c51eefb1379f8820beb3eab392a3bfc2f4da9168b93799e",
@@ -382,9 +394,9 @@
         "apps/web/src/shared/ui/button/Button.vue"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "d628e443732cd7176cb6e9b0e1f620070f9e681761a4f10abce30d30e0e8b90a",
+        ".superdesign/design-system.md": "50c6b28f20d1889b17333fa5305129cd93cb84b79703ac5ed11b6ce2965e13ba",
         "apps/web/src/app/layout/AppShell.vue": "c091dac8b61c357bfbed1d63e12dc2e3543384a21b5ec70e2ca4ef9a3c0f7b95",
-        "apps/web/src/app/layout/AppSidebarNav.vue": "851f2f23a8ce99f90d90ba3c9417470e77d27fe563a95559866a5ac4d1b1cf4d",
+        "apps/web/src/app/layout/AppSidebarNav.vue": "892aa840f12cf017e1451edf114f66097a53b0883d8a8a43178c1a1e5e80fb13",
         "apps/web/src/pages/dashboard/ui/DashboardPage.vue": "97d4e4e085c0ba56dc294bd8e8cf5e48f8081f6c2f77cd93308d360d275a0974",
         "apps/web/src/pages/dashboard/ui/StatCard.vue": "69be2e27b2205d7771f1227d1043272aa15a7986e234d2c12b3b495f1284f96c",
         "apps/web/src/pages/dashboard/ui/CategoryBreakdownCard.vue": "e396cebd576ff3188c51eefb1379f8820beb3eab392a3bfc2f4da9168b93799e",
@@ -420,7 +432,7 @@
         "apps/mobile/src/entities/category/config/category-appearance.ts"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "d628e443732cd7176cb6e9b0e1f620070f9e681761a4f10abce30d30e0e8b90a",
+        ".superdesign/design-system.md": "50c6b28f20d1889b17333fa5305129cd93cb84b79703ac5ed11b6ce2965e13ba",
         "apps/web/src/features/transaction/add/ui/NewCategoryDialog.vue": "eff01c01853626712c194f09fe249d6836331c07326e164584ba161fb5eaebd5",
         "apps/mobile/src/entities/category/config/category-appearance.ts": "3609629b11d85b5719e9238f4dcdb385303a6eb01bbb0887bf20c4bcee6a227d"
       },
@@ -462,9 +474,9 @@
         "apps/web/src/app/layout/MobileTopBar.vue"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "d628e443732cd7176cb6e9b0e1f620070f9e681761a4f10abce30d30e0e8b90a",
+        ".superdesign/design-system.md": "50c6b28f20d1889b17333fa5305129cd93cb84b79703ac5ed11b6ce2965e13ba",
         "apps/web/src/app/layout/AppShell.vue": "c091dac8b61c357bfbed1d63e12dc2e3543384a21b5ec70e2ca4ef9a3c0f7b95",
-        "apps/web/src/app/layout/AppSidebarNav.vue": "8cdd78c78e2c529330d7673a777afbb3941fcb90846134e4f1dc372d3efe2454",
+        "apps/web/src/app/layout/AppSidebarNav.vue": "892aa840f12cf017e1451edf114f66097a53b0883d8a8a43178c1a1e5e80fb13",
         "apps/web/src/pages/transactions/ui/TransactionsPage.vue": "e623c8619cbcd0b1f6c7dba0932ca559058be6682aa735a93583b34c4a65ed06",
         "apps/web/src/pages/transactions/ui/TransactionsBrowser.vue": "2dee11b547b0b065965a04e9cb2f1a26a87eb4000920edae096b995d383f3307",
         "apps/web/src/pages/transactions/ui/TransactionsDateFilter.vue": "ee158586a935bfaf22fc2935400653cea6c4b34c03a7d560c451ff6925a214fc",
@@ -538,10 +550,10 @@
         "apps/web/src/shared/ui/card/CardContent.vue"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "d628e443732cd7176cb6e9b0e1f620070f9e681761a4f10abce30d30e0e8b90a",
+        ".superdesign/design-system.md": "50c6b28f20d1889b17333fa5305129cd93cb84b79703ac5ed11b6ce2965e13ba",
         "apps/web/src/app/layout/AppShell.vue": "c091dac8b61c357bfbed1d63e12dc2e3543384a21b5ec70e2ca4ef9a3c0f7b95",
         "apps/web/src/app/layout/AppSidebar.vue": "7f8666c0cc8ed4f924948f38c2d8355297fefa76a56cf022d28a33ccc38775a9",
-        "apps/web/src/app/layout/AppSidebarNav.vue": "8cdd78c78e2c529330d7673a777afbb3941fcb90846134e4f1dc372d3efe2454",
+        "apps/web/src/app/layout/AppSidebarNav.vue": "892aa840f12cf017e1451edf114f66097a53b0883d8a8a43178c1a1e5e80fb13",
         "apps/web/src/pages/accounts/ui/AccountsPage.vue": "4f2ee4256166ff692228d5a867cd86d364dec197870547ab0710600393fcd720",
         "apps/web/src/pages/accounts/ui/AccountCard.vue": "ed80e684e4a798b78782381a1f4715deb1312003703afaa393013e7d0a8d5114",
         "apps/web/src/pages/accounts/features/add-account/ui/AddAccountDialog.vue": "cd60a29d3d3c42845558367cc2eea801b025596cb72686bdcb46a995012a1a44",
@@ -595,7 +607,7 @@
         "apps/web/src/pages/transactions/ui/TransactionsFiltersSheet.vue"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "d628e443732cd7176cb6e9b0e1f620070f9e681761a4f10abce30d30e0e8b90a",
+        ".superdesign/design-system.md": "50c6b28f20d1889b17333fa5305129cd93cb84b79703ac5ed11b6ce2965e13ba",
         "apps/web/src/shared/ui/button/index.ts": "10749bb1421a0eca94311bb214e9e8d80562499eab7291a4f0f975db23a8d9a2",
         "apps/web/src/shared/ui/button/Button.vue": "8c7afb939b83f8e7dcb33575013d0064674282b140380ef8841c2effeeee469c",
         "apps/web/src/pages/transactions/ui/TransactionsDateFilter.vue": "a32b4341cc8942b21928a465f41283ac80a55bcca6b20f2d10ecc820510cc379",
@@ -629,9 +641,9 @@
         "apps/web/src/pages/settings/ui/SettingsPage.vue"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "d628e443732cd7176cb6e9b0e1f620070f9e681761a4f10abce30d30e0e8b90a",
+        ".superdesign/design-system.md": "50c6b28f20d1889b17333fa5305129cd93cb84b79703ac5ed11b6ce2965e13ba",
         "packages/tokens/src/index.css": "520161ff5424b271d24ba5af1b0da75118d9db32ce6e77e5bf80bfb1b861bda8",
-        "apps/web/src/app/layout/AppSidebarNav.vue": "8cdd78c78e2c529330d7673a777afbb3941fcb90846134e4f1dc372d3efe2454",
+        "apps/web/src/app/layout/AppSidebarNav.vue": "892aa840f12cf017e1451edf114f66097a53b0883d8a8a43178c1a1e5e80fb13",
         "apps/web/src/app/layout/MobileTopBar.vue": "52061725efba0e77c25e68768290b7281df21fafc2f8dcfc5bcc6017f4229108",
         "apps/web/src/widgets/sync-status/ui/SyncStatusBadge.vue": "f2edaebfba1d69ec092193c9cfb47aec7572aa86e91db677cf1b9796062072ef",
         "apps/web/src/pages/dashboard/ui/DashboardPage.vue": "db9d50a57fde1eb1a7538c6876391740c368af614f79137ee7cc2678729354b9",
@@ -699,7 +711,7 @@
         "apps/web/src/pages/settings/ui/SettingsPage.vue"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "0c7d82a391818d83f4f673e07d1bcdc108df9a111257ad1bf6e3432a859d47fb",
+        ".superdesign/design-system.md": "50c6b28f20d1889b17333fa5305129cd93cb84b79703ac5ed11b6ce2965e13ba",
         "apps/web/src/entities/category/config/category-appearance.ts": "bf52e1efe3ce8bb655ea0fb158f6c5ad2e778c8c2db667ec0a9f732737c50574",
         "apps/web/src/pages/settings/ui/SettingsPage.vue": "6a53b4fd85c5b73c80b0de769d93eccd8a6f591fb5d48599efa501150a676276"
       },
@@ -726,5 +738,5 @@
       "updatedAt": "2026-09-02T17:29:13Z"
     }
   },
-  "updatedAt": "2026-08-31T16:40:29.339Z"
+  "updatedAt": "2026-09-06T09:22:34Z"
 }

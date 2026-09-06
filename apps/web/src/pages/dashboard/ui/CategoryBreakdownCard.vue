@@ -6,6 +6,8 @@ import { categoryTotals, periodTotal, percentLabel } from '@/entities/analytics'
 import { useTransactions } from '@/entities/transaction'
 import { CategoryAvatar } from '@/shared/ui/category-avatar'
 import { useCategoriesIncludingArchived } from '@/entities/category'
+import type { Category } from '@expense-tracker/api'
+import { CategoryCashflowDialog } from '@/widgets/category-cashflow-dialog'
 import { NewCategoryDialog } from '@/features/transaction/add'
 import DashboardCard from './DashboardCard.vue'
 import { Skeleton } from '@/shared/ui/skeleton'
@@ -15,7 +17,8 @@ import { DEFAULT_CURRENCY, formatMoney } from '@/shared/lib/money'
 // Expense breakdown of the selected dashboard month (the page owns the
 // period cursor), derived in memory with the same selectors as the
 // analytics page (analytics capability) - no extra backend aggregate.
-// The dashed footer row opens the shared new-category dialog (expenses).
+// The dashed footer row opens the shared new-category dialog (expenses);
+// a row opens the category's month transactions in the shared overlay.
 const props = defineProps<{
   /** Selected dashboard month; the breakdown re-scopes with it. */
   cursor: PeriodCursor
@@ -55,6 +58,22 @@ const format = (value: number) => formatMoney(value, DEFAULT_CURRENCY, locale.va
 const addCategoryLabel = computed(() => `+ ${t('addCategory.newCategory')}`)
 
 const newCategoryOpen = ref(false)
+
+// Drill-down (web-screens spec): one dialog instance + the active category.
+// Clearing the category on close remounts the overlay per peek, so each
+// activation snapshots the dashboard's current month cursor.
+const drilldownOpen = ref(false)
+const drilldownCategory = ref<Category | null>(null)
+
+const openDrilldown = (category: Category) => {
+  drilldownCategory.value = category
+  drilldownOpen.value = true
+}
+
+const setDrilldownOpen = (open: boolean) => {
+  drilldownOpen.value = open
+  if (!open) drilldownCategory.value = null
+}
 </script>
 
 <template>
@@ -75,10 +94,13 @@ const newCategoryOpen = ref(false)
       {{ t('analytics.emptyMonthExpense') }}
     </p>
     <div v-else>
-      <div
+      <button
         v-for="row in rows"
         :key="row.category.id"
-        class="flex items-center gap-3 border-b border-border px-4 md:px-6 py-3 last:border-0"
+        type="button"
+        class="flex w-full items-center gap-3 border-b border-border px-4 md:px-6 py-3 text-left transition-colors last:border-0 hover:bg-muted/40"
+        :data-testid="`dashboard-category-row-${row.category.id}`"
+        @click="openDrilldown(row.category)"
       >
         <CategoryAvatar :icon="row.category.icon" :color="row.category.color" class="size-9" />
         <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ row.category.name }}</p>
@@ -88,7 +110,7 @@ const newCategoryOpen = ref(false)
             {{ percentLabel(row.totalMinor, totalMinor, locale) }}
           </p>
         </div>
-      </div>
+      </button>
     </div>
     <button
       v-if="!error"
@@ -101,4 +123,13 @@ const newCategoryOpen = ref(false)
     </button>
   </DashboardCard>
   <NewCategoryDialog v-model:open="newCategoryOpen" type="expense" />
+  <CategoryCashflowDialog
+    v-if="drilldownCategory"
+    :key="drilldownCategory.id"
+    :open="drilldownOpen"
+    :category="drilldownCategory"
+    direction="expense"
+    :cursor="cursor"
+    @update:open="setDrilldownOpen"
+  />
 </template>

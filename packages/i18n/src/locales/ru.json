@@ -322,6 +322,7 @@
     "confirmModeOption": "{label} — {caption}"
   },
   "transactions": {
+    "noDescription": "Без описания",
     "filter": "Фильтр",
     "filtersTitle": "Фильтры",
     "reset": "Сбросить",

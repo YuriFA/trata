@@ -98,7 +98,7 @@ const editDebtorOpen = ref(false)
       </Button>
     </template>
 
-    <div class="max-h-80 overflow-y-auto">
+    <div class="max-h-80 overflow-y-auto pt-4">
       <EmptyState v-if="groups.length === 0" :title="t('debts.historyEmpty')" />
       <div v-for="group in groups" :key="group.key" :data-testid="`debts-history-day-${group.key}`">
         <div class="border-y border-border bg-muted/50 px-6 py-2.5 first:border-t-0">

@@ -29,7 +29,7 @@ import { ErrorState } from '@/shared/ui/error-state'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { ChevronLeft, ChevronRight } from '@lucide/vue'
 import { DEFAULT_CURRENCY, formatMoney } from '@/shared/lib/money'
-import CategoryCashflowDialog from './CategoryCashflowDialog.vue'
+import { CategoryCashflowDialog } from '@/widgets/category-cashflow-dialog'
 
 // Per-direction detail (analytics capability): period selector, prev/next
 // navigation over periods, interactive donut + breakdown with include
@@ -174,12 +174,19 @@ function toggleMaster() {
 }
 
 // Drill-down: one dialog instance + the active category (convention 4).
+// Clearing the category on close remounts the dialog per peek, so a
+// reopen snapshots the view's current period (its cursor initializes once).
 const drilldownOpen = ref(false)
 const drilldownCategory = ref<Category | null>(null)
 
 const openDrilldown = (category: Category) => {
   drilldownCategory.value = category
   drilldownOpen.value = true
+}
+
+const setDrilldownOpen = (open: boolean) => {
+  drilldownOpen.value = open
+  if (!open) drilldownCategory.value = null
 }
 </script>
 
@@ -320,10 +327,11 @@ const openDrilldown = (category: Category) => {
     <CategoryCashflowDialog
       v-if="drilldownCategory"
       :key="drilldownCategory.id"
-      v-model:open="drilldownOpen"
+      :open="drilldownOpen"
       :category="drilldownCategory"
       :direction="direction"
       :cursor="cursor"
+      @update:open="setDrilldownOpen"
     />
   </section>
 </template>

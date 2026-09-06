@@ -133,9 +133,11 @@ const baseBodyClass = computed(() =>
   cn(
     'min-h-0',
     isDesktop.value && 'flex-1 overflow-y-auto',
-    // 'flush' serves edge-to-edge body content that pads itself; the top
-    // rhythm stays on the shell.
-    props.bodyVariant === 'flush' ? 'pt-4' : 'px-6 pt-4',
+    // 'flush' serves edge-to-edge body content that pads itself. NO padding
+    // here at all: a padding-top on the scroller offsets the sticky scrollport,
+    // so sticky day bands would pin below the header hairline with a gap that
+    // lets rows peek through. The top rhythm lives on the content.
+    props.bodyVariant === 'flush' ? '' : 'px-6 pt-4',
   ),
 )
 const baseFooterClass = computed(() =>

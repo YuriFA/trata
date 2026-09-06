@@ -168,13 +168,13 @@ describe('ResponsiveDialog', () => {
     }
   })
 
-  it('drops body horizontal padding on the flush variant', async () => {
+  it('drops all body padding on the flush variant - sticky scrollport stays flush with the header', async () => {
     mountDialog(true, { bodyVariant: 'flush' })
     await flushPromises()
 
     const body = document.querySelector('[data-slot="dialog-body"]')
     expect(body?.className).not.toContain('px-6')
-    expect(body?.className).toContain('pt-4')
+    expect(body?.className).not.toContain('pt-4')
   })
 
   it('keeps the in-body form footer sticky so it stays visible while the body scrolls', () => {
