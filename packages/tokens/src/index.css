@@ -46,7 +46,10 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Outfit", system-ui, -apple-system, sans-serif;
+    /* System font stack (SF Pro on iOS, Roboto on Android): no third-party
+     * webfont - a remote render-blocking @import white-screened the offline
+     * PWA on carrier-whitelisted networks (fonts.googleapis.com hung). */
+    font-family: system-ui, -apple-system, sans-serif;
   }
 }
 

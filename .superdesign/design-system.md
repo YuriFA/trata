@@ -1,6 +1,6 @@
 # Design System — Expense Tracker (web)
 
-The visual language is IMPLEMENTED and shipped. Direction «Бумага» (warm paper minimal) won the earlier 5-direction exploration (reference screenshots — purple mobile finance app, «Кошелёк» and «Finance» dashboards — are retired). Tokens live in `packages/tokens` (the MOBILE copy is canonical; web syncs to it; identical sRGB values in light and dark). Both themes are wired at runtime (setting: light / dark / system). Font is FIXED: Outfit everywhere (single sanctioned family — web and mobile share it). Drafts follow the implemented system below.
+The visual language is IMPLEMENTED and shipped. Direction «Бумага» (warm paper minimal) won the earlier 5-direction exploration (reference screenshots — purple mobile finance app, «Кошелёк» and «Finance» dashboards — are retired). Tokens live in `packages/tokens` (the MOBILE copy is canonical; web syncs to it; identical sRGB values in light and dark). Both themes are wired at runtime (setting: light / dark / system). Font is FIXED: the platform system stack (`system-ui`; SF Pro on iOS, Roboto on Android) for both web and mobile - a third-party webfont was removed after it white-screened the offline PWA on carrier-whitelisted networks (a render-blocking Google Fonts @import hung; see `apps/web/src/style.css`). Drafts follow the implemented system below.
 
 ## Product context
 
@@ -30,7 +30,7 @@ JTBD: record a spend in seconds; see where money goes this month; keep balances/
 - Category rows in cards: colored circle avatar, name, dotted meta, right-aligned amount, hairline dividers; «+ Новая категория» dashed ghost row.
 
 ### Typography
-Outfit 400/500/600/700 only. Scale: 12 / 14 (body) / 16 / 20 (card titles) / 24 / 32–40 (hero money). Headings semibold-bold, ink `#221d16` (light) / `#f2ede4` (dark). No serifs, no decorative fonts.
+System stack (`system-ui`) only: regular / medium / semibold / bold. Scale: 12 / 14 (body) / 16 / 20 (card titles) / 24 / 32–40 (hero money). Headings semibold-bold, ink `#221d16` (light) / `#f2ede4` (dark). No serifs, no decorative fonts.
 
 ### Palette (implemented — token values verbatim, no substitutions)
 
