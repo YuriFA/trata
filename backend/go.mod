@@ -3,6 +3,7 @@ module github.com/yurifa/expense-tracker-api
 go 1.26.3
 
 require (
+	github.com/SherClockHolmes/webpush-go v1.4.0
 	github.com/fatih/color v1.19.0
 	github.com/getkin/kin-openapi v0.146.0
 	github.com/gin-contrib/cors v1.7.7
@@ -27,7 +28,6 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/SherClockHolmes/webpush-go v1.4.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/bytedance/gopkg v0.1.4 // indirect
