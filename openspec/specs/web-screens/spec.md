@@ -95,6 +95,14 @@ the transactions screen already parses from its URL query), so the opened list i
 scoped to the same month as the figure on the card. The accounts and debts card links
 SHALL NOT carry a date filter.
 
+Each row of the expense-by-category breakdown SHALL act as a drill-down control:
+activating a row SHALL open that category's transaction overlay scoped to the
+expense direction and the dashboard's selected month, with the period navigable
+inside the overlay - the same drill-down presentation the analytics detail screens
+provide per the `analytics` capability. Transactions SHALL be attributed to the
+month per the `analytics` capability. The breakdown rows SHALL NOT navigate away
+from the dashboard; the overlay is the detail surface.
+
 #### Scenario: Overview of the current month
 
 - **WHEN** the user opens the dashboard in a month with income and expenses
@@ -141,6 +149,16 @@ SHALL NOT carry a date filter.
 
 - **WHEN** the user switches the dashboard month while a plan is overdue
 - **THEN** the attention card's contents are unchanged
+
+#### Scenario: Category row opens the selected month's transactions
+
+- **WHEN** the dashboard shows a month with expenses and the user activates a category row in the expense breakdown
+- **THEN** an overlay opens listing that category's expense transactions for the selected month, with the period navigable inside the overlay, and the dashboard stays underneath
+
+#### Scenario: Drill-down follows the selected month
+
+- **WHEN** the user switches the dashboard month and then activates a category row
+- **THEN** the overlay is scoped to the newly selected month
 
 ### Requirement: Dashboard period navigation
 
