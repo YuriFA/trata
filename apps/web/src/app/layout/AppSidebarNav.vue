@@ -120,9 +120,9 @@ function goToLogin() {
       <SyncStatusBadge class="w-fit" />
       <span class="truncate text-sm font-medium">{{ auth.user?.email }}</span>
       <Button
-        variant="ghost"
+        variant="link"
         size="sm"
-        class="w-fit gap-1.5 px-2 text-xs text-muted-foreground"
+        class="w-fit gap-1.5 text-xs text-muted-foreground"
         @click="signOut"
       >
         <LogOut class="size-3.5" aria-hidden="true" />
@@ -137,9 +137,9 @@ function goToLogin() {
         {{ t('auth.guestMode') }}
       </Badge>
       <Button
-        variant="ghost"
+        variant="link"
         size="sm"
-        class="w-fit px-2 text-xs text-muted-foreground"
+        class="w-fit text-xs text-muted-foreground"
         @click="goToLogin"
       >
         {{ t('auth.signIn') }}

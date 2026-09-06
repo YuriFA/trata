@@ -327,9 +327,9 @@ onMounted(() => {
               </Badge>
               <Button
                 v-if="isOwner && member.role !== 'owner'"
-                variant="ghost"
+                variant="link"
                 size="sm"
-                class="px-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-destructive"
+                class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-destructive"
                 :data-testid="`settings-household-remove-${member.userId}`"
                 @click="openRemove(member)"
               >

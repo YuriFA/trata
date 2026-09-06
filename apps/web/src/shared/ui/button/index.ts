@@ -15,7 +15,7 @@ export const buttonVariants = cva(
           'border bg-background hover:bg-muted/70 hover:text-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary-hover',
         ghost: 'hover:bg-muted/70 hover:text-foreground dark:hover:bg-muted/50',
-        link: 'text-primary underline-offset-4 hover:underline',
+        link: 'hover:text-foreground',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',
@@ -27,6 +27,7 @@ export const buttonVariants = cva(
         'icon-lg': 'size-10',
       },
     },
+    compoundVariants: [{ variant: 'link', class: 'px-0 has-[>svg]:px-0' }],
     defaultVariants: {
       variant: 'default',
       size: 'default',
