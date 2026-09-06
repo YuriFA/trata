@@ -52,6 +52,15 @@ operate on local data per the `web-local-data` capability.
 - **THEN** the application loads and works on local data without network
   access
 
+#### Scenario: Cold start into a hanging network
+
+- **WHEN** connectivity exists but the backend (and any non-precached
+  origin) blackholes requests - carrier whitelist, DPI middlebox - and the
+  user opens the installed app
+- **THEN** the application shell paints from the precache without waiting
+  for any hung network request, and the app operates on local data in the
+  offline state per `web-local-data`
+
 ### Requirement: No cached API responses
 
 The service worker SHALL NOT serve cached backend API responses: network
