@@ -58,7 +58,6 @@ test('keyboard focus selects the full reconcile balance for fast replacement', a
   await page.keyboard.type('115')
 
   await expect(actualBalance).toHaveValue('115')
-  await dialog.getByLabel('Note').fill('cash count')
   await dialog.getByTestId('reconcile-submit').click()
 
   await expect(page.getByText('Balance reconciled')).toBeVisible()
