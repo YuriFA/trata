@@ -211,3 +211,56 @@ describe('PlansPage confirm deep link', () => {
     expect(router.currentRoute.value.query.confirm).toBeUndefined()
   })
 })
+
+// Regression (user report): after confirming, the plan list must show the
+// advanced plan - the invalidation has to reach the query and re-render the
+// rows. The mock answers the first query with the original data and the
+// post-invalidation refetch with the advanced plan, exactly like the
+// worker-backed repository does over the real local DB.
+describe('PlansPage confirm refreshes the list', () => {
+  it('re-renders the row from the post-confirm refetch', async () => {
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    const original = [plan({ id: 'p1', nextDue: todayKey })]
+    const advanced = [plan({ id: 'p1', nextDue: tomorrow, version: 2 })]
+
+    const plannedPaymentsRepo = createMockPlannedPaymentRepository()
+    plannedPaymentsRepo.query.mockResolvedValueOnce(original).mockResolvedValue(advanced)
+    plannedPaymentsRepo.confirmPlannedPayment.mockResolvedValue(undefined)
+    const categoriesRepo = createMockCategoryRepository()
+    categoriesRepo.getAll.mockResolvedValue(categories)
+    const accountsRepo = createMockAccountRepository()
+    accountsRepo.getAll.mockResolvedValue([
+      { id: 'a1', name: 'Cash', currency: 'USD', openingBalance: 0, balance: 0, version: 1 },
+    ])
+
+    const wrapper = mountWithProviders(PlansPage, {
+      repositories: {
+        plannedPayments: plannedPaymentsRepo,
+        categories: categoriesRepo,
+        accounts: accountsRepo,
+        transactions: createMockTransactionRepository(),
+      },
+    })
+    mounted.push(wrapper)
+    await flushPromises()
+
+    await wrapper.find('[data-testid="plans-card-expense"]').trigger('click')
+    await flushPromises()
+
+    const row = document.querySelector('[data-testid="plans-row-p1"]')
+    expect(row).not.toBeNull()
+    expect(document.querySelector('[data-testid="plans-row-p1-overdue"]')).not.toBeNull()
+
+    ;(document.querySelector('[data-testid="plans-row-p1-confirm"]') as HTMLElement).click()
+    await flushPromises()
+    ;(document.querySelector('[data-testid="plans-confirm-submit"]') as HTMLElement).click()
+    await flushPromises()
+    await flushPromises()
+
+    const updatedRow = document.querySelector('[data-testid="plans-row-p1"]')
+    expect(document.querySelector('[data-testid="plans-row-p1-overdue"]')).toBeNull()
+    // The label renders the calendar date ("7 September"), not ISO.
+    expect(updatedRow?.textContent).toMatch(/7 Sept|07\.09|сентября/)
+    expect(plannedPaymentsRepo.query).toHaveBeenCalledTimes(2)
+  })
+})

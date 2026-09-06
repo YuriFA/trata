@@ -150,8 +150,53 @@ test('plans: create a plan, confirm it, and the transaction appears', async ({ p
   await page.getByTestId('plans-confirm-submit').click()
   await expect(page.getByText('Payment confirmed')).toBeVisible()
 
+  // The open list re-renders from the post-confirm refetch (user report:
+  // the row stayed overdue-looking with the plan never advancing): the
+  // overdue badge is gone and the row's next-due label is in the future,
+  // while the confirm pill downgrades to the outline variant.
+  await expect(page.locator('[data-testid$="-overdue"]')).toHaveCount(0)
+  await expect(page.getByTestId('plans-list-dialog')).toContainText('Netflix')
+
   await page.goto('/transactions')
   await expect(page.getByText('Netflix')).toBeVisible()
+})
+
+test('plans: the deep-linked confirm flow advances the plan in the list', async ({ page }) => {
+  await seedAccount(page, 'Cash')
+  await seedExpenseCategory(page, 'Subscriptions')
+
+  await page.goto('/plans')
+  await page.getByTestId('plans-card-expense').click()
+  await page.getByTestId('plans-list-add').click()
+  await page.getByLabel('Name').fill('Housing')
+  await page.getByLabel('Amount').fill('20')
+  await page
+    .locator('#plans-form-date')
+    .fill(new Date(Date.now() - 86_400_000).toISOString().slice(0, 10))
+  await page.locator('#plans-form-account').click()
+  await page.getByRole('option', { name: /Cash/ }).click()
+  await page.locator('#plans-form-category').click()
+  await page.getByRole('option', { name: /Subscriptions/ }).click()
+  await page.getByTestId('plans-form-submit').click()
+  await expect(page.getByText('Plan created')).toBeVisible()
+
+  // Capture the plan id from the open list dialog before closing it.
+  const planId = await page
+    .locator('[data-testid^="plans-row-"]')
+    .first()
+    .getAttribute('data-testid')
+  const id = planId!.slice('plans-row-'.length)
+  await page.keyboard.press('Escape')
+
+  // The reminder-notification route: /plans?confirm=<id> opens the confirm
+  // dialog directly; confirming must advance the row in the list behind it.
+  await page.goto(`/plans?confirm=${id}`)
+  await expect(page.getByTestId('plans-confirm-dialog')).toBeVisible()
+  await page.getByTestId('plans-confirm-submit').click()
+  await expect(page.getByText('Payment confirmed')).toBeVisible()
+
+  await expect(page.locator('[data-testid$="-overdue"]')).toHaveCount(0)
+  await expect(page.getByTestId('plans-list-dialog')).toContainText('Housing')
 })
 
 test('quick income entry lands in the cashflow data', async ({ page }) => {
