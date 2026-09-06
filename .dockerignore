@@ -31,6 +31,15 @@ apps/web/test-results
 # web image.
 apps/mobile/*
 !apps/mobile/package.json
+# Sole exception: the canonical category icon config. The web
+# category-icons-sync drift test imports it directly (mobile copy is
+# canonical, same model as the design-tokens palette), and the image
+# build type-checks tests - without this one file the Docker build
+# fails on a module it otherwise deliberately excludes. When mobile
+# revives, the proper home for this shared vocabulary is a packages/*
+# module both apps import.
+apps/mobile/src/**
+!apps/mobile/src/entities/category/config/category-appearance.ts
 backend
 docs
 openspec

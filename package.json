@@ -7,7 +7,7 @@
     "arch:check": "depcruise packages/api/src packages/dates/src packages/money/src packages/i18n/src packages/local-data/src --config .dependency-cruiser.packages.cjs && pnpm -C apps/mobile exec depcruise src --config ../../.dependency-cruiser.mobile.cjs && depcruise apps/web/src --config .dependency-cruiser.web.cjs",
     "knip": "knip",
     "lint:design": "pnpm --filter web lint:design && pnpm --filter mobile lint:design",
-    "prepare": "lefthook install",
+    "prepare": "if [ -d .git ] || [ -f .git ]; then lefthook install; fi",
     "sync-catalog:gen": "node tools/sync-catalog/generate.mjs",
     "sync-catalog:gen-check": "pnpm sync-catalog:gen && git diff --exit-code -- backend/internal/service/sync_entity_catalog.gen.go packages/local-data/src/sync/sync-entity-catalog.generated.ts apps/web/src/features/sync-conflicts/model/sync-entity-catalog.generated.ts apps/mobile/src/features/sync-conflicts/model/sync-entity-catalog.generated.ts",
     "sync-catalog:parity": "node tools/sync-catalog/check-openapi-parity.mjs"
