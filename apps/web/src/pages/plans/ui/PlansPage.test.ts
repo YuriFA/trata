@@ -50,18 +50,22 @@ const categories: Category[] = [
 
 const mounted: ReturnType<typeof mountWithProviders>[] = []
 
-describe('PlansPage', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-  afterEach(async () => {
-    for (const wrapper of mounted.splice(0)) {
-      wrapper.unmount()
-    }
-    await flushPromises()
-    document.body.innerHTML = ''
-  })
+// File-level hygiene: every test in this file (three describes) mounts full
+// pages into document.body via portals; a leftover mounted app from a
+// previous test leaks its live DOM into the next test's document.querySelector
+// assertions (seen with the deep-link page polluting the refresh test).
+beforeEach(() => {
+  vi.clearAllMocks()
+})
+afterEach(async () => {
+  for (const wrapper of mounted.splice(0)) {
+    wrapper.unmount()
+  }
+  await flushPromises()
+  document.body.innerHTML = ''
+})
 
+describe('PlansPage', () => {
   function mountPage(plans: PlannedPayment[]) {
     const plannedPaymentsRepo = createMockPlannedPaymentRepository()
     plannedPaymentsRepo.query.mockResolvedValue(plans)
@@ -255,10 +259,13 @@ describe('PlansPage confirm refreshes the list', () => {
     await flushPromises()
     ;(document.querySelector('[data-testid="plans-confirm-submit"]') as HTMLElement).click()
     await flushPromises()
-    await flushPromises()
 
+    // The invalidation-triggered refetch re-renders the rows asynchronously;
+    // waitFor polls past the mutation's settle chain deterministically.
+    await vi.waitFor(() => {
+      expect(document.querySelector('[data-testid="plans-row-p1-overdue"]')).toBeNull()
+    })
     const updatedRow = document.querySelector('[data-testid="plans-row-p1"]')
-    expect(document.querySelector('[data-testid="plans-row-p1-overdue"]')).toBeNull()
     // The label renders the calendar date ("7 September"), not ISO.
     expect(updatedRow?.textContent).toMatch(/7 Sept|07\.09|сентября/)
     expect(plannedPaymentsRepo.query).toHaveBeenCalledTimes(2)
