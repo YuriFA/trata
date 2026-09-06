@@ -74,6 +74,8 @@ tags:
     description: Хаусхолд (общее семейное пространство) и профиль пользователя
   - name: Sync
     description: Синхронизация offline-first клиентов (push/pull с change-log)
+  - name: Push
+    description: Web Push-подписки устройств и конфигурация напоминаний плановых платежей
   - name: Health
     description: Операционные эндпоинты (liveness-проба для деплоя)
 
@@ -2079,6 +2081,88 @@ paths:
         "500":
           $ref: "#/components/responses/InternalError"
 
+  /api/push/subscriptions:
+    post:
+      tags: [Push]
+      operationId: upsertPushSubscription
+      summary: Зарегистрировать (обновить) push-подписку устройства
+      description: |
+        Upsert по `endpoint`: повторная регистрация того же endpoint
+        обновляет ключи и таймзону устройства, не создавая дубликатов.
+        Подписки — записи per-device: не участвуют в синхронизации
+        (нет change-log), не видны другим участникам household.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushSubscriptionUpsertRequest"
+      responses:
+        "200":
+          description: Сохранённая подписка (создана или обновлена).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PushSubscription"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: Неизвестное имя таймзоны (IANA).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                timezoneInvalid:
+                  value:
+                    code: PUSH_SUBSCRIPTION_TIMEZONE_INVALID
+                    message: unknown timezone
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/push/subscriptions/{id}:
+    parameters:
+      - $ref: "#/components/parameters/PushSubscriptionId"
+    delete:
+      tags: [Push]
+      operationId: deletePushSubscription
+      summary: Удалить push-подписку устройства
+      description: |
+        Удаляет подписку текущего user по её id. Чужая или несуществующая
+        подписка ведёт себя как not-found (данные не раскрываются).
+      responses:
+        "204":
+          description: Подписка удалена.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/PushSubscriptionNotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/config/push:
+    get:
+      tags: [Push]
+      operationId: getPushConfig
+      summary: Конфигурация Web Push
+      description: |
+        Публичный VAPID-ключ и признак включённости push на сервере.
+        Клиент скрывает opt-in напоминаний, когда push не настроен
+        (`enabled=false`).
+      responses:
+        "200":
+          description: Конфигурация push.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PushConfig"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
   /api/health:
     get:
       tags: [Health]
@@ -2176,6 +2260,13 @@ components:
         type: string
         format: uuid
     PlannedPaymentId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PushSubscriptionId:
       name: id
       in: path
       required: true
@@ -2374,6 +2465,15 @@ components:
           example:
             code: PLANNED_PAYMENT_NOT_FOUND
             message: planned payment not found
+    PushSubscriptionNotFound:
+      description: Push-подписка не найдена (или чужая).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            code: PUSH_SUBSCRIPTION_NOT_FOUND
+            message: push subscription not found
     PlannedPaymentAlreadyExists:
       description: Плановый платёж с таким id уже есть у user (клиентский id-дубликат).
       content:
@@ -2409,6 +2509,76 @@ components:
             Версия сборки API: тег развернутого образа (`sha-<short>`,
             передается через build-arg `VERSION`) или `dev` для сборок без
             версии (`go run`, тесты).
+
+    PushSubscriptionKeys:
+      type: object
+      description: Ключи шифрования доставки Web Push (RFC 8291), base64.
+      required: [p256dh, auth]
+      properties:
+        p256dh:
+          type: string
+          minLength: 1
+          maxLength: 512
+        auth:
+          type: string
+          minLength: 1
+          maxLength: 512
+
+    PushSubscriptionUpsertRequest:
+      type: object
+      description: |
+        Регистрация устройства для напоминаний плановых платежей.
+        `endpoint` — URL push-сервиса (bearer-секрет: не логируется и не
+        отдаётся другим клиентам), `keys` — ключи доставки, `timeZone` —
+        IANA-имя таймзоны устройства: напоминания отправляются в 10:00
+        локального времени подписки. Повторный вызов с тем же `endpoint`
+        обновляет ключи и таймзону (upsert, не дубль).
+      required: [endpoint, keys, timeZone]
+      properties:
+        endpoint:
+          type: string
+          format: uri
+          maxLength: 2048
+        keys:
+          $ref: "#/components/schemas/PushSubscriptionKeys"
+        timeZone:
+          type: string
+          maxLength: 64
+          description: IANA time zone name, например `Europe/Moscow`.
+
+    PushSubscription:
+      type: object
+      description: Сохранённая push-подписка устройства.
+      required: [id, endpoint, keys, timeZone, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Идентификатор подписки (для DELETE).
+        endpoint:
+          type: string
+          format: uri
+        keys:
+          $ref: "#/components/schemas/PushSubscriptionKeys"
+        timeZone:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    PushConfig:
+      type: object
+      description: Публичная конфигурация Web Push-канала.
+      required: [enabled, vapidPublicKey]
+      properties:
+        enabled:
+          type: boolean
+          description: |
+            false — push не настроен на сервере (нет VAPID-ключей);
+            клиент скрывает opt-in напоминаний.
+        vapidPublicKey:
+          type: string
+          description: Публичный VAPID-ключ (base64); пустая строка при enabled=false.
 
     User:
       type: object

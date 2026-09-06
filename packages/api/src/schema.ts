@@ -857,6 +857,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/push/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Зарегистрировать (обновить) push-подписку устройства
+         * @description Upsert по `endpoint`: повторная регистрация того же endpoint
+         *     обновляет ключи и таймзону устройства, не создавая дубликатов.
+         *     Подписки — записи per-device: не участвуют в синхронизации
+         *     (нет change-log), не видны другим участникам household.
+         */
+        post: operations["upsertPushSubscription"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/push/subscriptions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["PushSubscriptionId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Удалить push-подписку устройства
+         * @description Удаляет подписку текущего user по её id. Чужая или несуществующая
+         *     подписка ведёт себя как not-found (данные не раскрываются).
+         */
+        delete: operations["deletePushSubscription"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/config/push": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Конфигурация Web Push
+         * @description Публичный VAPID-ключ и признак включённости push на сервере.
+         *     Клиент скрывает opt-in напоминаний, когда push не настроен
+         *     (`enabled=false`).
+         */
+        get: operations["getPushConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -901,6 +969,50 @@ export interface components {
              *     версии (`go run`, тесты).
              */
             version: string;
+        };
+        /** @description Ключи шифрования доставки Web Push (RFC 8291), base64. */
+        PushSubscriptionKeys: {
+            p256dh: string;
+            auth: string;
+        };
+        /**
+         * @description Регистрация устройства для напоминаний плановых платежей.
+         *     `endpoint` — URL push-сервиса (bearer-секрет: не логируется и не
+         *     отдаётся другим клиентам), `keys` — ключи доставки, `timeZone` —
+         *     IANA-имя таймзоны устройства: напоминания отправляются в 10:00
+         *     локального времени подписки. Повторный вызов с тем же `endpoint`
+         *     обновляет ключи и таймзону (upsert, не дубль).
+         */
+        PushSubscriptionUpsertRequest: {
+            /** Format: uri */
+            endpoint: string;
+            keys: components["schemas"]["PushSubscriptionKeys"];
+            /** @description IANA time zone name, например `Europe/Moscow`. */
+            timeZone: string;
+        };
+        /** @description Сохранённая push-подписка устройства. */
+        PushSubscription: {
+            /**
+             * Format: uuid
+             * @description Идентификатор подписки (для DELETE).
+             */
+            id: string;
+            /** Format: uri */
+            endpoint: string;
+            keys: components["schemas"]["PushSubscriptionKeys"];
+            timeZone: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description Публичная конфигурация Web Push-канала. */
+        PushConfig: {
+            /**
+             * @description false — push не настроен на сервере (нет VAPID-ключей);
+             *     клиент скрывает opt-in напоминаний.
+             */
+            enabled: boolean;
+            /** @description Публичный VAPID-ключ (base64); пустая строка при enabled=false. */
+            vapidPublicKey: string;
         };
         User: {
             /** Format: uuid */
@@ -2019,6 +2131,21 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
+        /** @description Push-подписка не найдена (или чужая). */
+        PushSubscriptionNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /**
+                 * @example {
+                 *       "code": "PUSH_SUBSCRIPTION_NOT_FOUND",
+                 *       "message": "push subscription not found"
+                 *     }
+                 */
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
         /** @description Плановый платёж с таким id уже есть у user (клиентский id-дубликат). */
         PlannedPaymentAlreadyExists: {
             headers: {
@@ -2062,6 +2189,7 @@ export interface components {
         DebtorId: string;
         DebtOperationId: string;
         PlannedPaymentId: string;
+        PushSubscriptionId: string;
     };
     requestBodies: never;
     headers: never;
@@ -3928,6 +4056,87 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    upsertPushSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionUpsertRequest"];
+            };
+        };
+        responses: {
+            /** @description Сохранённая подписка (создана или обновлена). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushSubscription"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Неизвестное имя таймзоны (IANA). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            500: components["responses"]["InternalError"];
+        };
+    };
+    deletePushSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["PushSubscriptionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Подписка удалена. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["PushSubscriptionNotFound"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getPushConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Конфигурация push. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushConfig"];
+                };
+            };
             401: components["responses"]["Unauthorized"];
             500: components["responses"]["InternalError"];
         };
