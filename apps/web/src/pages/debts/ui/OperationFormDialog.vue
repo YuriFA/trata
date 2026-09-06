@@ -28,6 +28,7 @@ import {
 import { Button } from '@/shared/ui/button'
 import { SegmentedControl, type SegmentedControlOption } from '@/shared/ui/segmented-control'
 import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
+import { DateField } from '@/shared/ui/date-field'
 import { Input } from '@/shared/ui/input'
 import { AmountField } from '@/shared/ui/amount-field'
 import { Trash2 } from '@lucide/vue'
@@ -229,10 +230,10 @@ const handleDelete = async () => {
       <VeeField v-slot="{ value, setValue, errors }" name="occurredAt">
         <Field :data-invalid="!!errors.length">
           <FieldLabel for="debts-operation-date">{{ t('fields.date') }}</FieldLabel>
-          <Input
-            id="debts-operation-date"
-            type="date"
+          <DateField
+            input-id="debts-operation-date"
             :model-value="value"
+            :placeholder="t('fields.datePlaceholder')"
             :aria-invalid="!!errors.length"
             @update:model-value="setValue"
           />

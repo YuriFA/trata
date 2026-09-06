@@ -11,6 +11,7 @@ import { createDebtorDebtSchema, type DebtorDebtFormValues } from '../model/sche
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
+import { DateField } from '@/shared/ui/date-field'
 import { Input } from '@/shared/ui/input'
 import { AmountField } from '@/shared/ui/amount-field'
 import { notification } from '@/shared/services/notification'
@@ -127,10 +128,10 @@ const handleSubmit = handleFormSubmit(async (data) => {
       <VeeField v-slot="{ value, setValue, errors }" name="occurredAt">
         <Field :data-invalid="!!errors.length">
           <FieldLabel for="debts-new-debt-date">{{ t('fields.date') }}</FieldLabel>
-          <Input
-            id="debts-new-debt-date"
-            type="date"
+          <DateField
+            input-id="debts-new-debt-date"
             :model-value="value"
+            :placeholder="t('fields.datePlaceholder')"
             :aria-invalid="!!errors.length"
             @update:model-value="setValue"
           />

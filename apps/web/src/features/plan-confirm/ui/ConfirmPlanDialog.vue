@@ -9,6 +9,7 @@ import { planRowTitle } from '@/entities/planned-payment'
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldLabel } from '@/shared/ui/field'
+import { DateField } from '@/shared/ui/date-field'
 import { Input } from '@/shared/ui/input'
 import { AmountField } from '@/shared/ui/amount-field'
 import { notification } from '@/shared/services/notification'
@@ -102,7 +103,11 @@ const handleSubmit = async () => {
 
       <Field>
         <FieldLabel for="plans-confirm-date">{{ t('fields.date') }}</FieldLabel>
-        <Input id="plans-confirm-date" v-model="occurredOn" type="date" />
+        <DateField
+          v-model="occurredOn"
+          input-id="plans-confirm-date"
+          :placeholder="t('fields.datePlaceholder')"
+        />
       </Field>
 
       <Field>

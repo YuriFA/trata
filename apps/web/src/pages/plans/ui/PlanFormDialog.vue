@@ -15,6 +15,7 @@ import { CategorySelect } from '@/entities/category'
 import { usePushReminders } from '@/features/push-reminders'
 import { createPlanSchema, type PlanFormValues } from '../model/plan-schema'
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
+import { DateField } from '@/shared/ui/date-field'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -266,10 +267,10 @@ const handleDelete = async () => {
       <VeeField v-slot="{ value, setValue, errors }" name="nextDue">
         <Field :data-invalid="!!errors.length">
           <FieldLabel for="plans-form-date">{{ t('fields.date') }}</FieldLabel>
-          <Input
-            id="plans-form-date"
-            type="date"
+          <DateField
+            input-id="plans-form-date"
             :model-value="value"
+            :placeholder="t('fields.datePlaceholder')"
             :aria-invalid="!!errors.length"
             @update:model-value="setValue"
           />

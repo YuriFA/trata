@@ -385,6 +385,7 @@
     "transactionType": "Transaction type",
     "description": "Description",
     "date": "Date",
+    "datePlaceholder": "Select date",
     "currency": "Currency"
   },
   "validation": {

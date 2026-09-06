@@ -385,6 +385,7 @@
     "transactionType": "Тип транзакции",
     "description": "Описание",
     "date": "Дата",
+    "datePlaceholder": "Выберите дату",
     "currency": "Валюта"
   },
   "validation": {

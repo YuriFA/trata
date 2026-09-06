@@ -130,10 +130,12 @@ test('plans: create a plan, confirm it, and the transaction appears', async ({ p
 
   await page.getByLabel('Name').fill('Netflix')
   await page.getByLabel('Amount').fill('15')
-  // Anchor on yesterday so the row is deterministically overdue: the
-  // default (the form's local today) already counts as due-today, but a
-  // past anchor keeps the assertion independent of day-boundary timing.
-  await page.locator('#plans-form-date').fill(new Date(Date.now() - 86_400_000).toISOString().slice(0, 10))
+  // Pick today through the calendar popover (DateField replaced the native
+  // date input whose iOS Safari rendering overflowed the sheet): a due-today
+  // plan already counts as overdue, and the post-confirm assertions hold on
+  // either side of a midnight crossing (advance lands a full month ahead).
+  await page.locator('#plans-form-date').click()
+  await page.locator('[data-today]').first().click()
   await page.locator('#plans-form-account').click()
   await page.getByRole('option', { name: /Cash/ }).click()
   await page.locator('#plans-form-category').click()
@@ -170,9 +172,8 @@ test('plans: the deep-linked confirm flow advances the plan in the list', async 
   await page.getByTestId('plans-list-add').click()
   await page.getByLabel('Name').fill('Housing')
   await page.getByLabel('Amount').fill('20')
-  await page
-    .locator('#plans-form-date')
-    .fill(new Date(Date.now() - 86_400_000).toISOString().slice(0, 10))
+  await page.locator('#plans-form-date').click()
+  await page.locator('[data-today]').first().click()
   await page.locator('#plans-form-account').click()
   await page.getByRole('option', { name: /Cash/ }).click()
   await page.locator('#plans-form-category').click()

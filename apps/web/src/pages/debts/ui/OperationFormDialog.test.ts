@@ -96,9 +96,8 @@ describe('OperationFormDialog', () => {
       // AmountField renders through the deterministic money formatter: the
       // en shape prefixes the narrow symbol (₽) with no separator.
     ).toBe('₽5,000.00')
-    expect((inDialog('#debts-operation-date') as HTMLInputElement).value).toBe(
-      new Date('2026-08-20T12:00:00.000Z').toLocaleDateString('sv'),
-    )
+    // DateField renders the picked day as its button label (long en format).
+    expect(inDialog('#debts-operation-date')!.textContent).toBe('August 20, 2026')
     expect((inDialog('#debts-operation-note') as HTMLInputElement).value).toBe('Займ')
   })
 
