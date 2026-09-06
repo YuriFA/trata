@@ -1,5 +1,4 @@
-import { apiClient } from '@/shared/api'
-import { AUTH_REQUEST_TIMEOUT_MS } from '@/shared/api/client'
+import { apiClient, AUTH_REQUEST_TIMEOUT_MS } from '@/shared/api'
 import type { components } from '@/shared/api'
 import type { Session, User } from '../model/types'
 

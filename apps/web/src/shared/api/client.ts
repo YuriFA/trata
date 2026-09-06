@@ -7,8 +7,7 @@ import { createApiClient } from '@expense-tracker/api'
 // and gate the restore, so they get a tighter bound via per-call signals in
 // the session API; the sync transport may legitimately carry large first-sync
 // pages on slow links, so the worker builds its own 30s client.
-const AUTH_REQUEST_TIMEOUT_MS = 5_000
-export { AUTH_REQUEST_TIMEOUT_MS }
+export const AUTH_REQUEST_TIMEOUT_MS = 5_000
 const SYNC_REQUEST_TIMEOUT_MS = 30_000
 
 // Resolve a base URL the generated client can build absolute Request URLs from.
