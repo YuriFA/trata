@@ -67,6 +67,13 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM:-}
       SMTP_TLS: ${SMTP_TLS:-starttls}
+      # Web Push reminder channel (ADR-0007): an empty key pair keeps the
+      # channel off - pushremind never starts and the config endpoint
+      # reports enabled=false, so clients hide the reminder opt-in.
+      PUSH_VAPID_PRIVATE_KEY: ${PUSH_VAPID_PRIVATE_KEY:-}
+      PUSH_VAPID_PUBLIC_KEY: ${PUSH_VAPID_PUBLIC_KEY:-}
+      PUSH_VAPID_SUBJECT: ${PUSH_VAPID_SUBJECT:-mailto:admin@localhost}
+      PUSH_INTERVAL: ${PUSH_INTERVAL:-1m}
     depends_on:
       db:
         condition: service_healthy
