@@ -1,6 +1,6 @@
 // Closed unions: a typo'd context fails type-check instead of silently
 // landing in the error logs. Extending them is a one-line edit here.
-export type ErrorFeature =
+type ErrorFeature =
   | 'account'
   | 'category'
   | 'transaction'

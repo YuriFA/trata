@@ -1,2 +1,2 @@
 export { notification } from './notification'
-export type { ErrorAction, ErrorContext, ErrorFeature, MutationErrorOptions } from './types'
+export type { ErrorAction } from './types'
