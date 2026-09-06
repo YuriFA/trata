@@ -77,6 +77,14 @@ shell requirement. Month-scoped figures SHALL
 attribute transactions to periods per the `analytics` capability, and money figures
 SHALL be formatted per the `app-currency` capability.
 
+The dashboard SHALL additionally show a period-independent attention card for planned
+payments requiring action: the household's overdue plans and the plans due today or
+tomorrow, per the `web-push` capability's opt-in rules the card MAY also carry the
+device reminder opt-in entry. Each listed plan SHALL offer the plan confirm flow; the
+card SHALL be hidden entirely when the household has nothing overdue and nothing due
+today or tomorrow. The attention card is not month-scoped and is unaffected by period
+navigation.
+
 Each summary stat card SHALL act as a single navigation link detailing its figure: the
 accounts balance card SHALL link to the accounts screen; the period income card SHALL
 link to the transactions screen filtered to income transactions; the period expenses
@@ -118,6 +126,21 @@ SHALL NOT carry a date filter.
 
 - **WHEN** the user switches the dashboard month
 - **THEN** the income and expense card links' month range follows the newly selected month
+
+#### Scenario: Attention card lists overdue and imminent plans
+
+- **WHEN** the household has an overdue plan and a plan due tomorrow
+- **THEN** the attention card lists both with their due labels and a confirm action for each, and confirming follows the `planned-payments` capability (transaction created, plan advanced, amount editable)
+
+#### Scenario: Attention card hidden when empty
+
+- **WHEN** the household has no overdue plans and none due today or tomorrow
+- **THEN** the attention card is not rendered and the dashboard layout shows no empty placeholder
+
+#### Scenario: Attention card ignores period navigation
+
+- **WHEN** the user switches the dashboard month while a plan is overdue
+- **THEN** the attention card's contents are unchanged
 
 ### Requirement: Dashboard period navigation
 

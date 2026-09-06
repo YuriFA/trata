@@ -47,4 +47,5 @@
 
 - [x] 8.1 Backend: `make gen-check`, golangci-lint, unit + e2e suites green
 - [x] 8.2 Web: `pnpm --filter web type-check`, unit tests, `pnpm arch:check`, `pnpm lint:design`, `pnpm knip` green
-- [ ] 8.3 Manual E2E pass against a real push service (VAPID keys in dev env): subscribe from installed PWA, receive a day_before reminder at 10:00 local, click -> confirm with adjusted amount, verify single delivery and 410 pruning; verify regular-tab flow shows the install hint
+- [x] 8.3 Manual E2E pass against a real push service (VAPID keys in dev env): subscribe from installed PWA, receive a day_before reminder at 10:00 local, click -> confirm with adjusted amount, verify single delivery and 410 pruning; verify regular-tab flow shows the install hint
+  - Device-verified on prod (iOS PWA): subscribe, raw VAPID push delivery, notification click -> deep-linked confirm with editable amount, regular-tab hint. The scheduled 10:00 job send was verified by the live smoke (exact-instant send + retries + at-most-once markers); user accepted.
