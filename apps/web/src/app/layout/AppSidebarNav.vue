@@ -131,10 +131,14 @@ function goToLogin() {
     </div>
 
     <div v-else class="mt-auto flex flex-col gap-2.5 border-t border-sidebar-border pt-4">
-      <!-- Anonymous (local) mode indicator: everything works on local data;
-           sign-in only adds server sync. -->
-      <Badge variant="secondary" class="w-fit" data-testid="guest-mode-indicator">
-        {{ t('auth.guestMode') }}
+      <!-- Mode indicator: offline (network failed restore, sign-in pending,
+           will auto-retry) vs the ordinary anonymous local mode. -->
+      <Badge
+        variant="secondary"
+        class="w-fit"
+        :data-testid="auth.isOfflineMode ? 'offline-mode-indicator' : 'guest-mode-indicator'"
+      >
+        {{ auth.isOfflineMode ? t('auth.offlineMode') : t('auth.guestMode') }}
       </Badge>
       <Button
         variant="link"

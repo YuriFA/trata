@@ -102,16 +102,68 @@ describe('useAuthStore', () => {
       await auth.ensureRestored()
       expect(auth.status).toBe('anonymous')
       expect(auth.user).toBeNull()
+      // A server-confirmed sign-out is terminal for the run (design D2).
+      expect(auth.restoreOutcome).toBe('signed-out')
     })
 
     it('lands in anonymous mode when the backend is unreachable', async () => {
       vi.mocked(sessionApi.getCurrentUser).mockRejectedValue(new TypeError('network down'))
+      metaMock.getOwnerUserId.mockResolvedValue(user.id)
 
       const auth = useAuthStore()
       await auth.ensureRestored()
 
       // Offline-first: no error screen, the anonymous shell on local data.
       expect(auth.status).toBe('anonymous')
+      // A network failure is recoverable (design D2) and the indicator can
+      // distinguish offline (owner exists) from a guest device.
+      expect(auth.restoreOutcome).toBe('offline')
+      await vi.waitFor(() => expect(auth.isOfflineMode).toBe(true))
+    })
+
+    it('does not flag offline mode on an unowned (guest) device', async () => {
+      vi.mocked(sessionApi.getCurrentUser).mockRejectedValue(new TypeError('network down'))
+      metaMock.getOwnerUserId.mockResolvedValue(null)
+
+      const auth = useAuthStore()
+      await auth.ensureRestored()
+
+      expect(auth.restoreOutcome).toBe('offline')
+      await vi.waitFor(() => expect(metaMock.getOwnerUserId).toHaveBeenCalled())
+      expect(auth.isOfflineMode).toBe(false)
+    })
+
+    it('a network-failed restore retries on demand and authenticates (design D3)', async () => {
+      vi.mocked(sessionApi.getCurrentUser)
+        .mockRejectedValueOnce(new TypeError('network down'))
+        .mockResolvedValueOnce(user)
+      metaMock.getOwnerUserId.mockResolvedValue(null)
+
+      const auth = useAuthStore()
+      await auth.ensureRestored()
+      expect(auth.status).toBe('anonymous')
+
+      // Connectivity returns: the retry re-runs the restore, the ownership
+      // gate runs, and the store lands in the authenticated state.
+      await auth.retryRestoreIfOffline()
+
+      expect(auth.status).toBe('authenticated')
+      expect(auth.user).toEqual(user)
+      expect(sessionApi.getCurrentUser).toHaveBeenCalledTimes(2)
+    })
+
+    it('a 401 outcome is terminal: retry is a no-op', async () => {
+      vi.mocked(sessionApi.getCurrentUser).mockRejectedValue(
+        new UnauthorizedError('missing session cookie'),
+      )
+      const auth = useAuthStore()
+      await auth.ensureRestored()
+
+      await auth.retryRestoreIfOffline()
+
+      expect(auth.status).toBe('anonymous')
+      expect(auth.restoreOutcome).toBe('signed-out')
+      expect(sessionApi.getCurrentUser).toHaveBeenCalledTimes(1)
     })
 
     it('runs the ownership gate for a restored different owner', async () => {

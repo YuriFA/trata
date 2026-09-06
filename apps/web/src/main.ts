@@ -14,6 +14,7 @@ import { useAuthStore } from './entities/session'
 import './style.css'
 import { setupI18nLocaleWatcher } from './app/setup-i18n-locale-watcher'
 import { setupPushReminders } from './app/setup-push-reminders'
+import { setupOfflineRestoreRetry } from './app/setup-offline-restore-retry'
 import { registerServiceWorker } from './app/register-service-worker'
 
 const app = createApp(App)
@@ -38,8 +39,11 @@ provideRepositories(app)
 
 // Session restore runs once at startup and is network-tolerant (design D5):
 // a 401 or an unreachable backend both land in the anonymous shell - the app
-// keeps working on local data.
-void useAuthStore(pinia).ensureRestored()
+// keeps working on local data. A network-failed restore stays recoverable:
+// online/visibility retries re-run it (web-offline-resilience design D3).
+const auth = useAuthStore(pinia)
+void auth.ensureRestored()
+setupOfflineRestoreRetry(auth)
 
 // Apply the persisted theme before the first paint and keep it in sync.
 setupThemeWatcher()

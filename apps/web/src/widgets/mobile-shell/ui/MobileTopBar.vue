@@ -32,14 +32,14 @@ const auth = useAuthStore()
       <slot name="status" />
       <UserMenu v-if="auth.isAuthenticated" />
       <template v-else>
-        <!-- Anonymous (local) mode indicator: everything works on local data;
-             sign-in only adds server sync. -->
+        <!-- Mode indicator: offline (network failed restore, sign-in pending,
+             will auto-retry) vs the ordinary anonymous local mode. -->
         <span
           class="inline-flex h-7 items-center gap-1 rounded-full bg-accent pr-2.5 pl-2 text-[11px] font-semibold text-accent-foreground"
-          data-testid="guest-mode-indicator"
+          :data-testid="auth.isOfflineMode ? 'offline-mode-indicator' : 'guest-mode-indicator'"
         >
           <CloudOffIcon class="size-3" aria-hidden="true" />
-          {{ t('auth.guestModeShort') }}
+          {{ auth.isOfflineMode ? t('auth.offlineModeShort') : t('auth.guestModeShort') }}
         </span>
         <Button as-child size="sm" data-testid="topbar-sign-in">
           <RouterLink :to="{ name: 'login' }">{{ t('shell.signIn') }}</RouterLink>

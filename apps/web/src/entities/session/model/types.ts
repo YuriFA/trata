@@ -18,6 +18,14 @@ export interface Session {
 
 export type AuthStatus = 'restoring' | 'anonymous' | 'authenticated'
 
+/**
+ * Why the session restore ended without a session (web-offline-resilience
+ * design D2): `signed-out` is server-confirmed (401 / explicit logout) and
+ * terminal for the run; `offline` means the network failed (timeout, no
+ * connectivity) and the restore is retried when connectivity returns.
+ */
+export type RestoreOutcome = 'unknown' | 'signed-out' | 'offline'
+
 /** Outcome of a login/register attempt after the ownership gate ran. */
 export interface AuthResult {
   ok: boolean

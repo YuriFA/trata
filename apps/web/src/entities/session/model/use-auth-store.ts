@@ -2,9 +2,10 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { useQueryCache } from '@pinia/colada'
 import { sessionApi } from '../api/session-api'
-import type { AuthResult, AuthStatus, PendingOwnershipGate, User } from '../model/types'
+import type { AuthResult, AuthStatus, PendingOwnershipGate, RestoreOutcome, User } from '../model/types'
 import { getLocalDbApi } from '@/shared/lib/local-db'
 import { ownershipGateDecision } from '@expense-tracker/local-data'
+import { UnauthorizedError } from '@expense-tracker/api'
 
 /**
  * Auth state with the mobile status machine (design D5):
@@ -20,10 +21,32 @@ export const useAuthStore = defineStore('auth', () => {
 
   const user = ref<User | null>(null)
   const status = ref<AuthStatus>('restoring')
+  /** Why the restore ended without a session (see RestoreOutcome). */
+  const restoreOutcome = ref<RestoreOutcome>('unknown')
   /** Set while the ownership dialog awaits the user's choice (design D5). */
   const pendingGate = ref<PendingOwnershipGate | null>(null)
 
+  /**
+   * Whether local data is bound to some owner: loaded lazily when a restore
+   * fails by network, so the shell can tell "offline, sign-in pending"
+   * (owner exists) from a true guest device.
+   */
+  const hasLocalOwner = ref(false)
+  function loadOwnerFlag(): void {
+    void getLocalDbApi()
+      .then((db) => db.meta.getOwnerUserId())
+      .then((owner) => {
+        hasLocalOwner.value = owner !== null
+      })
+      .catch(() => undefined)
+  }
+
   const isAuthenticated = computed(() => status.value === 'authenticated' && user.value !== null)
+
+  /** Offline indicator state: restore failed by network on an owned device (design D4). */
+  const isOfflineMode = computed(
+    () => status.value === 'anonymous' && restoreOutcome.value === 'offline' && hasLocalOwner.value,
+  )
 
   /** Binds an unowned database to its first authenticated user, then flips to `authenticated`. */
   async function completeAuthentication(authenticated: User): Promise<void> {
@@ -86,21 +109,43 @@ export const useAuthStore = defineStore('auth', () => {
   let restorePromise: Promise<void> | null = null
 
   /**
-   * Restores the session once per app run. A 401 means "not signed in"; an
-   * unreachable backend means the anonymous shell - either way there is no
-   * error state to show. A restored session for a different user than the
-   * local owner goes through the same ownership gate as login.
+   * Restores the session once per app run. A 401 means "not signed in" and
+   * lands in a terminal anonymous shell; a network failure (timeout, no
+   * connectivity) also means the anonymous shell - never an error screen -
+   * but is recoverable: `restoreOutcome` records which one happened so the
+   * app layer can retry (`retryRestoreIfOffline`) when connectivity returns.
+   * A restored session for a different user than the local owner goes
+   * through the same ownership gate as login.
    */
   function ensureRestored(): Promise<void> {
     restorePromise ??= sessionApi
       .getCurrentUser()
       .then((restored) => passOwnershipGate(restored).then(() => undefined))
-      .catch(() => {
+      .catch((error: unknown) => {
         // Not signed in (401) or the backend is unreachable: offline-first
         // means the anonymous shell, not a blocking error screen.
         status.value = 'anonymous'
+        if (error instanceof UnauthorizedError) {
+          restoreOutcome.value = 'signed-out'
+        } else {
+          restoreOutcome.value = 'offline'
+          loadOwnerFlag()
+        }
       })
     return restorePromise
+  }
+
+  /**
+   * Retries the session restore while the last attempt failed by network
+   * (airplane mode off, app foregrounded). A 401 outcome is terminal and a
+   * no-op here. Re-entrancy is safe: an in-flight retry caches its promise
+   * through `ensureRestored`, so concurrent triggers join the same attempt.
+   */
+  function retryRestoreIfOffline(): Promise<void> {
+    if (restoreOutcome.value !== 'offline') return restorePromise ?? Promise.resolve()
+    restoreOutcome.value = 'unknown'
+    restorePromise = null
+    return ensureRestored()
   }
 
   async function register(email: string, password: string): Promise<AuthResult> {
@@ -118,6 +163,7 @@ export const useAuthStore = defineStore('auth', () => {
     await sessionApi.logout().catch(() => undefined)
     user.value = null
     status.value = 'anonymous'
+    restoreOutcome.value = 'signed-out'
   }
 
   /** Re-reads the current user (e.g. after email verification flips emailVerified). */
@@ -133,14 +179,19 @@ export const useAuthStore = defineStore('auth', () => {
   function clearSession(): void {
     user.value = null
     status.value = 'anonymous'
+    restoreOutcome.value = 'signed-out'
   }
 
   return {
     user,
     status,
+    restoreOutcome,
+    hasLocalOwner,
+    isOfflineMode,
     pendingGate,
     isAuthenticated,
     ensureRestored,
+    retryRestoreIfOffline,
     register,
     login,
     logout,

@@ -109,6 +109,11 @@ function mockControlPlane(page: Page, getWithSibling: () => boolean): void {
   void page.route('**/api/household/invitations', (route) =>
     fulfillJson(route, 200, []),
   )
+  // Same class of leak (web-push change): the push-config probe fires on
+  // every authenticated boot and an unmocked 401 clears the session.
+  void page.route('**/api/config/push', (route) =>
+    fulfillJson(route, 200, { enabled: false, vapidPublicKey: '' }),
+  )
   void page.route('**/api/sync/push', (route) => fulfillJson(route, 200, { results: [] }))
   void page.route('**/api/sync/pull*', (route) => {
     const cursor = Number(new URL(route.request().url()).searchParams.get('cursor') ?? '0')

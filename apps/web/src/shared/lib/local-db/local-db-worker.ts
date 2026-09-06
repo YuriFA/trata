@@ -9,7 +9,7 @@
 
 import * as Comlink from 'comlink'
 import { proxy } from 'comlink'
-import { apiClient } from '@/shared/api'
+import { syncApiClient } from '@/shared/api'
 import {
   createApiTransport,
   createLocalAccountRepository,
@@ -65,7 +65,7 @@ async function boot(): Promise<void> {
 
     const engine = createSyncEngine({
       db: store.db,
-      transport: createApiTransport(apiClient),
+      transport: createApiTransport(syncApiClient),
       // A cycle completed (design D6): the flag tells whether local rows were
       // written. A plain id-less message - Comlink ignores it on the wrap
       // endpoint.

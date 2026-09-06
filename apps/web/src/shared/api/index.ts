@@ -1,5 +1,5 @@
 // Re-exported from `@expense-tracker/api`; the local `client.ts` only adds the
 // web-specific base-URL resolution (Vite env / `window.location`).
-export { apiClient } from './client'
+export { apiClient, syncApiClient } from './client'
 export type { components } from '@expense-tracker/api'
 export { setUnauthorizedHandler } from '@expense-tracker/api'
