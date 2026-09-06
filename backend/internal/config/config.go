@@ -16,6 +16,7 @@ type Config struct {
 	Database       DatabaseConfig       `yaml:"database"`
 	Retention      RetentionConfig      `yaml:"retention"`
 	PlannedConfirm PlannedConfirmConfig `yaml:"planned_confirm"`
+	Push           PushConfig           `yaml:"push"`
 	Household      HouseholdConfig      `yaml:"household"`
 	SMTP           SMTPConfig           `yaml:"smtp"`
 }
@@ -31,6 +32,25 @@ type RetentionConfig struct {
 // often the job sweeps for due auto plans.
 type PlannedConfirmConfig struct {
 	Interval time.Duration `yaml:"interval" env:"PLANNED_CONFIRM_INTERVAL" env-default:"1h"`
+}
+
+// PushConfig tunes the Web Push reminder channel (web-push change,
+// ADR-0004). VAPID keys are server-side only (the private key is never
+// shipped to any client); an empty key pair disables the channel: the
+// pushremind job no-ops and GET /api/config/push reports enabled=false so
+// clients hide the reminder opt-in.
+type PushConfig struct {
+	VapidPrivateKey string        `yaml:"vapid_private_key" env:"PUSH_VAPID_PRIVATE_KEY" env-default:""`
+	VapidPublicKey  string        `yaml:"vapid_public_key"  env:"PUSH_VAPID_PUBLIC_KEY"  env-default:""`
+	VapidSubject    string        `yaml:"vapid_subject"     env:"PUSH_VAPID_SUBJECT"     env-default:"mailto:admin@localhost"`
+	Interval        time.Duration `yaml:"interval"          env:"PUSH_INTERVAL"          env-default:"1m"`
+}
+
+// Enabled reports whether the push channel is configured: both VAPID keys
+// must be present (a half-configured pair would subscribe clients against a
+// sender that cannot deliver).
+func (c PushConfig) Enabled() bool {
+	return c.VapidPrivateKey != "" && c.VapidPublicKey != ""
 }
 
 // HouseholdConfig tunes the join lifecycle (household-join change): the

@@ -69,6 +69,10 @@ var domainErrorStatus = map[error]int{
 	domain.ErrDebtOperationNotFound:  http.StatusNotFound,
 	domain.ErrPlannedPaymentNotFound: http.StatusNotFound,
 
+	// --- push subscriptions (web-push change) ---
+	domain.ErrPushSubscriptionNotFound:        http.StatusNotFound,
+	domain.ErrPushSubscriptionTimezoneInvalid: http.StatusUnprocessableEntity,
+
 	// --- conflict ---
 	domain.ErrUserAlreadyExists:             http.StatusConflict,
 	domain.ErrCategoryAlreadyExists:         http.StatusConflict,

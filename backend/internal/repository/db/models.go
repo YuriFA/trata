@@ -189,6 +189,24 @@ type PlannedPayment struct {
 	HouseholdID uuid.UUID
 }
 
+type PushRemindersSent struct {
+	PlanID         uuid.UUID
+	OccurrenceDate time.Time
+	SubscriptionID uuid.UUID
+	SentAt         time.Time
+}
+
+type PushSubscription struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Endpoint  string
+	P256dh    string
+	Auth      string
+	TimeZone  string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 type Session struct {
 	ID        string
 	UserID    uuid.UUID

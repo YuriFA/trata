@@ -13,6 +13,7 @@ import (
 	"github.com/yurifa/expense-tracker-api/internal/config"
 	"github.com/yurifa/expense-tracker-api/internal/jobs/cleanup"
 	"github.com/yurifa/expense-tracker-api/internal/jobs/plannedconfirm"
+	"github.com/yurifa/expense-tracker-api/internal/jobs/pushremind"
 	"github.com/yurifa/expense-tracker-api/internal/jobs/retention"
 	"github.com/yurifa/expense-tracker-api/internal/logger"
 	"github.com/yurifa/expense-tracker-api/internal/repository/postgres"
@@ -132,6 +133,24 @@ func startBackgroundJobs(
 	plannedConfirmJob := plannedconfirm.New(repo, log, cfg.PlannedConfirm.Interval)
 	plannedConfirmDone := make(chan struct{})
 
+	// Web Push reminders: without VAPID keys the job never starts and the
+	// config endpoint reports enabled=false, so a keys-less deploy simply
+	// has no push channel (design D3, ADR-0004).
+	pushRemindDone := make(chan struct{})
+	if cfg.Push.Enabled() {
+		sender := pushremind.NewWebPushSender(
+			cfg.Push.VapidPrivateKey, cfg.Push.VapidPublicKey, cfg.Push.VapidSubject,
+		)
+		pushRemindJob := pushremind.New(repo, sender, log, cfg.Push.Interval)
+		go func() {
+			defer close(pushRemindDone)
+			_ = pushRemindJob.Run(bgCtx)
+		}()
+	} else {
+		log.InfoContext(bgCtx, "PUSH_VAPID_* keys not set: web push reminders disabled")
+		close(pushRemindDone)
+	}
+
 	go func() {
 		defer close(cleanupDone)
 		_ = cleanupJob.Run(bgCtx)
@@ -149,6 +168,7 @@ func startBackgroundJobs(
 		<-cleanupDone
 		<-retentionDone
 		<-plannedConfirmDone
+		<-pushRemindDone
 	}
 }
 
@@ -203,6 +223,7 @@ func newHTTPServer(
 		WebAppBaseURL:            cfg.Household.WebAppBaseURL,
 	})
 	syncSvc := service.NewSyncService(repo)
+	pushSvc := service.NewPushService(repo)
 
 	server := httptransport.NewServer(
 		&cfg.HTTPServer,
@@ -214,6 +235,8 @@ func newHTTPServer(
 		debtorSvc,
 		debtOpSvc,
 		planSvc,
+		pushSvc,
+		cfg.Push,
 		authSvc,
 		sessionSvc,
 		householdSvc,

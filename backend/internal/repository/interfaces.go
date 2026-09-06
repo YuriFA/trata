@@ -176,6 +176,18 @@ type PlannedPaymentRepository interface {
 	) ([]domain.PlannedPayment, error)
 }
 
+// PushSubscriptionRepository owns per-device Web Push registrations
+// (web-push change, ADR-0004): plain CRUD with no sync participation -
+// no change_log, no tombstones. IANA timezone validation lives in the
+// service layer; the endpoint URL is a bearer secret never logged.
+type PushSubscriptionRepository interface {
+	UpsertPushSubscription(
+		ctx context.Context,
+		params domain.UpsertPushSubscriptionParams,
+	) (*domain.PushSubscription, error)
+	DeletePushSubscription(ctx context.Context, userID, id uuid.UUID) error
+}
+
 // SyncCore is the entity-agnostic push core: durable op-id idempotency (the
 // applied-operations store) and the cross-household adoption check. It is the
 // shared half of the per-batch unit-of-work; the per-entity halves are the

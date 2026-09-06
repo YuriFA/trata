@@ -32,6 +32,8 @@ type Server struct {
 	debtors    *service.DebtorService
 	debtOps    *service.DebtOperationService
 	plans      *service.PlannedPaymentService
+	push       *service.PushService
+	pushCfg    config.PushConfig
 	auth       *service.AuthService
 	sessions   *service.SessionService
 	households *service.HouseholdService
@@ -48,6 +50,8 @@ func NewServer(
 	debtors *service.DebtorService,
 	debtOps *service.DebtOperationService,
 	plans *service.PlannedPaymentService,
+	push *service.PushService,
+	pushCfg config.PushConfig,
 	auth *service.AuthService,
 	sessions *service.SessionService,
 	households *service.HouseholdService,
@@ -60,7 +64,8 @@ func NewServer(
 		accounts: accounts, categories: categories, txn: txn,
 		debtors: debtors, debtOps: debtOps,
 		plans: plans,
-		auth:  auth, sessions: sessions,
+		push:  push, pushCfg: pushCfg,
+		auth: auth, sessions: sessions,
 		households: households,
 		sync:       sync,
 	}

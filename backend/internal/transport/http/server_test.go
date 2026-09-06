@@ -115,6 +115,8 @@ func wireTestEngineWithVersion(t *testing.T, cfg *config.HTTPServer, log *slog.L
 		debtorSvc,
 		debtOpSvc,
 		planSvc,
+		service.NewPushService(store),
+		config.PushConfig{},
 		authSvc,
 		sessionSvc,
 		householdSvc,

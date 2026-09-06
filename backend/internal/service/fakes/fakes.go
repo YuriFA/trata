@@ -40,6 +40,7 @@ type Store struct {
 	debtors      map[uuid.UUID]*domain.Debtor
 	debtOps      map[uuid.UUID]*domain.DebtOperation
 	plans        map[uuid.UUID]*domain.PlannedPayment
+	pushSubs     map[uuid.UUID]*domain.PushSubscription
 
 	// households + memberships mirror the scoping tables: every user owns
 	// exactly one household (v1), every record belongs to a household.
@@ -113,6 +114,7 @@ func New() *Store {
 		debtors:      make(map[uuid.UUID]*domain.Debtor),
 		debtOps:      make(map[uuid.UUID]*domain.DebtOperation),
 		plans:        make(map[uuid.UUID]*domain.PlannedPayment),
+		pushSubs:     make(map[uuid.UUID]*domain.PushSubscription),
 		households:   make(map[uuid.UUID]*domain.Household),
 		memberships:  make(map[uuid.UUID]*domain.Membership),
 		codes:        make(map[uuid.UUID]*domain.HouseholdCode),

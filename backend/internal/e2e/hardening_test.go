@@ -37,6 +37,8 @@ func e2eEngineWithCfg(cfg *config.HTTPServer) http.Handler {
 		service.NewDebtorService(e2eRepo),
 		service.NewDebtOperationService(e2eRepo, e2eRepo),
 		service.NewPlannedPaymentService(e2eRepo, e2eRepo, e2eRepo),
+		service.NewPushService(e2eRepo),
+		config.PushConfig{},
 		authSvc,
 		service.NewSessionService(e2eRepo),
 		householdSvc,

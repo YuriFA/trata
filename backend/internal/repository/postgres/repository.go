@@ -37,6 +37,7 @@ var (
 	_ repository.IdempotencyRepository       = (*Repository)(nil)
 	_ repository.EmailVerificationRepository = (*Repository)(nil)
 	_ repository.PasswordResetRepository     = (*Repository)(nil)
+	_ repository.PushSubscriptionRepository  = (*Repository)(nil)
 )
 
 // pgUniqueViolation reports whether err is a Postgres unique_violation (the

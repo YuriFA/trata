@@ -150,6 +150,7 @@ func testMain(m *testing.M) int {
 		},
 	)
 	syncSvc := service.NewSyncService(e2eRepo)
+	pushSvc := service.NewPushService(e2eRepo)
 
 	server := httptransport.NewServer(
 		testCfg(),
@@ -161,6 +162,8 @@ func testMain(m *testing.M) int {
 		debtorSvc,
 		debtOpSvc,
 		planSvc,
+		pushSvc,
+		config.PushConfig{},
 		authSvc,
 		sessionSvc,
 		householdSvc,

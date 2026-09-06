@@ -46,6 +46,10 @@ var errorSpecs = map[error]ErrorSpec{
 	ErrDebtOperationNotFound:  {"DEBT_OPERATION_NOT_FOUND", "debt operation not found"},
 	ErrPlannedPaymentNotFound: {"PLANNED_PAYMENT_NOT_FOUND", "planned payment not found"},
 
+	// --- push subscriptions (web-push change) ---
+	ErrPushSubscriptionNotFound:        {"PUSH_SUBSCRIPTION_NOT_FOUND", "push subscription not found"},
+	ErrPushSubscriptionTimezoneInvalid: {"PUSH_SUBSCRIPTION_TIMEZONE_INVALID", "unknown timezone"},
+
 	// --- conflict ---
 	ErrUserAlreadyExists:          {"USER_ALREADY_EXISTS", "user already exists"},
 	ErrCategoryAlreadyExists:      {"CATEGORY_ALREADY_EXISTS", "category already exists"},

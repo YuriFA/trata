@@ -68,6 +68,8 @@ var (
 	ErrCategoryArchived                   = errors.New("category is archived and not available for new transactions")
 	ErrPlannedPaymentCategoryArchived     = errors.New("planned payment category is archived")
 	ErrPlannedPaymentTypeImmutable        = errors.New("planned payment type is immutable")
+	ErrPushSubscriptionNotFound           = errors.New("push subscription not found")
+	ErrPushSubscriptionTimezoneInvalid    = errors.New("push subscription timezone is not a known IANA zone")
 	ErrAccountHasPlannedPayments          = errors.New("account has planned payments and cannot be deleted")
 	ErrCategoryHasPlannedPayments         = errors.New("category has planned payments and cannot be deleted")
 	ErrInvalidDate                        = errors.New("date must be YYYY-MM-DD")
