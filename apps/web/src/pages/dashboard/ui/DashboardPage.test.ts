@@ -8,8 +8,10 @@ import {
   shiftPeriod,
 } from '@expense-tracker/dates'
 import DashboardPage from './DashboardPage.vue'
+import type { PlannedPayment } from '@/entities/planned-payment'
 import {
   createMockAccountRepository,
+  createMockPlannedPaymentRepository,
   createMockCategoryRepository,
   createMockDebtorRepository,
   createMockDebtOperationRepository,
@@ -233,5 +235,144 @@ describe('DashboardPage stat card links', () => {
       .findAll('a')
       .find((a) => (a.attributes('href') ?? '').startsWith('/debts'))
     expect(debtsLink?.text()).toContain('1M')
+  })
+})
+
+// Attention card (web-push change, ADR-0007): overdue + due today/tomorrow
+// plans with one-tap confirm; hidden when nothing is due; period-independent.
+describe('DashboardPage attention card', () => {
+  const dayKey = (offsetDays: number) => {
+    const date = new Date()
+    date.setDate(date.getDate() + offsetDays)
+    return date.toISOString().slice(0, 10)
+  }
+
+  const mountWithPlans = (plans: PlannedPayment[]) => {
+    const plannedPaymentsRepo = createMockPlannedPaymentRepository()
+    plannedPaymentsRepo.query.mockResolvedValue(plans)
+    const wrapper = mountWithProviders(DashboardPage, {
+      repositories: {
+        transactions: (() => {
+          const repo = createMockTransactionRepository()
+          repo.query.mockResolvedValue([])
+          return repo
+        })(),
+        accounts: createMockAccountRepository(),
+        categories: createMockCategoryRepository(),
+        debtors: createMockDebtorRepository(),
+        debtOperations: createMockDebtOperationRepository(),
+        plannedPayments: plannedPaymentsRepo,
+      },
+    })
+    return wrapper
+  }
+
+  it('lists overdue and imminent plans with confirm actions, overdue first', async () => {
+    const wrapper = mountWithPlans([
+      {
+        id: 'p-future',
+        type: 'expense',
+        amount: 59900,
+        name: 'Netflix',
+        accountId: 'a1',
+        categoryId: 'c1',
+        nextDue: dayKey(5),
+        anchorDate: dayKey(5),
+        regularity: 'monthly',
+        confirmMode: 'manual',
+        reminder: 'off',
+        note: '',
+        version: 1,
+      },
+      {
+        id: 'p-tomorrow',
+        type: 'expense',
+        amount: 240000,
+        name: 'Квартплата',
+        accountId: 'a1',
+        categoryId: 'c1',
+        nextDue: dayKey(1),
+        anchorDate: dayKey(1),
+        regularity: 'monthly',
+        confirmMode: 'manual',
+        reminder: 'day_before',
+        note: '',
+        version: 1,
+      },
+      {
+        id: 'p-overdue',
+        type: 'expense',
+        amount: 1200,
+        name: '',
+        accountId: 'a1',
+        categoryId: 'c1',
+        nextDue: dayKey(-3),
+        anchorDate: dayKey(-3),
+        regularity: 'weekly',
+        confirmMode: 'manual',
+        reminder: 'on_day',
+        note: '',
+        version: 1,
+      },
+    ])
+    await flushPromises()
+
+    const card = wrapper.find('[data-testid="dashboard-attention-card"]')
+    expect(card.exists()).toBe(true)
+    const rowIds = card.findAll('li').map((li) => li.attributes('data-testid'))
+    expect(rowIds).toEqual(['attention-plan-p-overdue', 'attention-plan-p-tomorrow'])
+    expect(card.find('[data-testid="attention-plan-p-overdue-overdue"]').exists()).toBe(true)
+    expect(card.find('[data-testid="attention-plan-p-tomorrow-confirm"]').exists()).toBe(true)
+  })
+
+  it('is hidden entirely when nothing is overdue or due within the window', async () => {
+    const wrapper = mountWithPlans([
+      {
+        id: 'p-future',
+        type: 'expense',
+        amount: 59900,
+        name: 'Netflix',
+        accountId: 'a1',
+        categoryId: 'c1',
+        nextDue: dayKey(3),
+        anchorDate: dayKey(3),
+        regularity: 'monthly',
+        confirmMode: 'manual',
+        reminder: 'off',
+        note: '',
+        version: 1,
+      },
+    ])
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="dashboard-attention-card"]').exists()).toBe(false)
+  })
+
+  it('ignores the dashboard period cursor (a past month does not change the card)', async () => {
+    const wrapper = mountWithPlans([
+      {
+        id: 'p-overdue',
+        type: 'expense',
+        amount: 1200,
+        name: '',
+        accountId: 'a1',
+        categoryId: 'c1',
+        nextDue: dayKey(-3),
+        anchorDate: dayKey(-3),
+        regularity: 'weekly',
+        confirmMode: 'manual',
+        reminder: 'on_day',
+        note: '',
+        version: 1,
+      },
+    ])
+    await flushPromises()
+
+    await wrapper.find('[data-testid="period-nav-prev"]').trigger('click')
+    await flushPromises()
+
+    const card = wrapper.find('[data-testid="dashboard-attention-card"]')
+    expect(card.exists()).toBe(true)
+    expect(card.find('[data-testid="attention-plan-p-overdue"]').exists()).toBe(true)
   })
 })

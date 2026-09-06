@@ -25,6 +25,7 @@ import CategoryBreakdownCard from './CategoryBreakdownCard.vue'
 import RecentTransactionsCard from './RecentTransactionsCard.vue'
 import AccountsCard from './AccountsCard.vue'
 import DebtsCard from './DebtsCard.vue'
+import PlannedPaymentsAttentionCard from './PlannedPaymentsAttentionCard.vue'
 import PeriodNav from './PeriodNav.vue'
 
 // The overview starts on the current device-local month; the header
@@ -191,6 +192,7 @@ const stats = computed(() => [
 
     <div class="grid gap-6 xl:grid-cols-3">
       <div class="space-y-6 xl:col-span-2">
+        <PlannedPaymentsAttentionCard />
         <CategoryBreakdownCard :cursor="cursor" />
         <RecentTransactionsCard :range="range" />
       </div>

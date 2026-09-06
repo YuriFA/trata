@@ -22,12 +22,18 @@ export default defineConfig({
     vue(),
     vueDevTools(),
     tailwindcss(),
-    // App-shell-only PWA (capability `web-pwa`): generateSW precaches the
-    // built shell incl. the SQLite-WASM binary and the local-db worker chunk
-    // so a cold start works offline; there is NO runtime caching, so API
-    // requests always hit the network (never a stale cached response) and
-    // offline behavior comes from the local-first data layer instead.
+    // App-shell-only PWA (capability `web-pwa`): a CUSTOM worker
+    // (src/sw.ts, injectManifest) precaches the built shell incl. the
+    // SQLite-WASM binary and the local-db worker chunk so a cold start works
+    // offline; there is NO runtime caching, so API requests always hit the
+    // network (never a stale cached response) and offline behavior comes from
+    // the local-first data layer instead. The custom source additionally
+    // carries the prompted-update handshake and the reminder push handlers
+    // (web-push change, ADR-0007).
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'prompt',
       // The manifest stays hand-maintained at public/site.webmanifest
       // (linked from index.html); the plugin must not generate its own.
@@ -38,8 +44,6 @@ export default defineConfig({
         // app never fetches (spike: web-sqlite-wasm-driver) - keep the ~1 MB
         // of dead assets out of the precache.
         globIgnores: ['**/sqlite3-worker1*', '**/sqlite3-opfs-async-proxy*'],
-        navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/api\//],
         cleanupOutdatedCaches: true,
       },
     }),

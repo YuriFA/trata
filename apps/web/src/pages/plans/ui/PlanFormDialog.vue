@@ -12,6 +12,7 @@ import {
 } from '@/entities/planned-payment'
 import { AccountSelect } from '@/entities/account'
 import { CategorySelect } from '@/entities/category'
+import { usePushReminders } from '@/features/push-reminders'
 import { createPlanSchema, type PlanFormValues } from '../model/plan-schema'
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
 import {
@@ -54,7 +55,11 @@ const { mutateAsync: createPlan } = useCreatePlannedPayment()
 const { mutateAsync: updatePlan } = useUpdatePlannedPayment()
 const { mutateAsync: deletePlan } = useDeletePlannedPayment()
 
-const { handleSubmit: handleFormSubmit, isSubmitting } = useForm<PlanFormValues>({
+const {
+  handleSubmit: handleFormSubmit,
+  isSubmitting,
+  setFieldValue,
+} = useForm<PlanFormValues>({
   validationSchema: toTypedSchema(createPlanSchema()),
   initialValues: {
     amount: props.plan ? toMajorUnits(props.plan.amount) : undefined,
@@ -107,6 +112,16 @@ const reminderOptions = [
   { value: 'day_before', label: t('plans.reminderLabel.day_before') },
   { value: 'on_day', label: t('plans.reminderLabel.on_day') },
 ] as const
+
+// Enabling a reminder asks for notification permission on this device
+// (parity with the mobile form): the setting itself is household state on
+// the plan, delivery is per-device - usePushReminders' enable() guards the
+// standalone context and registers the subscription.
+const { enable: enableDeviceReminders } = usePushReminders()
+const setReminder = (value: PlanFormValues['reminder']) => {
+  if (value !== 'off') void enableDeviceReminders()
+  setFieldValue('reminder', value)
+}
 
 const handleSubmit = handleFormSubmit(async (data) => {
   try {
@@ -303,14 +318,14 @@ const handleDelete = async () => {
         </Field>
       </VeeField>
 
-      <VeeField v-slot="{ value, setValue }" name="reminder">
+      <VeeField v-slot="{ value }" name="reminder">
         <Field>
           <FieldLabel for="plans-form-reminder">{{ t('plans.reminder') }}</FieldLabel>
           <NativeSelect
             id="plans-form-reminder"
             :model-value="value"
             class="w-full"
-            @update:model-value="(option) => setValue(option as PlanFormValues['reminder'])"
+            @update:model-value="(option) => setReminder(option as PlanFormValues['reminder'])"
           >
             <NativeSelectOption
               v-for="option in reminderOptions"

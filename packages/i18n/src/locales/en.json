@@ -43,7 +43,16 @@
     "noDebts": "No debts",
     "categoriesTitle": "Expenses by category",
     "prevMonth": "Previous month",
-    "nextMonth": "Next month"
+    "nextMonth": "Next month",
+    "attentionTitle": "Requires attention",
+    "dueToday": "Due today"
+  },
+  "pushReminders": {
+    "optIn": "Get payment reminders on this device",
+    "installHint": "Install the app to the home screen to get reminders",
+    "enable": "Enable",
+    "enabling": "Enabling…",
+    "error": "Could not enable reminders. Try again."
   },
   "home": {
     "balance": "Balance",

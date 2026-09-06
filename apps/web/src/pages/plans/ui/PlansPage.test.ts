@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { createMemoryHistory, createRouter } from 'vue-router'
 import { flushPromises } from '@vue/test-utils'
 import PlansPage from './PlansPage.vue'
 import type { PlannedPayment } from '@/entities/planned-payment'
@@ -161,5 +162,52 @@ describe('PlansPage', () => {
       occurredAt: `${todayKey}T12:00:00.000Z`,
       note: 'Netflix',
     })
+  })
+})
+
+// Deep-linked confirm (web-push change, ADR-0007): activating a reminder
+// notification opens /plans?confirm=<planId>; the page opens that plan's
+// list sheet with the confirm dialog pre-armed and clears the query param
+// so a reload does not re-trigger it.
+describe('PlansPage confirm deep link', () => {
+  it('opens the confirm dialog for the linked plan and clears the query', async () => {
+    const plansRepo = createMockPlannedPaymentRepository()
+    plansRepo.query.mockResolvedValue([
+      plan({ id: 'p-1', type: 'expense' }),
+      plan({ id: 'p-2', type: 'income' }),
+    ])
+    const categoriesRepo = createMockCategoryRepository()
+    categoriesRepo.getAll.mockResolvedValue(categories)
+    const accountsRepo = createMockAccountRepository()
+    accountsRepo.getAll.mockResolvedValue([
+      { id: 'a1', name: 'Cash', currency: 'USD', openingBalance: 0, balance: 0, version: 1 },
+    ])
+
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/', component: { template: '<div/>' } },
+        { path: '/plans', name: 'plans', component: { template: '<div/>' } },
+      ],
+    })
+    await router.push('/plans?confirm=p-1')
+
+    const wrapper = mountWithProviders(PlansPage, {
+      router,
+      repositories: {
+        plannedPayments: plansRepo,
+        categories: categoriesRepo,
+        accounts: accountsRepo,
+        transactions: createMockTransactionRepository(),
+      },
+    })
+    mounted.push(wrapper)
+    await flushPromises()
+
+    const confirmDialog = document.querySelector('[data-testid="plans-list-dialog"]')
+    expect(confirmDialog).not.toBeNull()
+    // The confirm sheet itself is pre-armed for the linked plan.
+    expect(document.querySelector('[data-testid="plans-confirm-dialog"]')).not.toBeNull()
+    expect(router.currentRoute.value.query.confirm).toBeUndefined()
   })
 })

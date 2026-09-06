@@ -1,13 +1,18 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Category } from '@expense-tracker/api'
 import type { PlannedPayment } from '@/entities/planned-payment'
 import { monthlyTotal } from '@/entities/planned-payment'
 import { CategoryAvatar } from '@/shared/ui/category-avatar'
-import { isPlanOverdue, nextDueLabel, planRowTitle, plansSortedByNextDue } from '../model/selectors'
+import {
+  isPlanOverdue,
+  nextDueLabel,
+  planRowTitle,
+  plansSortedByNextDue,
+} from '@/entities/planned-payment'
 import PlanFormDialog from './PlanFormDialog.vue'
-import ConfirmPlanDialog from './ConfirmPlanDialog.vue'
+import { ConfirmPlanDialog } from '@/features/plan-confirm'
 import { currentDay } from '@/shared/lib/date'
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
 import { Button } from '@/shared/ui/button'
@@ -26,6 +31,8 @@ const props = defineProps<{
   type: 'expense' | 'income'
   plans: readonly PlannedPayment[]
   categories: readonly Category[]
+  /** Deep-linked plan (reminder notification): its confirm dialog opens immediately. */
+  initialConfirmPlanId?: string | null
 }>()
 
 const open = defineModel<boolean>('open', { default: false })
@@ -89,6 +96,21 @@ const openConfirm = (plan: PlannedPayment) => {
   confirmPlan.value = plan
   confirmOpen.value = true
 }
+
+// Deep-linked confirm (?confirm=<planId>): once the list is populated, open
+// the plan's confirm dialog immediately (the notification promised it).
+const deepLinkHandled = ref(false)
+watch(
+  () => props.plans,
+  (plans) => {
+    if (deepLinkHandled.value || !props.initialConfirmPlanId || plans.length === 0) return
+    const plan = plans.find((candidate) => candidate.id === props.initialConfirmPlanId)
+    if (!plan) return
+    deepLinkHandled.value = true
+    openConfirm(plan)
+  },
+  { immediate: true },
+)
 </script>
 
 <template>

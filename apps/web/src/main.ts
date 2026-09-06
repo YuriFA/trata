@@ -13,6 +13,7 @@ import { APP_VERSION } from './shared/config/app-version'
 import { useAuthStore } from './entities/session'
 import './style.css'
 import { setupI18nLocaleWatcher } from './app/setup-i18n-locale-watcher'
+import { setupPushReminders } from './app/setup-push-reminders'
 import { registerServiceWorker } from './app/register-service-worker'
 
 const app = createApp(App)
@@ -57,6 +58,7 @@ setUnauthorizedHandler(() => {
 })
 
 setupI18nLocaleWatcher()
+setupPushReminders()
 app.mount('#app')
 
 // Boot version line (spec: `app-version`): one console.info identifying the

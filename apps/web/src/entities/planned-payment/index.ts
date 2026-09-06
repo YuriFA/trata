@@ -10,3 +10,7 @@ export {
 // The monthly-total figure is a pure package function the plans screen
 // derives its summaries from - re-exported so the page stays off the package.
 export { monthlyTotal } from '@expense-tracker/local-data'
+
+// Plan list helpers shared by the plans screen and the
+// dashboard attention card.
+export { isPlanOverdue, nextDueLabel, planRowTitle, plansSortedByNextDue } from './model/selectors'
