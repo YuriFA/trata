@@ -33,13 +33,14 @@ spec, ADRs, invariants, openspec specs) is established.
   layer — decided 2026-08-20; the app-local `@internationalized/date`
   adapter is the sanctioned temporary exception (invariant #14). Extend
   the package when web needs more; don't grow a permanent parallel adapter.
-- **PWA background sync and push notifications are deferred** (decided
-  2026-08-27, change `web-pwa-i18n`). The shipped PWA posture is settled
-  and spec'd (`openspec/specs/web-pwa`): an app-shell-only service worker
-  with prompted updates (never auto-reload) and NO runtime caching — API
+- **Periodic Background Sync remains deferred; Web Push is decided**
+  (push un-deferred 2026-09-06, change `web-push-planned-payment-reminders`,
+  ADR-0007). The shipped PWA posture stays settled and spec'd
+  (`openspec/specs/web-pwa`): an app-shell-only service worker with
+  prompted updates (never auto-reload) and NO runtime caching — API
   responses are never served from cache; offline behavior comes from the
-  local-first data layer. Periodic Background Sync / push are possible
-  future work, to be revisited after launch.
+  local-first data layer. Web Push reminder delivery is implemented per
+  ADR-0007; Periodic Background Sync remains possible future work.
 - **Mobile i18n wiring** — react-i18next over the shared
   `@expense-tracker/i18n` bundle with mobile-local wiring (mobile already
   consumes api/dates/money/tokens); RU strings stay hardcoded with
