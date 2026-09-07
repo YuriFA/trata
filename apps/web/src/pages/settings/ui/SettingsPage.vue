@@ -15,6 +15,7 @@ import { Skeleton } from '@/shared/ui/skeleton'
 import { ChevronRight, Database, Tags } from '@lucide/vue'
 import { useAuthStore, sessionApi } from '@/entities/session'
 import { householdDisplayName, memberLabel, useHousehold } from '@/entities/household'
+import { AppInfoCard } from '../features/app-info'
 import { DissolveHouseholdDialog } from '../features/dissolve-household'
 import { DisplayNameEditor } from '../features/display-name'
 import { HouseholdCodeDialog } from '../features/household-code'
@@ -401,5 +402,10 @@ onMounted(() => {
         {{ t('auth.forgotPassword') }}
       </RouterLink>
     </template>
+
+    <!-- About-app card (web-app-info): last, least-frequent section. Outside
+         the authenticated block - SW updates and build versions apply to
+         anonymous users too. -->
+    <AppInfoCard />
   </section>
 </template>
