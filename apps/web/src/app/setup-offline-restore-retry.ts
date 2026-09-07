@@ -7,9 +7,7 @@ import { useAuthStore } from '@/entities/session'
  * normal ownership gate and the existing auth watch resumes the sync engine -
  * no timers, no manual refresh UI.
  */
-export function setupOfflineRestoreRetry(
-  auth: ReturnType<typeof useAuthStore>,
-): () => void {
+export function setupOfflineRestoreRetry(auth: ReturnType<typeof useAuthStore>): () => void {
   const retry = () => {
     void auth.retryRestoreIfOffline()
   }
