@@ -11,9 +11,18 @@ import {
 } from '@/__tests__/helpers/mock-repositories'
 import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'
 import { currentDay } from '@/shared/lib/date'
+import { fullDayLabel } from '@expense-tracker/dates'
 
 const today = new Date()
 const todayKey = currentDay()
+
+// The advanced plan's next-due key, derived from the day key itself (UTC
+// calendar-day +1) rather than from the run instant: `today + 24h` sliced
+// in UTC drifts across timezones/time of day (a late-evening run can land
+// on the same day as the local `todayKey`, hanging the overdue waitFor).
+const nextDay = new Date(`${todayKey}T00:00:00Z`)
+nextDay.setUTCDate(nextDay.getUTCDate() + 1)
+const tomorrowKey = nextDay.toISOString().slice(0, 10)
 
 function plan(overrides: Partial<PlannedPayment>): PlannedPayment {
   return {
@@ -223,9 +232,8 @@ describe('PlansPage confirm deep link', () => {
 // worker-backed repository does over the real local DB.
 describe('PlansPage confirm refreshes the list', () => {
   it('re-renders the row from the post-confirm refetch', async () => {
-    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
     const original = [plan({ id: 'p1', nextDue: todayKey })]
-    const advanced = [plan({ id: 'p1', nextDue: tomorrow, version: 2 })]
+    const advanced = [plan({ id: 'p1', nextDue: tomorrowKey, version: 2 })]
 
     const plannedPaymentsRepo = createMockPlannedPaymentRepository()
     plannedPaymentsRepo.query.mockResolvedValueOnce(original).mockResolvedValue(advanced)
@@ -266,8 +274,14 @@ describe('PlansPage confirm refreshes the list', () => {
       expect(document.querySelector('[data-testid="plans-row-p1-overdue"]')).toBeNull()
     })
     const updatedRow = document.querySelector('[data-testid="plans-row-p1"]')
-    // The label renders the calendar date ("7 September"), not ISO.
-    expect(updatedRow?.textContent).toMatch(/7 Sept|07\.09|сентября/)
+    // The label renders the advanced plan's calendar day (e.g. "8 September"
+    // for a 2026-09-08 key), not the ISO key: the expectation is computed
+    // from the same key construction the row uses, so it holds on any run
+    // date instead of the previously baked "7 September".
+    expect(updatedRow?.textContent).toContain(
+      fullDayLabel(new Date(`${tomorrowKey}T00:00:00`), 'en'),
+    )
+    expect(updatedRow?.textContent).not.toContain(tomorrowKey)
     expect(plannedPaymentsRepo.query).toHaveBeenCalledTimes(2)
   })
 })
