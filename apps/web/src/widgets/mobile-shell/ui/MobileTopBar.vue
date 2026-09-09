@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
-import { CloudOffIcon, Wallet } from '@lucide/vue'
+import { CloudOffIcon } from '@lucide/vue'
 import { Button } from '@/shared/ui/button'
+import { LogoMark } from '@/shared/ui/logo'
 import { useAuthStore } from '@/entities/session'
 import UserMenu from './UserMenu.vue'
 
@@ -23,7 +24,7 @@ const auth = useAuthStore()
         class="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground"
         aria-hidden="true"
       >
-        <Wallet class="size-4" />
+        <LogoMark class="size-5.25" />
       </span>
       <span class="text-[17px] font-semibold">{{ t('app.name') }}</span>
     </RouterLink>
