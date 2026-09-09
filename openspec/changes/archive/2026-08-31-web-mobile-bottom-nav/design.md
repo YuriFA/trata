@@ -13,7 +13,7 @@ testids strictly. Nav items and active-state logic live in `AppSidebarNav.vue`
 (`CashflowForm` / `TransferForm`); `pages/dashboard/ui/QuickActionsCard.vue`
 already hosts three separate dialogs (expense / transfer / income) embedding
 those forms directly — the canonical one-dialog-per-kind pattern
-(vue-patterns §4). Styling is Tailwind v4 + `@expense-tracker/tokens`
+(vue-patterns §4). Styling is Tailwind v4 + `@trata/tokens`
 (Direction D «Бумага»); the approved target look is superdesign draft
 `99e2a910-ec8e-4ac6-97a9-4aab96545efb` v5 (variant A).
 

@@ -1,4 +1,4 @@
-# Expense Tracker
+# Trata
 
 A local-first family budget tracker with household sharing and a cross-device sync protocol. This glossary names project-specific concepts so architectural seams can use stable language.
 

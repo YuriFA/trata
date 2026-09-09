@@ -47,7 +47,7 @@ truth for domain data, with direct API access limited to control-plane
 operations; the sync engine reconciles with the backend (web: SQLite-WASM in
 a worker, anonymous mode included; mobile: on-device SQLite). Both consume
 the same generated contract types and the same error-mapping layer from
-`@expense-tracker/api`.
+`@trata/api`.
 
 CI reality (`.github/workflows/ci.yml`, 6 jobs): redocly spec lint +
 PR-only `oasdiff breaking`; backend codegen drift gate (`make gen-check`);
@@ -64,7 +64,7 @@ tests, knip, and web Steiger (documented as debt in
 
 ## Backend (`backend/`)
 
-Go 1.26 module `github.com/yurifa/expense-tracker-api`: Gin + pgx/v5 +
+Go 1.26 module `github.com/yurifa/trata/backend`: Gin + pgx/v5 +
 sqlc + golang-migrate. Single binary `cmd/expense-tracker-api/main.go`
 with manual constructor injection (main.go:117-137) and graceful shutdown;
 migrations are embedded and auto-applied at boot
@@ -247,7 +247,7 @@ to hold**: grep of `packages/*/src` finds no `window.`/`document.`/
 `navigator.`/`react-native`/`localStorage` usage; `createApiClient` touches
 only `globalThis.fetch` and injected `fetch`.
 
-- **`api`** (deps: `@expense-tracker/money` — the only cross-package import
+- **`api`** (deps: `@trata/money` — the only cross-package import
   in the tree) — the contract layer: generated `schema.ts` (1971 lines,
   committed, regenerated via `pnpm gen:api`); `createApiClient({baseUrl,
   fetch})` wrapping openapi-fetch with `credentials: 'include'` default;
@@ -309,7 +309,7 @@ happens in dialogs, not on dedicated pages.
   HttpOnly cookie, so the store holds only the fetched user); UI/settings
   state in a Pinia settings store persisted to localStorage via
   `@vueuse/core`. Forms use vee-validate + zod.
-- **Local data / repositories**: the whole `@expense-tracker/local-data`
+- **Local data / repositories**: the whole `@trata/local-data`
   stack (SQLite-WASM + OPFS sahpool driver, drizzle schema, repositories,
   sync engine) runs in a dedicated Web Worker
   (`shared/lib/local-db/local-db-worker.ts`); the main thread talks to it
@@ -370,21 +370,21 @@ happens in dialogs, not on dedicated pages.
   center (keep-local/take-server for version conflicts via RPC;
   deleted-kind conflicts offer dismiss plus restore-as-new — re-creating
   the preserved `localState` as a fresh record).
-- **Dates**: `@expense-tracker/dates` is a dependency since the analytics
+- **Dates**: `@trata/dates` is a dependency since the analytics
   screens (web-screens-parity): their period cursors, day keys, and labels
   go through the package directly. The older app-local facade over
   `@internationalized/date` (`shared/lib/date/`, branded `CalendarDay`)
   still backs the transactions date filter and transfers — the sanctioned
   **temporary** adapter; the decided end-state (2026-08-20) remains full
-  migration onto `@expense-tracker/dates`.
+  migration onto `@trata/dates`.
 - **Money**: `shared/lib/money/*` are pure re-export barrels over
-  `@expense-tracker/money`. Per the refined money rule (decided
+  `@trata/money`. Per the refined money rule (decided
   2026-08-20), `AmountField.vue` (reka-ui NumberField) keeps float major
   units in form state — a platform-appropriate representation — converted
   exactly once at the mapper seam (`toMinorUnits(data.amount)`, five
   verified sites); storage/transport/sync/calculation stay integer.
   Mobile's stricter digit-string convention remains valid, not mandatory.
-- **i18n**: vue-i18n over `@expense-tracker/i18n` bundles; RU is the
+- **i18n**: vue-i18n over `@trata/i18n` bundles; RU is the
   default locale (`web-locales` capability), a RU/EN switcher lives in
   settings; `app/setup-i18n-locale-watcher.ts` applies the persisted choice
   immediately and invalidates the categories query cache (category names
@@ -432,7 +432,7 @@ entities/ shared/`.
 - **Offline-first data architecture**: `src/app/_layout.tsx` mounts local
   repositories backed by expo-sqlite via Drizzle for account/category/
   transaction; the schema, outbox, engine, and local repositories live in the
-  shared `@expense-tracker/local-data` package
+  shared `@trata/local-data` package
   (`packages/local-data/src/repositories/*`); every create/update/remove
   writes the entity row plus an
   outbox op in one `db.transaction`. The app's `shared/lib/db/database.ts`
@@ -478,18 +478,18 @@ entities/ shared/`.
   local data to the first syncing account and offers a wipe when a
   different account tries to sync; logout keeps local data. The 401
   handler switches to anonymous without redirect.
-- **i18n**: none. `@expense-tracker/i18n` is not installed; UI strings are
+- **i18n**: none. `@trata/i18n` is not installed; UI strings are
   hardcoded Russian with `TODO(i18n)` markers; repository error text comes
   from a static RU map (`repository-errors-ru.ts`) that self-describes as
   a twin of the shared bundle's wording [INTENT-DIVERGENT vs the decided
   i18n direction (`docs/assumptions.md`, decided-directions list)].
 - **Money**: amounts stay strings through forms;
   `parseMajorUnitsToMinor` is the single sanctioned ×100 conversion
-  (`shared/lib/money/parse.ts`); formatting via `@expense-tracker/money`'s
+  (`shared/lib/money/parse.ts`); formatting via `@trata/money`'s
   Intl-free `formatMoney`. Serialized conflict values parse through a
   `Number.isSafeInteger`-guarded `toMinorUnits` helper
   (`conflict-center.tsx`, fixed 2026-08-20 — finding B4).
-- **Dates**: uses `@expense-tracker/dates` throughout (21 non-test import
+- **Dates**: uses `@trata/dates` throughout (21 non-test import
   sites); never imports date-fns directly.
 - **Testing**: 37 jest files — local repositories against **real SQLite**
   (`node:sqlite` test helper, forbidden from app code), hooks with mock
@@ -508,7 +508,7 @@ entities/ shared/`.
   (toast / inline field / `ErrorState` / form root error). No UI in either
   app switches on specific `apiCode`s; they consume the coarse classes.
 - **Web read path**: page → `useQuery(SYNC_QUERY_KEY_ROOTS.<entity>)` →
-  injected local repository (`@expense-tracker/local-data` over SQLite-WASM) →
+  injected local repository (`@trata/local-data` over SQLite-WASM) →
   Pinia Colada cache; URL-driven filters. The server is reached only through
   the sync engine, not per-read.
 - **Mobile write path**: form → local repository (row + outbox op in one
@@ -536,7 +536,7 @@ entities/ shared/`.
 | 4 | ~~"each package has tsconfig + type-check"~~ refined 2026-08-20: TS packages only; tokens (css-only) exempt | i18n flag added (type-checks clean); rule scoped |
 | 5 | ~~`time.Local = time.UTC` in tests~~ resolved 2026-08-20: mechanism claim removed from root `AGENTS.md` | UTC achieved via `time.Now().UTC()` + `time.Equal` — rule text now matches reality |
 | 6 | ~~Mobile 5-layer model~~ resolved 2026-08-20: 6-layer model + hard downward-only rule | All A11 violations fixed the same day; depcruise `fsd-*` rules run with zero exclusions |
-| 7 | ~~Mobile header claims `@expense-tracker/i18n`~~ resolved 2026-08-20 | Header states `{api,dates,money,tokens}` (i18n wiring pending); RU-hardcoded status self-acknowledged in the same file |
+| 7 | ~~Mobile header claims `@trata/i18n`~~ resolved 2026-08-20 | Header states `{api,dates,money,tokens}` (i18n wiring pending); RU-hardcoded status self-acknowledged in the same file |
 | 8 | ~~"packages consumed by every app" framing~~ resolved 2026-08-20 | Root `AGENTS.md` states actual consumption (web: api/money/i18n/tokens; mobile: api/dates/money/tokens); dates end-state and RU default recorded as decided direction |
 
 Items where a rule or rationale could not be established from any source are

@@ -9,7 +9,7 @@ githubCopilot:
 # openspec/specs/; open decisions in docs/assumptions.md.
 context: |
   PRODUCT:
-  Expense Tracker — personal finance app. Users manage accounts
+  Trata — personal finance app. Users manage accounts
   (USD/EUR/RUB), per-user categories, and income/expense/transfer
   transactions; the backend serves per-account balances with the
   account listing. Apps are ruble-only over the multi-currency-ready

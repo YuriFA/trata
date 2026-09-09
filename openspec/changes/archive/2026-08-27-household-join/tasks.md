@@ -3,7 +3,7 @@
 ## 1. Contract first
 
 - [x] 1.1 OpenAPI: invitation endpoints (create/list/revoke owner-side; preview/accept by token), home-code endpoints (generate/rotate, revoke, join), leave/remove/dissolve, household `name` (GET/PATCH), additive `userId` on the sync change item; lint + `pnpm gen:api` + `make gen`
-- [x] 1.2 Extend `@expense-tracker/api` clients for the new endpoints and the authorship field
+- [x] 1.2 Extend `@trata/api` clients for the new endpoints and the authorship field
 
 ## 2. Backend: invitations and codes
 

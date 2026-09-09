@@ -25,7 +25,7 @@
 
 ## 4. Verification
 
-- [x] 4.1 `pnpm --filter @expense-tracker/local-data test` (or workspace test
+- [x] 4.1 `pnpm --filter @trata/local-data test` (or workspace test
   command) green; web `pnpm --filter web test` for the badge; mobile tests
   for the touched files.
 - [x] 4.2 E2E sanity on the local backend: reproduce the rejected-op badge state

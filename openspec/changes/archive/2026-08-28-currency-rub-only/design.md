@@ -3,7 +3,7 @@
 Currency today: accounts carry a `USD/EUR/RUB` enum through the OpenAPI
 contract, the sync protocol, and both apps; every cross-account aggregate
 (analytics totals, debts, plans, the API's `netWorth`) sums minor units
-with no conversion. `@expense-tracker/money` defaults to `USD`, so a
+with no conversion. `@trata/money` defaults to `USD`, so a
 fresh web install displays dollars for aggregates and defaults new
 accounts to USD, while the mobile form hardcodes `RUB`. Currency pickers
 exist in the web settings screen and both account-creation forms.
@@ -54,7 +54,7 @@ legible.
 
 Consumers that need a currency for currency-less amounts (debts, plans,
 analytics totals, dashboard empty state) import `DEFAULT_CURRENCY` from
-`@expense-tracker/money` instead of reading a settings field. The web
+`@trata/money` instead of reading a settings field. The web
 settings store drops `currency` entirely (locale and theme remain); a
 stale `currency` key left in localStorage is simply ignored - no cleanup
 migration. Alternative considered: keeping the store field pinned to RUB.

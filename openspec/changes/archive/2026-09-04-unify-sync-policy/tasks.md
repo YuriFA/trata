@@ -24,12 +24,12 @@
   `use-sync-conflicts.ts:39–46`), with unit tests for the
   localState-preferred / serverState-fallback / empty cases.
 - [x] 1.4 Export the new modules from `packages/local-data/src/index.ts`
-  and verify `pnpm --filter @expense-tracker/local-data type-check` and
+  and verify `pnpm --filter @trata/local-data type-check` and
   `test` are green.
 - [x] 1.5 Move `authorLabel` byte-identical to
   `packages/api/src/domain/author-label.ts` (+ export from the package
   entry), move the existing 64-line test file to the package, and verify
-  `pnpm --filter @expense-tracker/api type-check` and `test` are green.
+  `pnpm --filter @trata/api type-check` and `test` are green.
 
 ## 2. Web delegation
 
@@ -52,9 +52,9 @@
   method, including a refused-restore case.
 - [x] 2.4 Delete the local `conflictSubject` from
   `features/sync-conflicts/model/use-sync-conflicts.ts` and re-export from
-  `@expense-tracker/local-data` for `ConflictCenter.vue`; delete
+  `@trata/local-data` for `ConflictCenter.vue`; delete
   `entities/household/model/author-label.ts` and update its call sites +
-  barrel to import from `@expense-tracker/api`; move/keep
+  barrel to import from `@trata/api`; move/keep
   `author-label.test.ts` coverage via the package tests and delete the app
   copy; verify web `pnpm type-check` + unit tests green.
 
@@ -76,7 +76,7 @@
   account without currency) is refused with the conflict left unresolved.
 - [x] 3.4 Delete `entities/household/model/author-label.ts` and update its
   call sites (`features/edit-transaction`, cashflow/debts/plans selectors)
-  to import from `@expense-tracker/api`; verify mobile `pnpm type-check` +
+  to import from `@trata/api`; verify mobile `pnpm type-check` +
   jest suites green.
 
 ## 4. Docs cleanup
@@ -93,8 +93,8 @@
 
 ## 5. Verification
 
-- [x] 5.1 `pnpm --filter @expense-tracker/local-data test && pnpm
-  --filter @expense-tracker/api test` green (new policy tests included).
+- [x] 5.1 `pnpm --filter @trata/local-data test && pnpm
+  --filter @trata/api test` green (new policy tests included).
 - [x] 5.2 Web: `pnpm --filter web type-check && pnpm --filter web test`
   green; `pnpm exec steiger` stays green (FSD).
 - [x] 5.3 Mobile: `pnpm --filter mobile type-check && pnpm --filter mobile

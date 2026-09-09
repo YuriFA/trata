@@ -29,7 +29,7 @@ spec, ADRs, invariants, openspec specs) is established.
 
 ## Decided directions (implementation pending)
 
-- **Web migrates onto `@expense-tracker/dates`** as the canonical date
+- **Web migrates onto `@trata/dates`** as the canonical date
   layer — decided 2026-08-20; the app-local `@internationalized/date`
   adapter is the sanctioned temporary exception (invariant #14). Extend
   the package when web needs more; don't grow a permanent parallel adapter.
@@ -42,7 +42,7 @@ spec, ADRs, invariants, openspec specs) is established.
   local-first data layer. Web Push reminder delivery is implemented per
   ADR-0007; Periodic Background Sync remains possible future work.
 - **Mobile i18n wiring** — react-i18next over the shared
-  `@expense-tracker/i18n` bundle with mobile-local wiring (mobile already
+  `@trata/i18n` bundle with mobile-local wiring (mobile already
   consumes api/dates/money/tokens); RU strings stay hardcoded with
   `TODO(i18n)` markers until the wiring lands. This entry is the
   canonical record of the decision.

@@ -2,7 +2,7 @@
 
 ## Context
 
-The web app has vue-i18n wired over `@expense-tracker/i18n` (en.json +
+The web app has vue-i18n wired over `@trata/i18n` (en.json +
 ru.json, `DEFAULT_LOCALE = 'en'`, a locale watcher already exists at
 `src/app/setup-i18n-locale-watcher.ts`), and a boilerplate manifest
 ("MyWebSite") with icons but no service worker. Product decisions: web is

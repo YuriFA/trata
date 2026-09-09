@@ -112,7 +112,7 @@ periodRangeLabel(cursor, locale?): string    // "3 августа – 9 авгу
   (local period instants → `toISOString().slice(0, 10)`); correctness still
   comes from `transactionsInPeriod` (`isSameWeek { weekStartsOn: 1 }` /
   `isSameMonth` / `isSameYear`) applied on top. Plain `Date` API + date-fns
-  only; no `@expense-tracker/api` import (keeps the package a leaf).
+  only; no `@trata/api` import (keeps the package a leaf).
 - `periodRangeLabel`: week "3 августа – 9 августа", month "1 августа – 31
   августа", year "1 января – 31 декабря 2026"; week/month labels append the
   year when the range spans two calendar years. The donut center renders the
@@ -172,7 +172,7 @@ animation stack, and both require the same dev-build rebuild anyway);
 
 ### D4. New slice `src/features/analytics`: selectors + chart, `cashflow-overview` untouched
 
-- `model/selectors.ts` (pure, over `@expense-tracker/api` domain types):
+- `model/selectors.ts` (pure, over `@trata/api` domain types):
   `categoryTotals(txs, categories, cursor, kind)` (exact-period trim by
   `transactionsInPeriod`, `type === kind` filter excludes transfers by
   construction, integer minor-unit sums, descending), `periodTotal(txs,

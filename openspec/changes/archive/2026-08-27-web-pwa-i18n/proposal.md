@@ -16,7 +16,7 @@ product decision is RU default + EN at launch.
   the SQLite WASM binary and worker chunk, explicit no-cache policy for API
   calls, and a prompted update flow ("доступно обновление" → reload).
 - **i18n launch readiness**: `DEFAULT_LOCALE` flips en→ru in
-  `@expense-tracker/i18n` (closing the tracked assumption), EN coverage
+  `@trata/i18n` (closing the tracked assumption), EN coverage
   completed for all screens (including change 2's), locale switcher in
   settings with persisted choice.
 - Assumptions doc updated (DEFAULT_LOCALE item closed; PWA direction

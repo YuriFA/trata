@@ -3,7 +3,7 @@
 ## Context
 
 Change 1 (web-local-first-core) gives the web app the same local-first data
-layer as mobile: worker RPC over `@expense-tracker/local-data`. The mobile
+layer as mobile: worker RPC over `@trata/local-data`. The mobile
 app ships screens the web lacks: analytics (`pages/analytics`,
 `analytics-detail`), debts (`pages/debts` — list, debtor history sheet,
 operation form, debtor+debt creation sheet), plans (`pages/plans` — list
@@ -54,7 +54,7 @@ Mobile computes analytics from locally cached transactions via selectors
 colada-cached transactions feed the same selector shapes ported into
 `entities/analytics` (web slice), donut rendering via a small SVG component
 (no chart library — the mobile charts are custom-drawn; keep the dependency
-surface at zero). Date math goes through `@expense-tracker/dates` (the
+surface at zero). Date math goes through `@trata/dates` (the
 sanctioned web exception for `@internationalized/date` continues).
 
 ### D3. Worker RPC grows by three repositories
@@ -113,7 +113,7 @@ no engine changes.
 - [RPC surface sprawl] → the exposed API stays a flat object of repository
   factories + sync controller; no ad-hoc endpoints.
 - [Plans' client-side recurrence duplicated?] → no: recurrence/materialize
-  helpers come from `@expense-tracker/local-data`; web adds no logic.
+  helpers come from `@trata/local-data`; web adds no logic.
 
 ## Migration Plan
 
@@ -137,7 +137,7 @@ after it. Rollback = revert.
   controls per this change's presentation rule; a category drill-down
   dialog was added as required by the analytics capability the delta binds
   to.
-- **Enabling edits beyond `apps/web` pages**: `@expense-tracker/dates`
+- **Enabling edits beyond `apps/web` pages**: `@trata/dates`
   became a web dependency (mandated by D2); `packages/local-data`
   `balances.ts` parameter types widened to `readonly` (type-level only,
   128 package tests green); `NativeSelect` emit fixed to tuple syntax;

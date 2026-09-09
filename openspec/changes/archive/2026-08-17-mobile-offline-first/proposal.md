@@ -16,7 +16,7 @@ tombstones for deletes). The web app stays online-only and is not affected.
 - **Mobile local data layer (source of truth).** A local SQLite database
   (expo-sqlite + Drizzle, both usable in Expo Go) becomes the source of truth
   for the mobile UI. Local repositories implement the existing shared
-  repository interfaces from `@expense-tracker/api` unchanged; features never
+  repository interfaces from `@trata/api` unchanged; features never
   learn whether the device is online. TanStack Query is the UI cache layer and
   the single reactivity mechanism (no live-query duplication).
 - **Outbox on every mutation.** Each local create/update/delete writes the
@@ -81,7 +81,7 @@ tombstones for deletes). The web app stays online-only and is not affected.
 
 ## Impact
 
-- **apps/mobile**: new dependencies (`@expense-tracker/api`,
+- **apps/mobile**: new dependencies (`@trata/api`,
   `expo-sqlite`, `drizzle-orm`, `drizzle-kit`, `@tanstack/react-query`,
   `@react-native-community/netinfo`); new `shared/lib/db` and `shared/lib/sync`
   modules; entities gain local repositories and TanStack Query hooks; dashboard

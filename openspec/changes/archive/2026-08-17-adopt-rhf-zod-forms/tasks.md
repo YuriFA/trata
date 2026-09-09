@@ -25,7 +25,7 @@
 
 - [x] 2.1 Fix the §2 `createTransactionSchema` amount validation: replace the
   `Number(value.replace(',', '.'))` float math with a parseability check via
-  `parseMajorUnitsToMinor` from `@expense-tracker/money` (valid = the string
+  `parseMajorUnitsToMinor` from `@trata/money` (valid = the string
   parses to int64 minor units). Keep payload construction and the money
   conversion out of the schema — they belong to the §4 named mapper
   (design D7, money invariant).

@@ -112,7 +112,7 @@ mobile both advance the plan (auto job vs manual confirm). Both
 implementations are pinned by table-driven tests sharing the same
 vectors, including the 31 → 28/29 → 31 recovery, Feb 29 → Feb 28
 yearly clamp, and multi-month catch-up sequences. Mobile date handling
-goes through the `@expense-tracker/dates` facade per the workspace rule.
+goes through the `@trata/dates` facade per the workspace rule.
 
 Monthly normalization for the «₽/мес» card figure is a separate pure
 selector (`monthly amount = amount × {12, 1, 52/12, 365/12} by

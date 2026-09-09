@@ -5,7 +5,7 @@
 Backend: layered Go API (transport → service → repository, sqlc/Postgres),
 spec-first via `docs/api/openapi.yaml` (`make gen`, drift-gated). Web
 (Vue 3, FSD) is online-first; mobile (Expo, FSD) is offline-first with
-local SQLite (`@expense-tracker/local-data`) and the sync protocol.
+local SQLite (`@trata/local-data`) and the sync protocol.
 Transaction contribution today: income `+amount`, expense `-amount`,
 transfer `-from/+to`; `amount` is positive-only (`minimum: 1` in the
 contract). Account balance is server-computed as

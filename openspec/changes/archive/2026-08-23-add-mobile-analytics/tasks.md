@@ -1,8 +1,8 @@
 ## 1. Period model (`packages/dates`, design D2)
 
-- [x] 1.1 Add `packages/dates/src/period.ts`: `AnalyticsPeriodKind`, anchor-based `PeriodCursor`, `currentPeriod`, `shiftPeriod`, `isSamePeriod`, `periodToUtcDayRange` (inclusive UTC-day superset), `transactionsInPeriod` (exact local membership; weeks Monday-start via `weekStartsOn: 1`), `periodRangeLabel` (ru; year appended when the range spans calendar years); export from `src/index.ts`. No `@expense-tracker/api` import (leaf package).
+- [x] 1.1 Add `packages/dates/src/period.ts`: `AnalyticsPeriodKind`, anchor-based `PeriodCursor`, `currentPeriod`, `shiftPeriod`, `isSamePeriod`, `periodToUtcDayRange` (inclusive UTC-day superset), `transactionsInPeriod` (exact local membership; weeks Monday-start via `weekStartsOn: 1`), `periodRangeLabel` (ru; year appended when the range spans calendar years); export from `src/index.ts`. No `@trata/api` import (leaf package).
 - [x] 1.2 Add `apps/mobile/src/shared/lib/period.test.ts` reusing the per-zone child-process harness of `month-to-utc-day-range.test.ts`: Monday-start week ranges, week spanning Dec 31 → Jan 1, year wraparound, superset property vs `transactionsInPeriod` membership at boundary instants (00:30 local on the first day, 23:30 local on the last), ru label snapshots for week/month/year.
-- [x] 1.3 Verify: `pnpm --filter @expense-tracker/dates type-check` and the new mobile test pass.
+- [x] 1.3 Verify: `pnpm --filter @trata/dates type-check` and the new mobile test pass.
 
 ## 2. Skia dependency (design D3)
 
@@ -47,7 +47,7 @@
 
 ## 9. Drill-down: period-aware category sheet (design D10)
 
-- [x] 9.1 In `features/cashflow-overview/model/selectors.ts`, extract the day-grouping body shared by month and periods; add `cashflowInPeriod`, `cashflowDayGroupsInPeriod`, `totalCashflowInPeriod` over `PeriodCursor` (from `@expense-tracker/dates`); export from the barrel.
+- [x] 9.1 In `features/cashflow-overview/model/selectors.ts`, extract the day-grouping body shared by month and periods; add `cashflowInPeriod`, `cashflowDayGroupsInPeriod`, `totalCashflowInPeriod` over `PeriodCursor` (from `@trata/dates`); export from the barrel.
 - [x] 9.2 Add `initialPeriod?: PeriodCursor` to `CategoryCashflowSheet`: period-mode navigator (`shiftPeriod` ±1, `periodToUtcDayRange` query, `periodRangeLabel`), month callers unchanged (`initialCursor` path byte-identical, incl. the short month label). Reset-on-present mirrors the month behavior.
 - [x] 9.3 Unit tests: period-mode sheet opens at the given week/year period (label + query range), steps periods inside, and month-mode behavior is unchanged for existing callers.
 

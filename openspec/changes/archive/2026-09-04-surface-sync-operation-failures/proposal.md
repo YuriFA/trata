@@ -12,7 +12,7 @@ except reading raw network responses.
 
 ## What Changes
 
-- The sync status snapshot (`readSyncStatus` in `@expense-tracker/local-data`)
+- The sync status snapshot (`readSyncStatus` in `@trata/local-data`)
   gains `failingOperations` (count of outbox rows with a `lastError`) and
   `lastError` (the stored error string of the most recent failing operation).
 - The web sync status badge renders a distinct failing state (warning tint,

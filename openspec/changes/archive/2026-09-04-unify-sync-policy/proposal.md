@@ -14,12 +14,12 @@ data on different platforms. This is the top recommendation of the
 
 ## What Changes
 
-- `@expense-tracker/local-data` gains a single ownership-gate policy module:
+- `@trata/local-data` gains a single ownership-gate policy module:
   the pass/foreign-owner decision table, an atomic wipe-and-rebind
   (`rebindOwner`), and adopt-if-unowned (`adoptUnowned`). Both apps'
   auth flows delegate to it; app layers keep only presentation (dialog vs
   Alert) and control-plane side effects (server logout, cache invalidation).
-- `@expense-tracker/local-data` gains a single restore-as-new module
+- `@trata/local-data` gains a single restore-as-new module
   (`canRestoreAsNew`, `restoreConflictAsNew(db, conflictId)`): re-reads the
   conflict by id, decodes the preserved local state per entity through one
   shared decoder table, creates the new record via the local repository, and
@@ -31,8 +31,8 @@ data on different platforms. This is the top recommendation of the
   (adjustment→expense, currency→'USD', next-due fallback), which are not
   pinned by any spec or test.
 - `conflictSubject` (the human label of what a conflict is about) moves into
-  `@expense-tracker/local-data`; the two per-app copies are deleted.
-- `authorLabel` moves byte-identical into `@expense-tracker/api`
+  `@trata/local-data`; the two per-app copies are deleted.
+- `authorLabel` moves byte-identical into `@trata/api`
   (`domain/author-label.ts`), next to the `HouseholdMember` type it operates
   on; both apps' copies are deleted.
 - The web Comlink RPC bridge (`LocalDbApi`) exposes the two new db-backed

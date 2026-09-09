@@ -22,7 +22,7 @@ white-screening the shell itself - was already fixed on main (commit
 ## What Changes
 
 - Bounded request timeouts in the shared API client factory
-  (`@expense-tracker/api`): a default for all calls, overridable per client
+  (`@trata/api`): a default for all calls, overridable per client
   instance. The web app adopts: 5s for session/auth calls, 30s for the sync
   transport (large first-sync pages on slow links), 10s for everything else.
   The sync worker inherits via its existing shared client.

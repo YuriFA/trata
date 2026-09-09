@@ -3,7 +3,7 @@
 ## 1. Contract first
 
 - [x] 1.1 OpenAPI: add `GET /api/household` (Household + HouseholdMember schemas), optional `displayName` on `User`, `PATCH /api/me` with `{ displayName }`; lint the spec; `pnpm gen:api` (packages/api + apps consumers) and commit regenerated types
-- [x] 1.2 Extend `@expense-tracker/api`: household/me client functions and types following the existing client patterns
+- [x] 1.2 Extend `@trata/api`: household/me client functions and types following the existing client patterns
 
 ## 2. Database migration
 

@@ -42,7 +42,7 @@ only via local runs (Node ≥ 22), not in CI.
   silent breakage of one client; hand-maintained duplicate types rot.
 - **Current enforcement**: Go side — `make gen-check` job in CI + redocly
   lint + `oasdiff breaking` on PRs. TS side — `ts-gen-check` CI job
-  (added 2026-08-20): `pnpm --filter @expense-tracker/api gen:api` then
+  (added 2026-08-20): `pnpm --filter @trata/api gen:api` then
   `git diff --exit-code packages/api/src/schema.ts` — regeneration must
   leave the tree clean, mirroring `make gen-check`.
 - **Automated**: yes (both sides).
@@ -299,10 +299,10 @@ only via local runs (Node ≥ 22), not in CI.
 - **Automated**: partially (format yes; the supply-on-create policy is
   convention).
 
-### 11. The repository seam: app data access goes through `Repository` interfaces from `@expense-tracker/api`; the package never imports app code
+### 11. The repository seam: app data access goes through `Repository` interfaces from `@trata/api`; the package never imports app code
 
 - **Statement**: UI/stores depend on repository interfaces; concrete
-  implementations (local SQLite via `@expense-tracker/local-data` on both
+  implementations (local SQLite via `@trata/local-data` on both
   apps — web over a Comlink worker RPC bridge) are injected at the app
   root; `packages/api` contains no imports from `apps/*` and no app
   concerns; the only sanctioned direct `apiClient` uses are the session
@@ -346,7 +346,7 @@ only via local runs (Node ≥ 22), not in CI.
 - **Statement**: No workspace package imports another except
   `packages/api` → `packages/money` (for `CurrencyCode` narrowing); no
   cycles; leaves import nothing workspace-internal.
-- **Evidence**: grep of `@expense-tracker/*` imports in `packages/*/src`:
+- **Evidence**: grep of `@trata/*` imports in `packages/*/src`:
   only `api/src/domain/account.ts:1` and `api/src/domain/transaction.ts:1`;
   `balance-calculator.ts` comments document deliberate genericity to avoid
   a domain cycle.
@@ -363,9 +363,9 @@ only via local runs (Node ≥ 22), not in CI.
   either that package (mobile) or web's app-local `@internationalized/date`
   facade.
 - **Evidence**: zero `from 'date-fns'` hits in `apps/web/src` and
-  `apps/mobile`; mobile has 21 non-test `@expense-tracker/dates` imports;
+  `apps/mobile`; mobile has 21 non-test `@trata/dates` imports;
   web's app-local adapter is sanctioned as **temporary** — decided
-  end-state (2026-08-20): both apps on `@expense-tracker/dates`
+  end-state (2026-08-20): both apps on `@trata/dates`
   (decided-directions list in `docs/assumptions.md`).
 - **Risk if violated**: Duplicated locale/week-start logic diverging
   between platforms; unsanctioned direct deps defeat the facade's purpose.

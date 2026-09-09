@@ -18,14 +18,14 @@ UI layers (see `proposal.md` for the motivation and the shipped drift):
   decoders in `apps/mobile/src/features/sync-conflicts/ui/conflict-center.tsx`
   (:62–152 — coerces currency to `'USD'`, transaction type to `expense`,
   next-due to `'2026-01-01'`, plus a local `toMinorUnits` shadowing
-  `@expense-tracker/money`). The restore flow itself (repository create →
+  `@trata/money`). The restore flow itself (repository create →
   `markConflictResolved`) is also duplicated; outbox enqueue already lives
   inside the local repositories.
 - **conflictSubject**: web `use-sync-conflicts.ts:39–46` (exported) vs mobile
   `conflict-center.tsx:49–56` (private), same logic.
 - **authorLabel**: byte-identical 43-line files in both apps'
   `entities/household/model/author-label.ts`, pure over
-  `HouseholdMember` from `@expense-tracker/api`.
+  `HouseholdMember` from `@trata/api`.
 
 Constraints that shape the design:
 
@@ -138,7 +138,7 @@ conflict stays unresolved and re-prompts).
 - `conflictSubject` reads `LocalSyncConflict.localState`/`serverState`
   shapes — it becomes an export of
   `packages/local-data/src/sync/conflicts.ts`.
-- `authorLabel` operates on `HouseholdMember` (an `@expense-tracker/api`
+- `authorLabel` operates on `HouseholdMember` (an `@trata/api`
   domain type) and knows nothing about local data — it moves verbatim to
   `packages/api/src/domain/author-label.ts`, beside the domain types. Both
   apps' copies and barrels are deleted; call sites (~4 per app) import from

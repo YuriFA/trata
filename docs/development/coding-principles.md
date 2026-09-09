@@ -45,7 +45,7 @@ Before writing, decide: reuse / hook / composable / component / plain helper
 
 Cross-app rule: logic that would be duplicated in both apps and has no
 platform dependency belongs in `packages/*` (fetch-family only, invariant
-#12) — check `@expense-tracker/{api,money,dates,i18n,tokens}` before writing
+#12) — check `@trata/{api,money,dates,i18n,tokens}` before writing
 it twice. Money and date logic ALWAYS goes through the shared packages,
 never re-implemented app-side (invariants #2/#14).
 

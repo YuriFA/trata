@@ -72,7 +72,7 @@ the existing `isAuthenticated` watch. No timers, no manual refresh UI.
 The shell indicator (existing `guest-mode-indicator` surface) renders:
 
 - offline + local owner exists: "offline mode, will sign back in when the
-  network returns" (RU/EN strings added to `@expense-tracker/i18n`);
+  network returns" (RU/EN strings added to `@trata/i18n`);
 - `signed-out`: today's guest copy unchanged.
 
 The owner binding (`db.meta.getOwnerUserId()`) is the existing, free signal

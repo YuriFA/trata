@@ -1,13 +1,13 @@
 openapi: 3.0.3
 
 info:
-  title: Expense Tracker API
+  title: Trata API
   version: 0.1.0
   license:
     name: MIT
     url: https://opensource.org/license/mit
   description: |
-    REST API для expense tracker.
+    REST API для Trata.
 
     ## Соглашения
 

@@ -1,4 +1,4 @@
-# Expense Tracker - agent memory
+# Trata - agent memory
 
 pnpm workspace monorepo for a spec-first expense tracker: a layered **Go API**
 (`backend/`) wired to a **Vue 3** web app (`apps/web/`) and a **React Native
@@ -62,8 +62,8 @@ non-negotiables an agent must see before touching code.
 
 ## Shared workspace packages (`packages/*`)
 
-Platform-agnostic TS consumed by the apps — web: `@expense-tracker/{api,money,i18n,tokens}`;
-mobile: `@expense-tracker/{api,dates,local-data,money,tokens}` (i18n wiring pending) —
+Platform-agnostic TS consumed by the apps — web: `@trata/{api,money,i18n,tokens}`;
+mobile: `@trata/{api,dates,local-data,money,tokens}` (i18n wiring pending) —
 resolved to source `.ts` via `exports` (no build step; `moduleResolution: bundler`).
 
 - **MUST stay free of DOM/Vue/browser-only/RN APIs.** Only the fetch-family
@@ -71,11 +71,11 @@ resolved to source `.ts` via `exports` (no build step; `moduleResolution: bundle
 - **Fixed dependency direction:** `api → money` and
   `local-data → {api, dates, money}` are the only cross-package edges;
   `money`/`dates`/`i18n`/`tokens` are leaves.
-- **Apps never import `date-fns` directly** - only the `@expense-tracker/dates`
+- **Apps never import `date-fns` directly** - only the `@trata/dates`
   facade (web's app-local `@internationalized/date` adapter is a sanctioned
   temporary exception, see `docs/assumptions.md`).
 - **Repository seam:** app data access goes through `Repository` interfaces
-  from `@expense-tracker/api`; the package never imports app code (apps supply
+  from `@trata/api`; the package never imports app code (apps supply
   the base URL - no `window`).
 - Each TS package has its own `tsconfig.json` + `type-check` and must
   type-check cleanly alone (`tokens` is css-only and exempt - its palette is
@@ -91,7 +91,7 @@ The first three rules are enforced by `pnpm arch:check` (see below). App-local
 concerns stay OUT of packages: web keeps its vue-i18n instance, Vite base-URL
 resolution, localStorage repos, Vue DI/composables, and Zod schemas; mobile
 keeps its native wiring. Decided-direction-but-pending items (web migration
-onto `@expense-tracker/dates`) are tracked in `docs/assumptions.md`.
+onto `@trata/dates`) are tracked in `docs/assumptions.md`.
 
 ## Monorepo tooling
 

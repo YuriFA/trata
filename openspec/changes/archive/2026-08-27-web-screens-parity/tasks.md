@@ -8,7 +8,7 @@
 
 ## 2. Analytics screens
 
-- [x] 2.1 Create `entities/analytics` slice: port the mobile analytics selectors (period totals, per-category distribution) over colada-cached transactions; date math via `@expense-tracker/dates`
+- [x] 2.1 Create `entities/analytics` slice: port the mobile analytics selectors (period totals, per-category distribution) over colada-cached transactions; date math via `@trata/dates`
 - [x] 2.2 Build the donut chart component (SVG, token-driven colors, legend) in `shared/ui` with visual snapshot/unit tests
 - [x] 2.3 Build `pages/analytics` (overview: expenses/income cards with donut + legend, empty states) satisfying the analytics capability; RU copy from the mobile screens
 - [x] 2.4 Build `pages/analytics-detail` at `/analytics/:direction` (period selector week/month/year, prev/next navigation, inclusive range label, per-category breakdown) satisfying the analytics capability

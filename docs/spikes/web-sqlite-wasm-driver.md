@@ -7,7 +7,7 @@ IndexedDB+Dexie fallback is not needed.
 
 ## Question
 
-Can `@expense-tracker/local-data` (drizzle schema + repositories + outbox +
+Can `@trata/local-data` (drizzle schema + repositories + outbox +
 sync engine, extracted in stage 3) run in the browser unchanged, and what does
 the platform wiring cost?
 

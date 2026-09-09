@@ -8,7 +8,7 @@ everything needed: `TransactionQuery` has `type`, `categoryId`, `fromDate`,
 `toDate` (`CalendarDay` = `YYYY-MM-DD`), implemented identically by the SQLite
 repository (`occurredAt >= fromDate` midnight UTC, `<= toDate` end of UTC day,
 both inclusive), the HTTP repository, and the mobile mock repository used in
-tests. `MonthCursor` and `transactionsInMonth` live in `@expense-tracker/dates`
+tests. `MonthCursor` and `transactionsInMonth` live in `@trata/dates`
 (`packages/dates/src/month.ts`) after the dates-package migration. See
 proposal.md for why this changes now.
 
@@ -52,7 +52,7 @@ logic migrated to `packages/dates/src/month.ts`. The helper belongs beside
 facade, web will need the identical mapping when it adopts the dashboard
 pattern, and `packages/dates` is not on the change's exclusion list.
 
-`packages/dates` must not import `@expense-tracker/api` (keeps the dependency
+`packages/dates` must not import `@trata/api` (keeps the dependency
 direction clean; `api` depends only on `money`), so the return type is plain
 `{ fromDate: string; toDate: string }` — structurally assignable to
 `Pick<TransactionQuery, 'fromDate' | 'toDate'>`.

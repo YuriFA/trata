@@ -4,7 +4,7 @@
 
 The mobile app is a UI shell (Expo Router + FSD) whose dashboard runs on
 throwaway mock data; `entities/` and the data layer are empty. The shared
-`@expense-tracker/api` package already defines the repository contracts
+`@trata/api` package already defines the repository contracts
 (`Repository<T,C,U>`, `CategoryRepository`, `AccountRepository`,
 `TransactionRepository` with `query`/`listPage`), HTTP implementations,
 code-keyed error mapping, and domain normalizers — the web app consumes
@@ -197,7 +197,7 @@ merge as duplicates; auto-merge by `(name, type)` is a deferred option.
 dates are ISO-8601 UTC TEXT; ids are client UUID v4. Indexes on
 `transactions(occurred_at)`, `(account_id)`, `(category_id)`,
 `(type, occurred_at)`. Balances are computed by query (opening +
-manual + Σ impacts), mirroring `@expense-tracker/money`. Drizzle
+manual + Σ impacts), mirroring `@trata/money`. Drizzle
 interactive transactions on the expo-sqlite driver must be verified at
 the start of phase 1; fallback: wrap statements in expo-sqlite's
 `withTransactionAsync`.

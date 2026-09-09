@@ -4,7 +4,7 @@
 
 No import/export exists anywhere in the repo (greenfield; nothing CSV- or
 spreadsheet-related installed). The web app is local-first: every write
-goes through the worker-side `@expense-tracker/local-data` repositories
+goes through the worker-side `@trata/local-data` repositories
 (atomic row + outbox operation), and the sync engine pushes queued
 operations in batches of 50 with idempotent-create semantics (client
 supplied id + baseVersion 0). Reads go through the same repositories.

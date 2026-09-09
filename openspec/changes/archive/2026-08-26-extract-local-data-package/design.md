@@ -20,7 +20,7 @@ The mobile app owns the entire local-first stack today:
   drizzle with outbox enrollment.
 
 All of these are platform-neutral at runtime: they work against the drizzle
-query surface and `@expense-tracker/api` types. Two Expo leaks exist:
+query surface and `@trata/api` types. Two Expo leaks exist:
 `database.ts` (driver) and `shared/lib/generate-id.ts` (expo-crypto
 `randomUUID`, because Hermes lacks WebCrypto). The expo database **type** is
 threaded type-only into every module via `import type { LocalDatabase }`.
@@ -57,7 +57,7 @@ motivation.
 
 ## Decisions
 
-### D1. Package boundary and name: `@expense-tracker/local-data`
+### D1. Package boundary and name: `@trata/local-data`
 
 Moves into `packages/local-data`:
 
@@ -73,7 +73,7 @@ Moves into `packages/local-data`:
 Rejected: **engine-only minimal package** — the six local repositories are
 equally neutral and equally needed by web (stage 4); leaving them in mobile
 forces a rewrite of ~6 × CRUD + outbox enrollment. Rejected name
-**`@expense-tracker/sync`** — the package contains the schema and
+**`@trata/sync`** — the package contains the schema and
 repositories, not just sync; `local-data` matches the "local data boundary"
 language of invariant #16.
 
@@ -154,10 +154,10 @@ second source of truth for the schema.
 ### D7. Mobile consumption: direct package imports, no per-entity shims
 
 Mobile entities and features import repositories and engine APIs from
-`@expense-tracker/local-data` directly (same pattern as `@expense-tracker/api`
+`@trata/local-data` directly (same pattern as `@trata/api`
 today — FSD allows workspace-package imports at the entities/shared layers);
 the per-entity `api/local-repository.ts` files are deleted, not shimmed.
-Mobile jest `moduleNameMapper` gains `^@expense-tracker/local-data$` →
+Mobile jest `moduleNameMapper` gains `^@trata/local-data$` →
 `packages/local-data/src/index.ts` (mirrors the api mapping). Rejected:
 keeping thin re-export shims per entity — one more indirection layer with no
 consumer benefit; callers already cross package boundaries for types.

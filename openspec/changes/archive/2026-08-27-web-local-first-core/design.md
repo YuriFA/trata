@@ -3,7 +3,7 @@
 ## Context
 
 Stage 3 extracted the mobile offline-first layer into
-`@expense-tracker/local-data` (drizzle schema, repositories with mirrored
+`@trata/local-data` (drizzle schema, repositories with mirrored
 backend semantics, outbox, sync engine, conflicts). The driver spike
 (`docs/spikes/web-sqlite-wasm-driver.md`, branch `spike/web-sqlite-wasm`)
 proved the package runs unchanged in the browser: official
@@ -28,7 +28,7 @@ transport to the data differs (postMessage RPC instead of in-process).
 - Web parity with the mobile composition root, using the spike's driver code
   as-is where possible.
 - A typed RPC contract such that colada queries call repository methods
-  exactly as before (async interfaces unchanged from `@expense-tracker/api`).
+  exactly as before (async interfaces unchanged from `@trata/api`).
 - Anonymous-first shell with the ownership gate, network-tolerant restore,
   and logout-keeps-data — mirroring `use-auth.tsx` semantics 1:1.
 - Removal of the HTTP/localStorage entity repository variants in the same
@@ -94,7 +94,7 @@ with real edge cases — deferred until asked for by usage).
 
 `provideRepositories(app)` creates exactly one variant — Comlink `Remote`
 repository objects cast to the shared `Repository` interfaces from
-`@expense-tracker/api`. DI keys stay. `VITE_REPO_VARIANT`, the HTTP and
+`@trata/api`. DI keys stay. `VITE_REPO_VARIANT`, the HTTP and
 localStorage implementations under `entities/*/api/`, and their cross-wiring
 tests are deleted. Session APIs (`login`/`logout`/`me`, password flows) and
 the sync transport keep using the API client directly — the api-client-seam
@@ -102,7 +102,7 @@ rule shrinks to exactly the mobile shape.
 
 Testing seam: unit tests keep using in-memory mock repositories (existing
 pattern); integration tests of the local stack run against
-`@expense-tracker/local-data/testing` in vitest (node), not in-browser.
+`@trata/local-data/testing` in vitest (node), not in-browser.
 
 ### D5. Auth store rework mirrors `use-auth.tsx`
 

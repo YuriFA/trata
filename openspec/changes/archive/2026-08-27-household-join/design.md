@@ -74,7 +74,7 @@ household short-circuits to no-op before any write. Dissolution
 (owner): explicit confirm-required endpoint cascading household data
 deletion (entities, change_log, applied_operations, invitations, code).
 
-### D4. Rebase helper in `@expense-tracker/local-data`
+### D4. Rebase helper in `@trata/local-data`
 
 `rebaseLocalDataForHousehold(db)` — one transaction over the local
 database:

@@ -58,7 +58,7 @@ backend or OpenAPI change.
   occurred-at instant falls within that period in the device's local
   timezone, consistently across every period-scoped figure — the same rule
   the home screen already pins for months, extended to weeks and years.
-- **New period model in `@expense-tracker/dates`.** A week/month/year cursor
+- **New period model in `@trata/dates`.** A week/month/year cursor
   plus current/shift/range/label helpers, following the established
   superset-pre-filter + exact-local-trim pattern (`monthToUtcDayRange` +
   `transactionsInMonth`).
@@ -98,7 +98,7 @@ backend or OpenAPI change.
   mock in `jest.setup.js`; new Maestro flow `12-analytics.yaml`. RU strings
   hardcoded with `TODO(i18n)` per the pending i18n wiring.
 - **Shared package (`packages/dates`)**: new platform-agnostic period model
-  and label helpers (no `@expense-tracker/api` import).
+  and label helpers (no `@trata/api` import).
 - **Dependencies**: add `@shopify/react-native-skia` (native module — iOS dev
   build rebuild required; not Expo Go).
 - **Out of scope**: backend, OpenAPI contract, the web app, other chart types

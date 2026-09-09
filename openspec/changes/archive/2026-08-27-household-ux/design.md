@@ -7,7 +7,7 @@ After `household-scoping` (model, scoping, display-name API) and
 payloads and local rows), everything this change needs already exists at
 the data level. Both clients have settings screens; the web is Vue/reka-ui
 FSD, the mobile twin is React Native FSD; both localize (RU
-authoritative, EN mirrors) and share `@expense-tracker/api` clients for
+authoritative, EN mirrors) and share `@trata/api` clients for
 the household endpoints.
 
 ## Goals / Non-Goals

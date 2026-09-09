@@ -2,15 +2,15 @@
 
 ## 1. Worker: driver and storage (port from spike branch)
 
-- [x] 1.1 Add `@expense-tracker/local-data`, `drizzle-orm`, `@sqlite.org/sqlite-wasm`, `comlink` to `apps/web` dependencies
+- [x] 1.1 Add `@trata/local-data`, `drizzle-orm`, `@sqlite.org/sqlite-wasm`, `comlink` to `apps/web` dependencies
 - [x] 1.2 Port `shared/lib/local-db/sqlite-wasm-database.ts` from branch `spike/web-sqlite-wasm` (adapter + react-free migrator + `openLocalDatabase`), drop spike-only debug helpers
-- [x] 1.3 Create `shared/lib/local-db/local-db-worker.ts`: Web Locks `ifAvailable` guard (`expense-tracker-local-db`) held for the worker lifetime; on loss report `db-busy`; on success open + migrate the database, construct account/category/transaction repositories from `@expense-tracker/local-data`, build the sync engine, `expose` the API via Comlink, then post the ready signal
+- [x] 1.3 Create `shared/lib/local-db/local-db-worker.ts`: Web Locks `ifAvailable` guard (`expense-tracker-local-db`) held for the worker lifetime; on loss report `db-busy`; on success open + migrate the database, construct account/category/transaction repositories from `@trata/local-data`, build the sync engine, `expose` the API via Comlink, then post the ready signal
 - [x] 1.4 Create `shared/lib/local-db/local-db.ts` (main thread): spawn the worker with `new Worker(new URL(...), { type: 'module' })`, resolve a typed `LocalDbApi` (Comlink `wrap` + ready-handshake queueing calls made before ready), expose boot-state events (`booting`/`ready`/`db-busy`), singleton accessor
 - [x] 1.5 Call `navigator.storage.persist()` from the main thread at boot; surface `storage.estimate()` in settings later (not in this change)
 
 ## 2. Repository wiring
 
-- [x] 2.1 Rewrite `app/repositories.ts`: `provideRepositories(app)` provides exactly one `local` variant — Comlink `Remote` repositories cast to the shared `Repository` interfaces; keep DI keys from `@expense-tracker/api`
+- [x] 2.1 Rewrite `app/repositories.ts`: `provideRepositories(app)` provides exactly one `local` variant — Comlink `Remote` repositories cast to the shared `Repository` interfaces; keep DI keys from `@trata/api`
 - [x] 2.2 Add worker-side RPC surface for owner/meta and wipe: `getOwnerUserId`, `setOwnerUserId`, `wipeLocalData`, `isDbBusy` reporting (wrapping the package's sync-meta helpers)
 - [x] 2.3 Update `app/repositories.test.ts` for the new wiring (handshake + provide assertions against a fake `LocalDbApi`)
 - [x] 2.4 Boot shell: splash composable/component for `booting`, "уже открыто в другой вкладке" banner with reload for `db-busy`, mounted above the router outlet

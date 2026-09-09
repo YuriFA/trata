@@ -36,7 +36,7 @@ of "selected month" as a product decision before the two platforms diverge.
   Cache invalidation is unchanged: the key is already parameterized by the
   filter options and mutations invalidate the `['transactions']` prefix.
 - **Shared helper `monthToUtcDayRange(cursor)`.** Lives in the
-  `@expense-tracker/dates` package (where `MonthCursor` and
+  `@trata/dates` package (where `MonthCursor` and
   `transactionsInMonth` already live after the dates migration); maps a local
   calendar month to inclusive UTC days `fromDate`/`toDate` accepted by
   `TransactionQuery`. Web will reuse it when it adopts the dashboard pattern.

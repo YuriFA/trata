@@ -333,7 +333,7 @@ function renderLocalDataTs() {
 
   return `${header('tools/sync-catalog/manifest.json')}
 import { eq } from 'drizzle-orm'
-import type { ${apiTypeImports}, SyncOperationData } from '@expense-tracker/api'
+import type { ${apiTypeImports}, SyncOperationData } from '@trata/api'
 import type { DbLike, EntityRow, SyncRowPatch } from './sync-data'
 import type { ${rowTypeImports} } from '../schema'
 import { ${schemaValueImports} } from '../schema'
@@ -486,7 +486,7 @@ function renderGo() {
   return `${header('tools/sync-catalog/manifest.json')}
 package service
 
-import "github.com/yurifa/expense-tracker-api/internal/domain"
+import "github.com/yurifa/trata/backend/internal/domain"
 
 func catalogSyncEntityLabel(entity string) string {
 \tswitch entity {

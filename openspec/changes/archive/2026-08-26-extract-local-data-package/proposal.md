@@ -13,7 +13,7 @@ reusable module.
 
 ## What Changes
 
-- **New workspace package `@expense-tracker/local-data`** (`packages/local-data`)
+- **New workspace package `@trata/local-data`** (`packages/local-data`)
   holding the platform-neutral local data layer:
   - `db` layer: entity schema (6 entity tables + syncOutbox/syncConflicts/syncMeta),
     outbox mechanics, generated migrations, and the drizzle-kit generate pipeline
@@ -59,11 +59,11 @@ behavior changes.
 
 - **apps/mobile**: files move out of `src/shared/lib/{db,sync}` and
   `src/entities/*/api/local-repository.ts`; jest `moduleNameMapper` gains
-  `@expense-tracker/local-data`; bootstrap calls `configureIdFactory`;
+  `@trata/local-data`; bootstrap calls `configureIdFactory`;
   `drizzle.config.ts`, `scripts/inline-migrations.mjs`, and the `drizzle/`
   journal move to the package.
 - **packages/local-data** (new): runtime deps `drizzle-orm` +
-  `@expense-tracker/{api,dates}`; vitest as its test runner; own `tsconfig` +
+  `@trata/{api,dates}`; vitest as its test runner; own `tsconfig` +
   `type-check` per package rules.
 - **Root tooling**: `package.json` `arch:check` script, `.dependency-cruiser.packages.cjs`
   (new `pkg-no-expo` rule), `.dependency-cruiser.mobile.cjs` (exception path),

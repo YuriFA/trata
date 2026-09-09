@@ -11,7 +11,7 @@ service methods take `userID` first, every query scopes `WHERE user_id`
 Migrations are numbered up/down pairs under
 `backend/internal/repository/postgres/migrations/` (next: `000005`).
 Both clients (mobile, web) are local-first over
-`@expense-tracker/local-data`; sync push/pull shapes are
+`@trata/local-data`; sync push/pull shapes are
 platform-agnostic and generated from `docs/api/openapi.yaml`.
 
 ## Goals / Non-Goals

@@ -2,7 +2,7 @@
 
 ## 1. Phase 1 — Mobile local data foundation
 
-- [x] 1.1 Add mobile dependencies: `@expense-tracker/api` (workspace), `expo-sqlite`, `drizzle-orm`, `drizzle-kit`, `@tanstack/react-query`, `@react-native-community/netinfo` (`npx expo install` for native-bundled ones)
+- [x] 1.1 Add mobile dependencies: `@trata/api` (workspace), `expo-sqlite`, `drizzle-orm`, `drizzle-kit`, `@tanstack/react-query`, `@react-native-community/netinfo` (`npx expo install` for native-bundled ones)
 - [x] 1.2 Spike: verify interactive transactions in `drizzle-orm/expo-sqlite`; if unsupported, adopt expo-sqlite `withTransactionAsync` wrapper for all multi-statement writes (decision recorded in design D10)
 - [x] 1.3 Create `apps/mobile/src/shared/lib/db/`: Drizzle schema (`accounts`, `categories`, `transactions` with `version`/`server_version`/`deleted_at`, indexes; money INTEGER minor units; ISO UTC TEXT dates) + `sync_outbox` (opId PK, base_version, sent_at, attempts, last_error), `sync_conflicts`, `sync_meta`; drizzle-kit migrations applied at app start
 - [x] 1.4 Implement `entities/category/api/local-repository.ts`: CRUD per the shared interface; empty start (no seeds); unique-name check throwing the shared already-exists code; every mutation writes entity + outbox op in one transaction (`version += 1`, `server_version` untouched, baseVersion = `server_version` at creation; client-supplied version CAS starts when phase-2 types add `version`)

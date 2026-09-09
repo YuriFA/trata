@@ -2,7 +2,7 @@
 
 ## 1. Package scaffold
 
-- [x] 1.1 Create `packages/local-data/package.json`: name `@expense-tracker/local-data`, `exports`/`main`/`types` → `./src/index.ts` (source-consumed, no build step, `packages/api` pattern); runtime deps `drizzle-orm`, `@expense-tracker/{api,dates,money}` (`workspace:*`); dev deps `typescript`, `vitest`, `@types/node`; `engines.node >= 22`; scripts `type-check`, `test`
+- [x] 1.1 Create `packages/local-data/package.json`: name `@trata/local-data`, `exports`/`main`/`types` → `./src/index.ts` (source-consumed, no build step, `packages/api` pattern); runtime deps `drizzle-orm`, `@trata/{api,dates,money}` (`workspace:*`); dev deps `typescript`, `vitest`, `@types/node`; `engines.node >= 22`; scripts `type-check`, `test`
 - [x] 1.2 Create `packages/local-data/tsconfig.json` following `packages/api` (`moduleResolution: bundler`, strict; Node types visible to tests)
 - [x] 1.3 Add `vitest.config.ts` (node environment) and a placeholder `src/index.ts` with one smoke test proving the harness runs
 - [x] 1.4 Write the package `README.md`: what lives here (schema/outbox/sync/local repositories/migrations), the two platform seams (generic `LocalDatabase` type, `configureIdFactory`), and the `db:generate` command location
@@ -22,9 +22,9 @@
 
 ## 4. Sync modules move
 
-- [x] 4.1 Move `sync-meta.ts`, `offline-gate.ts`, `sync-data.ts` into the package with package-internal imports (`schema`, `outbox`, package types, `@expense-tracker/api` types)
-- [x] 4.2 Move `conflicts.ts` (drop the `@/shared/lib/generate-id` import → package id factory; `nowIso` from `@expense-tracker/dates` stays)
-- [x] 4.3 Move `sync-engine.ts` (transport stays injected; `UnauthorizedError`/`pushSyncOperations`/`pullSyncChanges` from `@expense-tracker/api` stay; db types from the package)
+- [x] 4.1 Move `sync-meta.ts`, `offline-gate.ts`, `sync-data.ts` into the package with package-internal imports (`schema`, `outbox`, package types, `@trata/api` types)
+- [x] 4.2 Move `conflicts.ts` (drop the `@/shared/lib/generate-id` import → package id factory; `nowIso` from `@trata/dates` stays)
+- [x] 4.3 Move `sync-engine.ts` (transport stays injected; `UnauthorizedError`/`pushSyncOperations`/`pullSyncChanges` from `@trata/api` stay; db types from the package)
 - [x] 4.4 Move `sync-status.ts`
 - [x] 4.5 Define the package public surface in `src/index.ts` (engine factory + types, repository factories, schema, migrations, seams, `testing` entry)
 
@@ -40,9 +40,9 @@
 
 ## 7. Mobile migration
 
-- [x] 7.1 Add `@expense-tracker/local-data` (`workspace:*`) to `apps/mobile/package.json`; add jest `moduleNameMapper` entry `^@expense-tracker/local-data$` → `packages/local-data/src/index.ts`
+- [x] 7.1 Add `@trata/local-data` (`workspace:*`) to `apps/mobile/package.json`; add jest `moduleNameMapper` entry `^@trata/local-data$` → `packages/local-data/src/index.ts`
 - [x] 7.2 Call `configureIdFactory(expoCrypto.randomUUID)` once in the mobile app entry, before any database open; delete `shared/lib/generate-id.ts`
-- [x] 7.3 Update all mobile imports from `@/shared/lib/db/{schema,outbox,migrations.generated}` and `@/shared/lib/sync/*` to `@expense-tracker/local-data`; keep `db/database.ts` (expo driver + migrator, now typed as the package `LocalDatabase`), `sync/transport.ts`, `background-sync.ts`, and the React contexts wired to package APIs
+- [x] 7.3 Update all mobile imports from `@/shared/lib/db/{schema,outbox,migrations.generated}` and `@/shared/lib/sync/*` to `@trata/local-data`; keep `db/database.ts` (expo driver + migrator, now typed as the package `LocalDatabase`), `sync/transport.ts`, `background-sync.ts`, and the React contexts wired to package APIs
 - [x] 7.4 Delete the moved source files and per-entity `api/local-repository.ts` from mobile; update entity/model/feature importers to the package
 - [x] 7.5 Mobile jest suite green (including `backend-integration.test.ts` compile; run it only if `SYNC_INTEGRATION_API` is set)
 

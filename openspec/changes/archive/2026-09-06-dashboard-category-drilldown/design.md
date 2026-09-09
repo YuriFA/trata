@@ -14,7 +14,7 @@ FSD constraint: a page must not import another page's module, so reusing
 the dialog on the dashboard requires promoting it to the `widgets` layer
 (existing segments there: `command-palette`, `mobile-shell`,
 `sync-status`). The dialog's own imports (`entities/*`, `features/*`,
-`shared/*`, `@expense-tracker/*`) are all legal from `widgets`, so the
+`shared/*`, `@trata/*`) are all legal from `widgets`, so the
 promotion is a move plus import-path updates, not a refactor.
 
 ## Goals / Non-Goals

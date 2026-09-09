@@ -1,8 +1,8 @@
 ## 1. Shared helper `monthToUtcDayRange` (packages/dates)
 
-- [x] 1.1 Add `monthToUtcDayRange(cursor: MonthCursor): { fromDate: string; toDate: string }` to `packages/dates/src/month.ts` per design D2 (local month instants → inclusive UTC days via `toISOString().slice(0, 10)`), export it from `packages/dates/src/index.ts`. No `@expense-tracker/api` import (design D1).
+- [x] 1.1 Add `monthToUtcDayRange(cursor: MonthCursor): { fromDate: string; toDate: string }` to `packages/dates/src/month.ts` per design D2 (local month instants → inclusive UTC days via `toISOString().slice(0, 10)`), export it from `packages/dates/src/index.ts`. No `@trata/api` import (design D1).
 - [x] 1.2 Add `apps/mobile/src/shared/lib/month-to-utc-day-range.test.ts`: per-zone child Node processes with target `TZ` running the real helper (Jest cannot change its own zone — see design D6); cases for UTC, UTC+3 (`Europe/Moscow`), UTC−5 (`America/New_York`), a 31-day month, and December→January wraparound; assert the returned range is a superset of `transactionsInMonth` membership at boundary instants (00:30 local on the 1st, 23:30 local on the last day).
-- [x] 1.3 Verify: `pnpm --filter @expense-tracker/dates type-check` and the new mobile test pass.
+- [x] 1.3 Verify: `pnpm --filter @trata/dates type-check` and the new mobile test pass.
 
 ## 2. Hook: conditional queries (entities/transaction)
 

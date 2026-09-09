@@ -17,7 +17,7 @@ machinery only gets in the way.
   RUB.
 - The web settings screen loses the currency selector; the `currency`
   field is removed from the settings store and its localStorage schema.
-- `DEFAULT_CURRENCY` in `@expense-tracker/money` changes from `USD` to
+- `DEFAULT_CURRENCY` in `@trata/money` changes from `USD` to
   `RUB`, becoming the single source of the app display currency.
 - The mobile account list keeps its per-account currency label (shows
   `RUB`, so it stays meaningful).
@@ -61,7 +61,7 @@ machinery only gets in the way.
   debts/plans/analytics display currency sources, dashboard empty state.
 - **Mobile**: new-account form (currency picker + validation), account
   list unchanged (label stays).
-- **Packages**: `@expense-tracker/money` `DEFAULT_CURRENCY` → `RUB`.
+- **Packages**: `@trata/money` `DEFAULT_CURRENCY` → `RUB`.
 - **Docs**: `docs/assumptions.md` multi-currency direction entry.
 - No data migration: no production databases exist; dev databases are
   resettable.

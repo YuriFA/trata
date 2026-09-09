@@ -5,7 +5,7 @@
 The web app is online-first: every action requires the backend, and it cannot
 serve the product's stated future — an offline-first public web app usable
 without login, with anonymous data migrating into an account on first login.
-Stage 3 extracted the local-first data layer (`@expense-tracker/local-data`)
+Stage 3 extracted the local-first data layer (`@trata/local-data`)
 and the driver spike proved it runs unchanged in the browser over SQLite-WASM
 + OPFS inside a dedicated worker (`docs/spikes/web-sqlite-wasm-driver.md`, GO).
 This change rebuilds the web app's core on that foundation.
@@ -14,7 +14,7 @@ This change rebuilds the web app's core on that foundation.
 
 - **Local-first core in a dedicated worker**: SQLite-WASM + OPFS (sahpool)
   driver from the spike, Comlink RPC bridge, react-free migrator; repositories
-  for account/category/transaction come from `@expense-tracker/local-data`.
+  for account/category/transaction come from `@trata/local-data`.
 - **BREAKING: single repository variant `local`** — the HTTP and localStorage
   entity repositories and `VITE_REPO_VARIANT` are removed; HTTP stays only for
   session APIs and the sync transport (api-client-seam, as on mobile).
@@ -54,7 +54,7 @@ changing its requirements.)
   branch `spike/web-sqlite-wasm`), rewritten `app/repositories.ts`, reworked
   `entities/session` auth store (ownership gate, anonymous shell), router
   guard flip, new sync-status widget and conflict-center feature, dependencies
-  `@expense-tracker/local-data`, `drizzle-orm`, `@sqlite.org/sqlite-wasm`,
+  `@trata/local-data`, `drizzle-orm`, `@sqlite.org/sqlite-wasm`,
   `comlink`.
 - Removed: `entities/{account,category,transaction}/api` HTTP and localStorage
   repository implementations (interfaces/DI keys stay), `VITE_REPO_VARIANT`.

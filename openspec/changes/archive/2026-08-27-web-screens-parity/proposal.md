@@ -16,7 +16,7 @@ navigation predates the mobile UX.
   operation create/edit, debtor creation), plans (list, plan create/edit,
   confirm flow), and quick income entry.
 - **Worker RPC surface grows** to expose debtor, debt-operation, and
-  planned-payment repositories from `@expense-tracker/local-data` (they
+  planned-payment repositories from `@trata/local-data` (they
   enter the web with their screens).
 - **Navigation alignment**: the app nav exposes the full screen set
   (dashboard, transactions, analytics, debts, plans, accounts, settings);
@@ -50,7 +50,7 @@ not a requirement change.)
   debtor/debt-operation/planned-payment (barrels + local wiring), worker RPC
   surface extension, router/nav entries, i18n keys for the new screens in
   the existing locale files.
-- No backend, OpenAPI, or package changes (`@expense-tracker/local-data`
+- No backend, OpenAPI, or package changes (`@trata/local-data`
   already ships all needed repositories and sync kinds).
 - Tests: unit tests per screen (mock repositories, existing patterns),
   e2e backendless flows for the new screens.

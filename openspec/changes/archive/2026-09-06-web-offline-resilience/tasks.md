@@ -29,7 +29,7 @@
   watch resumes sync
 - [x] 3.3 Shell indicator: while `restoreOutcome === 'offline'` and the
   local db has an owner binding, render offline-mode copy instead of guest
-  copy; add RU/EN strings to `@expense-tracker/i18n` (strict `i18n:lint` +
+  copy; add RU/EN strings to `@trata/i18n` (strict `i18n:lint` +
   key parity)
 - [x] 3.4 Unit tests: 401 -> `signed-out` (terminal, no retry); network
   error -> `offline` (retry authenticates; ownership gate runs; sync watch
