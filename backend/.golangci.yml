@@ -475,6 +475,12 @@ linters:
       os-temp-dir: true
 
   exclusions:
+    # Generated code is byte-exact-gated by `make gen-check` (oapi-codegen,
+    # sqlc); linting it only produces noise (dupl fires on the generated
+    # handler wrappers, first surfaced when a CI cache miss forced a
+    # clean-slate analysis after the repository rename).
+    # Default: []
+    generated: liberal
     # Log a warning if an exclusion rule is unused.
     # Default: false
     warn-unused: true
