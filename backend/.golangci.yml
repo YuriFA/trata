@@ -480,7 +480,7 @@ linters:
     # handler wrappers, first surfaced when a CI cache miss forced a
     # clean-slate analysis after the repository rename).
     # Default: []
-    generated: liberal
+    generated: strict
     # Log a warning if an exclusion rule is unused.
     # Default: false
     warn-unused: true
