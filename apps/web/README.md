@@ -1,73 +1,41 @@
-# vue-project
+# Trata web
 
-This template should help get you started developing with Vue 3 in Vite.
+Vue 3 + Vite client of the Trata expense tracker: an installable, local-first
+PWA (offline SQLite over OPFS, service-worker app shell) built with
+Feature-Sliced Design, Tailwind CSS v4 on shared design tokens
+(`@expense-tracker/tokens`), vue-i18n (ru default, en), and generated API
+types from `@expense-tracker/api` (OpenAPI is the contract source of truth).
 
-## Recommended IDE Setup
+Read `AGENTS.md` in this directory before changing code, and
+`docs/ARCHITECTURE.md` for the FSD layout. Root `README.md` covers the whole
+monorepo.
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## Commands
 
-## Recommended Browser Setup
+```bash
+pnpm dev            # dev server on :5173 (proxies /api to :8080)
+pnpm build          # type-check + production build
+pnpm preview        # serve the production build on :4173
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+pnpm test:unit      # Vitest unit tests
+pnpm test:coverage  # unit tests with v8 coverage report
+pnpm test:e2e       # Playwright e2e (auto-starts the dev server)
+pnpm test:e2e:pwa   # Playwright against the built PWA (service worker)
 
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-pnpm install
+pnpm lint           # oxlint + eslint
+pnpm lint:fsd       # steiger (FSD layer rules)
+pnpm lint:design    # design-system guard tests
+pnpm i18n:lint      # strict i18n usage check
+pnpm gen:api        # regenerate the API schema after an OpenAPI change
 ```
 
-### Compile and Hot-Reload for Development
+## Notes
 
-```sh
-pnpm dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-pnpm build
-```
-
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-pnpm test:unit
-```
-
-### Run End-to-End Tests with [Playwright](https://playwright.dev)
-
-```sh
-# Install browsers for the first run
-npx playwright install
-
-# When testing on CI, must build the project first
-pnpm build
-
-# Runs the end-to-end tests
-pnpm test:e2e
-# Runs the tests only on Chromium
-pnpm test:e2e --project=chromium
-# Runs the tests of a specific file
-pnpm test:e2e tests/example.spec.ts
-# Runs the tests in debug mode
-pnpm test:e2e --debug
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-pnpm lint
-```
+- E2E runs need the backend on `:8080` only for sync-specific specs; most
+  suites are backendless (anonymous local mode, fresh profile per test).
+  WebKit is excluded from local projects: Playwright's bundled WebKit has no
+  OPFS, which the local-first core requires.
+- Icons come from lucide (`@lucide/vue`); category identity is an emoji on a
+  pre-paired pastel color, defined in `src/entities/category/config/`.
+- The service worker is a custom Workbox `injectManifest` build (`src/sw.ts`):
+  app-shell precache only, no runtime caching, prompted updates.

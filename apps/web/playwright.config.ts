@@ -14,8 +14,12 @@ export default defineConfig({
   testDir: './e2e',
   // The PWA specs (e2e/pwa/) need the production build's service worker -
   // they run via playwright.pwa.config.ts (`pnpm test:e2e:pwa`) instead of
-  // this dev-server suite.
-  testIgnore: '**/pwa/**',
+  // this dev-server suite. The README screenshot capture is opt-in
+  // (README_SCREENS=1) so the regular suite never collects it.
+  testIgnore:
+    process.env.README_SCREENS === '1'
+      ? '**/pwa/**'
+      : ['**/pwa/**', '**/readme-screens.spec.ts'],
   /* Maximum time one test can run for. */
   timeout: 30 * 1000,
   expect: {
