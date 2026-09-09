@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	"github.com/yurifa/expense-tracker-api/internal/service"
+	"github.com/yurifa/trata/backend/internal/domain"
+	"github.com/yurifa/trata/backend/internal/service"
 )
 
 func TestTransactionService_RefValidation(t *testing.T) {

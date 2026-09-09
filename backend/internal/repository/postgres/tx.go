@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	db "github.com/yurifa/expense-tracker-api/internal/repository/db"
+	db "github.com/yurifa/trata/backend/internal/repository/db"
 )
 
 // withinLockedTx runs fn inside ONE database transaction that holds the

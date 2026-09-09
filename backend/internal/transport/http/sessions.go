@@ -3,8 +3,8 @@ package http
 import (
 	"context"
 
-	"github.com/yurifa/expense-tracker-api/internal/api"
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/httpctx"
+	"github.com/yurifa/trata/backend/internal/api"
+	"github.com/yurifa/trata/backend/internal/transport/http/httpctx"
 )
 
 func (s *Server) ListSessions(

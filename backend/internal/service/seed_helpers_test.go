@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	"github.com/yurifa/expense-tracker-api/internal/service/fakes"
+	"github.com/yurifa/trata/backend/internal/domain"
+	"github.com/yurifa/trata/backend/internal/service/fakes"
 )
 
 func seedFakeUser(t *testing.T, store *fakes.Store) *domain.User {

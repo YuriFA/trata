@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/httperr"
+	"github.com/yurifa/trata/backend/internal/transport/http/httperr"
 )
 
 // OriginCheck enforces the ADR-0001 server-side CSRF control: a browser may

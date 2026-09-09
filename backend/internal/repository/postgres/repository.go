@@ -7,8 +7,8 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/yurifa/expense-tracker-api/internal/repository"
-	db "github.com/yurifa/expense-tracker-api/internal/repository/db"
+	"github.com/yurifa/trata/backend/internal/repository"
+	db "github.com/yurifa/trata/backend/internal/repository/db"
 )
 
 // Repository is the concrete Postgres implementation of the repository

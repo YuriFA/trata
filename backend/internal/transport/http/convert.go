@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
-	"github.com/yurifa/expense-tracker-api/internal/api"
-	"github.com/yurifa/expense-tracker-api/internal/domain"
+	"github.com/yurifa/trata/backend/internal/api"
+	"github.com/yurifa/trata/backend/internal/domain"
 )
 
 // toUUID converts a domain uuid.UUID to the generated openapi_types.UUID.

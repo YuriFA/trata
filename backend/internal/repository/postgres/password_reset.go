@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
+	"github.com/yurifa/trata/backend/internal/domain"
 )
 
 // CreatePasswordResetToken atomically replaces any existing reset token for the

@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	"github.com/yurifa/expense-tracker-api/internal/jobs/plannedconfirm"
-	"github.com/yurifa/expense-tracker-api/internal/logger"
-	"github.com/yurifa/expense-tracker-api/internal/service/fakes"
+	"github.com/yurifa/trata/backend/internal/domain"
+	"github.com/yurifa/trata/backend/internal/jobs/plannedconfirm"
+	"github.com/yurifa/trata/backend/internal/logger"
+	"github.com/yurifa/trata/backend/internal/service/fakes"
 )
 
 // The job is driven through Run with a short interval (the retention-test

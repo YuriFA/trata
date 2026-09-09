@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/yurifa/expense-tracker-api/internal/config"
-	"github.com/yurifa/expense-tracker-api/internal/logger"
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/httperr"
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/middleware"
+	"github.com/yurifa/trata/backend/internal/config"
+	"github.com/yurifa/trata/backend/internal/logger"
+	"github.com/yurifa/trata/backend/internal/transport/http/httperr"
+	"github.com/yurifa/trata/backend/internal/transport/http/middleware"
 )
 
 // --- CSRF Origin check (ADR-0001) -----------------------------------------

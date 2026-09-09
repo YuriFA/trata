@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/yurifa/expense-tracker-api/internal/logger"
+	"github.com/yurifa/trata/backend/internal/logger"
 )
 
 // Cleaner is the repository surface the job needs.

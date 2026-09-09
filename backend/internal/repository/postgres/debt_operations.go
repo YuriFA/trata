@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	db "github.com/yurifa/expense-tracker-api/internal/repository/db"
+	"github.com/yurifa/trata/backend/internal/domain"
+	db "github.com/yurifa/trata/backend/internal/repository/db"
 )
 
 // Debt operations are leaf records (no in-use guard on delete); every mutation

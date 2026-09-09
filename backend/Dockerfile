@@ -21,16 +21,16 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags="-s -w -X main.version=$VERSION" -o /out/expense-tracker-api ./cmd/expense-tracker-api
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags="-s -w -X main.version=$VERSION" -o /out/trata-api ./cmd/trata-api
 
 FROM alpine:3.20
 RUN apk add --no-cache ca-certificates tzdata
 WORKDIR /app
-COPY --from=builder /out/expense-tracker-api /app/expense-tracker-api
+COPY --from=builder /out/trata-api /app/trata-api
 COPY config/prod.yaml /app/prod.yaml
 EXPOSE 8080
 ENV ENV=prod
 ENV TZ=UTC
 ENV CONFIG_PATH=/app/prod.yaml
 ENV DATABASE_URL=postgres://expense:expense@localhost:5432/expense?sslmode=disable
-ENTRYPOINT [ "/app/expense-tracker-api" ]
+ENTRYPOINT [ "/app/trata-api" ]

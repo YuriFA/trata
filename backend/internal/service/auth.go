@@ -10,9 +10,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/yurifa/expense-tracker-api/internal/auth"
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	"github.com/yurifa/expense-tracker-api/internal/repository"
+	"github.com/yurifa/trata/backend/internal/auth"
+	"github.com/yurifa/trata/backend/internal/domain"
+	"github.com/yurifa/trata/backend/internal/repository"
 )
 
 // AuthService owns register/login/logout/me + email verification and password

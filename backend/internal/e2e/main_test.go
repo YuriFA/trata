@@ -16,11 +16,11 @@ import (
 
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 
-	"github.com/yurifa/expense-tracker-api/internal/config"
-	"github.com/yurifa/expense-tracker-api/internal/logger"
-	"github.com/yurifa/expense-tracker-api/internal/repository/postgres"
-	"github.com/yurifa/expense-tracker-api/internal/service"
-	httptransport "github.com/yurifa/expense-tracker-api/internal/transport/http"
+	"github.com/yurifa/trata/backend/internal/config"
+	"github.com/yurifa/trata/backend/internal/logger"
+	"github.com/yurifa/trata/backend/internal/repository/postgres"
+	"github.com/yurifa/trata/backend/internal/service"
+	httptransport "github.com/yurifa/trata/backend/internal/transport/http"
 )
 
 var (

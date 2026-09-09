@@ -9,9 +9,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	"github.com/yurifa/expense-tracker-api/internal/repository"
-	db "github.com/yurifa/expense-tracker-api/internal/repository/db"
+	"github.com/yurifa/trata/backend/internal/domain"
+	"github.com/yurifa/trata/backend/internal/repository"
+	db "github.com/yurifa/trata/backend/internal/repository/db"
 )
 
 // syncTx implements repository.SyncTx over the open batch transaction.

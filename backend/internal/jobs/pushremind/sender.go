@@ -8,7 +8,7 @@ import (
 
 	webpush "github.com/SherClockHolmes/webpush-go"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
+	"github.com/yurifa/trata/backend/internal/domain"
 )
 
 // ErrGone marks a subscription the push service reported as permanently

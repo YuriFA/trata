@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	db "github.com/yurifa/expense-tracker-api/internal/repository/db"
+	"github.com/yurifa/trata/backend/internal/domain"
+	db "github.com/yurifa/trata/backend/internal/repository/db"
 )
 
 func (r *Repository) CreateSession(ctx context.Context, params domain.CreateSessionParams) (*domain.Session, error) {

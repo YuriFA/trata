@@ -12,9 +12,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 
-	"github.com/yurifa/expense-tracker-api/internal/config"
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	postgres "github.com/yurifa/expense-tracker-api/internal/repository/postgres"
+	"github.com/yurifa/trata/backend/internal/config"
+	"github.com/yurifa/trata/backend/internal/domain"
+	postgres "github.com/yurifa/trata/backend/internal/repository/postgres"
 )
 
 // These tests run against a real PostgreSQL container via testcontainers-go.

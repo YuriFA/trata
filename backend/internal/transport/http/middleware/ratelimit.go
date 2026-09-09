@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/httperr"
+	"github.com/yurifa/trata/backend/internal/transport/http/httperr"
 )
 
 type attemptInfo struct {

@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/yurifa/expense-tracker-api/internal/jobs/retention"
-	"github.com/yurifa/expense-tracker-api/internal/logger"
+	"github.com/yurifa/trata/backend/internal/jobs/retention"
+	"github.com/yurifa/trata/backend/internal/logger"
 )
 
 // fakeStore is an in-memory Store for the retention job (no database). It

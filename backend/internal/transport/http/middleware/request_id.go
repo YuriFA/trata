@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/keys"
+	"github.com/yurifa/trata/backend/internal/transport/http/keys"
 )
 
 func RequestID() gin.HandlerFunc {

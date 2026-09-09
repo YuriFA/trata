@@ -20,7 +20,7 @@ name: expense-tracker
 services:
   db:
     image: postgres:17-alpine
-    container_name: expense-tracker-db
+    container_name: trata-db
     restart: unless-stopped
     logging:
       driver: json-file
@@ -43,7 +43,7 @@ services:
 
   api:
     image: ghcr.io/${GHCR_REPO:?set in .env}:${IMAGE_TAG:-main}
-    container_name: expense-tracker-api
+    container_name: trata-api
     restart: unless-stopped
     logging:
       driver: json-file
@@ -106,7 +106,7 @@ services:
 
   web:
     image: ghcr.io/${GHCR_REPO:?set in .env}-web:${IMAGE_TAG:-main}
-    container_name: expense-tracker-web
+    container_name: trata-web
     restart: unless-stopped
     logging:
       driver: json-file
@@ -142,7 +142,7 @@ services:
   # and is set up once at first boot (docs/deployment.md, Backups).
   backup:
     image: ghcr.io/${GHCR_REPO:?set in .env}-backup:${IMAGE_TAG:-main}
-    container_name: expense-tracker-backup
+    container_name: trata-backup
     restart: unless-stopped
     logging:
       driver: json-file
@@ -169,7 +169,7 @@ services:
   # label on api/web; scoped to this stack's containers by labeling only.
   autoheal:
     image: willfarrell/autoheal:latest
-    container_name: expense-tracker-autoheal
+    container_name: trata-autoheal
     restart: unless-stopped
     logging:
       driver: json-file

@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/yurifa/expense-tracker-api/internal/api"
-	"github.com/yurifa/expense-tracker-api/internal/domain"
+	"github.com/yurifa/trata/backend/internal/api"
+	"github.com/yurifa/trata/backend/internal/domain"
 )
 
 func (s *Server) ListDebtors(

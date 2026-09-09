@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/yurifa/expense-tracker-api/internal/config"
-	"github.com/yurifa/expense-tracker-api/internal/logger"
-	"github.com/yurifa/expense-tracker-api/internal/service"
-	httptransport "github.com/yurifa/expense-tracker-api/internal/transport/http"
+	"github.com/yurifa/trata/backend/internal/config"
+	"github.com/yurifa/trata/backend/internal/logger"
+	"github.com/yurifa/trata/backend/internal/service"
+	httptransport "github.com/yurifa/trata/backend/internal/transport/http"
 )
 
 // e2eEngineWithCfg builds a second full-stack engine over the shared e2e

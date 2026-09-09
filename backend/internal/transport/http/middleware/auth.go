@@ -8,13 +8,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/yurifa/expense-tracker-api/internal/config"
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	"github.com/yurifa/expense-tracker-api/internal/repository"
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/cookie"
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/httpctx"
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/httperr"
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/keys"
+	"github.com/yurifa/trata/backend/internal/config"
+	"github.com/yurifa/trata/backend/internal/domain"
+	"github.com/yurifa/trata/backend/internal/repository"
+	"github.com/yurifa/trata/backend/internal/transport/http/cookie"
+	"github.com/yurifa/trata/backend/internal/transport/http/httpctx"
+	"github.com/yurifa/trata/backend/internal/transport/http/httperr"
+	"github.com/yurifa/trata/backend/internal/transport/http/keys"
 )
 
 // AuthRequired validates the session_id cookie against the SessionRepository,

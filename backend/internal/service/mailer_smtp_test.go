@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/yurifa/expense-tracker-api/internal/service"
+	"github.com/yurifa/trata/backend/internal/service"
 )
 
 // fakeSMTPConn records the SMTP conversation and returns canned errors per
@@ -241,7 +241,7 @@ func TestSMTPMailerMessagePerKind(t *testing.T) {
 		{
 			name:    "password reset token",
 			send:    func(m service.Mailer) error { return m.SendPasswordResetToken(t.Context(), "u@example.com", "tok123") },
-			subject: "Reset your expense tracker password",
+			subject: "Reset your Trata password",
 			body:    []string{"tok123", "15 minutes", "https://app.example.com/reset-password?token=tok123"},
 		},
 		{
@@ -249,7 +249,7 @@ func TestSMTPMailerMessagePerKind(t *testing.T) {
 			send: func(m service.Mailer) error {
 				return m.SendHouseholdInvitation(t.Context(), "u@example.com", "https://app.example.com/invite/tok")
 			},
-			subject: "You are invited to share a budget on Expense Tracker",
+			subject: "You are invited to share a budget on Trata",
 			body:    []string{"https://app.example.com/invite/tok"},
 		},
 	}

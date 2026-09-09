@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"github.com/yurifa/expense-tracker-api/internal/api"
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/httpctx"
+	"github.com/yurifa/trata/backend/internal/api"
+	"github.com/yurifa/trata/backend/internal/domain"
+	"github.com/yurifa/trata/backend/internal/transport/http/httpctx"
 )
 
 // SyncPush applies a batch of client operations; the endpoint always answers

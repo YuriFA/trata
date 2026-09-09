@@ -8,10 +8,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	"github.com/yurifa/expense-tracker-api/internal/logger"
-	"github.com/yurifa/expense-tracker-api/internal/service"
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/httperr"
+	"github.com/yurifa/trata/backend/internal/domain"
+	"github.com/yurifa/trata/backend/internal/logger"
+	"github.com/yurifa/trata/backend/internal/service"
+	"github.com/yurifa/trata/backend/internal/transport/http/httperr"
 )
 
 // writeDomainError is the ONE central domain-error -> HTTP mapper, wired in as

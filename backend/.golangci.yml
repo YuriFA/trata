@@ -36,7 +36,7 @@ formatters:
       # with the given prefixes are grouped after 3rd-party packages.
       # Default: []
       local-prefixes:
-        - github.com/yurifa/expense-tracker-api
+        - github.com/yurifa/trata/backend
 
     golines:
       # Target maximum line length.
@@ -229,13 +229,13 @@ linters:
           files:
             - "**/internal/transport/http/**"
           deny:
-            - pkg: github.com/yurifa/expense-tracker-api/internal/repository
+            - pkg: github.com/yurifa/trata/backend/internal/repository
               desc: Handlers must call services, not repositories (backend/AGENTS.md Layering; middleware exception is allowlisted)
         "arch: service layer has no HTTP":
           files:
             - "**/internal/service/**"
           deny:
-            - pkg: github.com/yurifa/expense-tracker-api/internal/transport
+            - pkg: github.com/yurifa/trata/backend/internal/transport
               desc: Service layer has no HTTP (backend/AGENTS.md Layering)
             - pkg: github.com/gin-gonic/gin
               desc: Service layer has no HTTP (backend/AGENTS.md Layering)
@@ -245,13 +245,13 @@ linters:
           deny:
             - pkg: github.com/gin-gonic/gin
               desc: Repository layer is SQL-only (backend/AGENTS.md Layering)
-            - pkg: github.com/yurifa/expense-tracker-api/internal/transport
+            - pkg: github.com/yurifa/trata/backend/internal/transport
               desc: Repository layer is SQL-only (backend/AGENTS.md Layering)
         "arch: sqlc code stays inside repository/postgres":
           files:
             - "!**/internal/repository/postgres/**"
           deny:
-            - pkg: github.com/yurifa/expense-tracker-api/internal/repository/db
+            - pkg: github.com/yurifa/trata/backend/internal/repository/db
               desc: sqlc types are confined to internal/repository/postgres
 
     embeddedstructfieldcheck:

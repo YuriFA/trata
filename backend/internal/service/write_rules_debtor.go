@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
+	"github.com/yurifa/trata/backend/internal/domain"
 )
 
 // Debtor write rules (ADR-0005). Upserts carry no cross-entity rules

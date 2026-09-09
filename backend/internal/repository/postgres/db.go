@@ -17,7 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib" // registers the "pgx/v5" database/sql driver
 
-	"github.com/yurifa/expense-tracker-api/internal/config"
+	"github.com/yurifa/trata/backend/internal/config"
 )
 
 // migrationsFS holds the embedded Postgres migration files

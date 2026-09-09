@@ -10,9 +10,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	"github.com/yurifa/expense-tracker-api/internal/jobs/pushremind"
-	"github.com/yurifa/expense-tracker-api/internal/logger"
+	"github.com/yurifa/trata/backend/internal/domain"
+	"github.com/yurifa/trata/backend/internal/jobs/pushremind"
+	"github.com/yurifa/trata/backend/internal/logger"
 )
 
 // fakeStore mirrors the SQL contract of the real candidate query: sent

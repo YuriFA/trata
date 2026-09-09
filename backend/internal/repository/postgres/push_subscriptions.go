@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	db "github.com/yurifa/expense-tracker-api/internal/repository/db"
+	"github.com/yurifa/trata/backend/internal/domain"
+	db "github.com/yurifa/trata/backend/internal/repository/db"
 )
 
 // Web Push subscriptions (web-push change, ADR-0004). Unlike every other

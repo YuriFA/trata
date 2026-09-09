@@ -3,7 +3,7 @@ package http //nolint:testpackage // needs the unexported domainErrorStatus tabl
 import (
 	"testing"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
+	"github.com/yurifa/trata/backend/internal/domain"
 )
 
 // TestDomainErrorStatusCoverage guards the split error tables: every sentinel

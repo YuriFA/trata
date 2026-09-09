@@ -7,9 +7,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	"github.com/yurifa/expense-tracker-api/internal/service"
-	"github.com/yurifa/expense-tracker-api/internal/service/fakes"
+	"github.com/yurifa/trata/backend/internal/domain"
+	"github.com/yurifa/trata/backend/internal/service"
+	"github.com/yurifa/trata/backend/internal/service/fakes"
 )
 
 // Push service: the only domain rules are timezone validity (a bad IANA

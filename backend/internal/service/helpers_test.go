@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/yurifa/expense-tracker-api/internal/service"
-	"github.com/yurifa/expense-tracker-api/internal/service/fakes"
+	"github.com/yurifa/trata/backend/internal/service"
+	"github.com/yurifa/trata/backend/internal/service/fakes"
 )
 
 // services wires all services to a fresh in-memory fake store.

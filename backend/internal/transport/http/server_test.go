@@ -15,11 +15,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/yurifa/expense-tracker-api/internal/config"
-	"github.com/yurifa/expense-tracker-api/internal/logger"
-	"github.com/yurifa/expense-tracker-api/internal/service"
-	"github.com/yurifa/expense-tracker-api/internal/service/fakes"
-	httptransport "github.com/yurifa/expense-tracker-api/internal/transport/http"
+	"github.com/yurifa/trata/backend/internal/config"
+	"github.com/yurifa/trata/backend/internal/logger"
+	"github.com/yurifa/trata/backend/internal/service"
+	"github.com/yurifa/trata/backend/internal/service/fakes"
+	httptransport "github.com/yurifa/trata/backend/internal/transport/http"
 )
 
 func TestMain(m *testing.M) {

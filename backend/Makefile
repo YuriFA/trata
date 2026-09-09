@@ -20,12 +20,12 @@ GENERATED := internal/api/api.gen.go internal/repository/db
 .PHONY: run build tidy test gen gen-check gen-openapi gen-sqlc migrate-up migrate-down migrate-create dev
 
 run:
-	@echo "Starting Expense Tracker API..."
-	go run ./cmd/expense-tracker-api
+	@echo "Starting Trata API..."
+	go run ./cmd/trata-api
 
 build:
 	@echo "Building binary..."
-	go build -o bin/expense-tracker-api ./cmd/expense-tracker-api
+	go build -o bin/trata-api ./cmd/trata-api
 
 tidy:
 	go mod tidy

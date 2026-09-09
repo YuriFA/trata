@@ -16,11 +16,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	"github.com/yurifa/expense-tracker-api/internal/logger"
-	"github.com/yurifa/expense-tracker-api/internal/repository"
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/httpctx"
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/httperr"
+	"github.com/yurifa/trata/backend/internal/domain"
+	"github.com/yurifa/trata/backend/internal/logger"
+	"github.com/yurifa/trata/backend/internal/repository"
+	"github.com/yurifa/trata/backend/internal/transport/http/httpctx"
+	"github.com/yurifa/trata/backend/internal/transport/http/httperr"
 )
 
 type bodyRecorder struct {

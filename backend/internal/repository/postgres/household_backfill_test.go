@@ -13,8 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
-	postgres "github.com/yurifa/expense-tracker-api/internal/repository/postgres"
+	"github.com/yurifa/trata/backend/internal/domain"
+	postgres "github.com/yurifa/trata/backend/internal/repository/postgres"
 )
 
 // The household backfill (household-scoping change, migration 000005) upgrades

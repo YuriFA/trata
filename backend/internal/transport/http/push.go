@@ -3,7 +3,7 @@ package http
 import (
 	"context"
 
-	"github.com/yurifa/expense-tracker-api/internal/api"
+	"github.com/yurifa/trata/backend/internal/api"
 )
 
 // Web Push subscription endpoints (web-push change, ADR-0004). Upsert is

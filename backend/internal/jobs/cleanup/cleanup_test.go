@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/yurifa/expense-tracker-api/internal/jobs/cleanup"
-	"github.com/yurifa/expense-tracker-api/internal/logger"
+	"github.com/yurifa/trata/backend/internal/jobs/cleanup"
+	"github.com/yurifa/trata/backend/internal/logger"
 )
 
 // fakeCleaner is an in-memory Cleaner for the cleanup job (no database).

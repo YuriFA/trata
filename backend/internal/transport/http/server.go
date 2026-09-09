@@ -12,11 +12,11 @@ import (
 	"github.com/gin-gonic/gin"
 	ginmiddleware "github.com/oapi-codegen/gin-middleware"
 
-	"github.com/yurifa/expense-tracker-api/internal/api"
-	"github.com/yurifa/expense-tracker-api/internal/config"
-	"github.com/yurifa/expense-tracker-api/internal/repository"
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/httperr"
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/middleware"
+	"github.com/yurifa/trata/backend/internal/api"
+	"github.com/yurifa/trata/backend/internal/config"
+	"github.com/yurifa/trata/backend/internal/repository"
+	"github.com/yurifa/trata/backend/internal/transport/http/httperr"
+	"github.com/yurifa/trata/backend/internal/transport/http/middleware"
 )
 
 const corsMaxAge = 12 * time.Hour

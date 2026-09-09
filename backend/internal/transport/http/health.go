@@ -3,7 +3,7 @@ package http
 import (
 	"context"
 
-	"github.com/yurifa/expense-tracker-api/internal/api"
+	"github.com/yurifa/trata/backend/internal/api"
 )
 
 // GetHealth is the liveness probe for deployment healthchecks: it proves the

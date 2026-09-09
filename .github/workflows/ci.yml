@@ -101,7 +101,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Regenerate TS contract types
-        run: pnpm --filter @expense-tracker/api gen:api
+        run: pnpm --filter @trata/api gen:api
       - name: Verify generated schema is in sync
         run: git diff --exit-code packages/api/src/schema.ts
       - name: Check sync catalog / OpenAPI parity
@@ -173,7 +173,7 @@ jobs:
         with:
           context: backend
           push: false
-          tags: expense-tracker-api:ci
+          tags: trata-api:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -183,6 +183,6 @@ jobs:
           # Catches rot in the backup sidecar (deploy/backup) on every PR.
           context: deploy/backup
           push: false
-          tags: expense-tracker-backup:ci
+          tags: trata-backup:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max

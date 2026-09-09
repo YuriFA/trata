@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yurifa/expense-tracker-api/internal/domain"
+	"github.com/yurifa/trata/backend/internal/domain"
 )
 
 // TLS modes for the SMTP relay connection (SMTP_TLS config).
@@ -203,7 +203,7 @@ func (m *smtpMailer) SendVerificationCode(ctx context.Context, to, code string) 
 }
 
 func (m *smtpMailer) SendPasswordResetToken(ctx context.Context, to, token string) error {
-	subject := "Reset your expense tracker password"
+	subject := "Reset your Trata password"
 	body := fmt.Sprintf(
 		"Use this one-time token to set a new password (expires in %s):\n\n%s",
 		ttlWords(domain.PasswordResetTokenTTL), token,
@@ -216,9 +216,9 @@ func (m *smtpMailer) SendPasswordResetToken(ctx context.Context, to, token strin
 }
 
 func (m *smtpMailer) SendHouseholdInvitation(ctx context.Context, to, link string) error {
-	subject := "You are invited to share a budget on Expense Tracker"
+	subject := "You are invited to share a budget on Trata"
 	body := fmt.Sprintf(
-		"Someone invited you to join their household on Expense Tracker.\n\nAccept the invitation:\n\n%s\n\nIf you were not expecting this, ignore this email.",
+		"Someone invited you to join their household on Trata.\n\nAccept the invitation:\n\n%s\n\nIf you were not expecting this, ignore this email.",
 		link,
 	)
 	return m.send(ctx, to, subject, body)

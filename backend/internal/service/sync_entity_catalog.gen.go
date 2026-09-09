@@ -2,7 +2,7 @@
 
 package service
 
-import "github.com/yurifa/expense-tracker-api/internal/domain"
+import "github.com/yurifa/trata/backend/internal/domain"
 
 func catalogSyncEntityLabel(entity string) string {
 	switch entity {

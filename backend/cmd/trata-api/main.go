@@ -10,15 +10,15 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/yurifa/expense-tracker-api/internal/config"
-	"github.com/yurifa/expense-tracker-api/internal/jobs/cleanup"
-	"github.com/yurifa/expense-tracker-api/internal/jobs/plannedconfirm"
-	"github.com/yurifa/expense-tracker-api/internal/jobs/pushremind"
-	"github.com/yurifa/expense-tracker-api/internal/jobs/retention"
-	"github.com/yurifa/expense-tracker-api/internal/logger"
-	"github.com/yurifa/expense-tracker-api/internal/repository/postgres"
-	"github.com/yurifa/expense-tracker-api/internal/service"
-	httptransport "github.com/yurifa/expense-tracker-api/internal/transport/http"
+	"github.com/yurifa/trata/backend/internal/config"
+	"github.com/yurifa/trata/backend/internal/jobs/cleanup"
+	"github.com/yurifa/trata/backend/internal/jobs/plannedconfirm"
+	"github.com/yurifa/trata/backend/internal/jobs/pushremind"
+	"github.com/yurifa/trata/backend/internal/jobs/retention"
+	"github.com/yurifa/trata/backend/internal/logger"
+	"github.com/yurifa/trata/backend/internal/repository/postgres"
+	"github.com/yurifa/trata/backend/internal/service"
+	httptransport "github.com/yurifa/trata/backend/internal/transport/http"
 )
 
 // version is the build version reported by GET /api/health: the deployed
@@ -32,7 +32,7 @@ func Version() string { return version }
 
 func main() {
 	cfg := config.MustLoad()
-	log := logger.New(logger.Options{Environment: cfg.Env, AppName: "expense-tracker-api"})
+	log := logger.New(logger.Options{Environment: cfg.Env, AppName: "trata-api"})
 
 	if err := run(cfg, log); err != nil {
 		log.Error("fatal error", logger.Error(err))

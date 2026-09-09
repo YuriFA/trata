@@ -17,7 +17,7 @@ services:
 
   app:
     build: ./backend
-    image: expense-tracker-api
+    image: trata-api
     depends_on:
       db:
         condition: service_healthy

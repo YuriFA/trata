@@ -16,7 +16,7 @@
 /backend/bin/
 /backend/out/
 /backend/coverage.out
-/backend/expense-tracker-api
+/backend/trata-api
 
 # --- JS workspaces ---
 node_modules/

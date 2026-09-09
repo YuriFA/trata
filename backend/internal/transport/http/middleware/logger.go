@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/yurifa/expense-tracker-api/internal/transport/http/httpctx"
+	"github.com/yurifa/trata/backend/internal/transport/http/httpctx"
 )
 
 func SlogLogger(log *slog.Logger) gin.HandlerFunc {
