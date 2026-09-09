@@ -15,6 +15,7 @@ import {
 } from '@lucide/vue'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { LogoMark } from '@/shared/ui/logo'
 import { SyncStatusBadge } from '@/widgets/sync-status'
 import { useAddTransactionDialog } from '@/features/transaction/add'
 import { useAuthStore } from '@/entities/session'
@@ -66,7 +67,7 @@ function goToLogin() {
         class="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground"
         aria-hidden="true"
       >
-        <Wallet class="size-4.5" />
+        <LogoMark class="size-6" />
       </span>
       <span class="text-xl font-bold tracking-tight">{{ t('app.name') }}</span>
     </RouterLink>

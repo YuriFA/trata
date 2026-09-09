@@ -20,6 +20,9 @@ JTBD: record a spend in seconds; see where money goes this month; keep balances/
 
 ## Branding & styling
 
+### Brand mark (approved)
+Outline glyph «дом + гроссбух» (канвас Trata Logo Variants, вариант 1 «Refined Outline"): шеврон-крыша над страницей-гроссбухом со скруглёнными углами, три строки, первая короче. Stroke-only, round caps/joins, толщина 36/512; геометрия канонична в `apps/web/src/shared/ui/logo/LogoMark.vue` (currentColor, наследует цвет поверхности). Рендеры: тил `#0f766e` на бумаге, белый на тиловой плашке сайдбара, тил `#2aa79b` на тёмном. Favicon/PWA: тиловая плитка `#0f766e` (у favicon скругление rx=112/512, у maskable/apple-touch полный квадрат, глиф в центральных 80%), сборка в `apps/web/public/favicon.svg`. Текст рядом с маркой рендерится системным шрифтом приложения, кастомного вордмарка нет.
+
 ### Layout structure (as implemented)
 - **Left sidebar** (the existing desktop shell, 248px): brand mark top, vertical nav with lucide icons + labels, prominent primary CTA «Добавить операцию» (full-width, THE single desktop add trigger; kbd-подсказка «N» справа на hover), bottom block: sync status badge + user email + sign out (authed) or guest badge + sign in. Добавление транзакций на десктопе имеет ровно один флоу (центрированный модал «Новая транзакция» с табами Расход/Доход/Перевод) и три триггера к нему: сайдбарная CTA (основной путь), хоткей «N», command palette ⌘K (ускорение, не единственный путь); кнопка «Создать» на странице Транзакций — контекстный триггер того же флоу. Быстрых действий на дашборде нет (их роль на <768px выполняет FAB speed-dial).
 - Content column max-w-6xl (~1152px), comfortable gutters. Dashboard (as implemented): 4 clickable stat cards on top (each navigates to the filtered transaction list), main column (category breakdown, recent transactions) + right rail (Счета + Долги) on ≥1280px, single column below.
