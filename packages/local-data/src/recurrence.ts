@@ -4,7 +4,7 @@
 // locally confirmed plan and the server's auto job compute identical series.
 // Plain UTC `Date` arithmetic — no date-fns (facade rule).
 
-import type { CalendarDay, PlannedPayment, PlannedPaymentRegularity } from '@expense-tracker/api'
+import type { CalendarDay, PlannedPayment, PlannedPaymentRegularity } from '@trata/api'
 
 const MS_PER_DAY = 86_400_000
 const MONTHS_PER_YEAR = 12

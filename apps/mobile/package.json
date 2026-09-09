@@ -16,11 +16,11 @@
     "test:e2e": "./scripts/e2e/run-maestro-ios.sh"
   },
   "dependencies": {
-    "@expense-tracker/api": "workspace:*",
-    "@expense-tracker/dates": "workspace:*",
-    "@expense-tracker/local-data": "workspace:*",
-    "@expense-tracker/money": "workspace:*",
-    "@expense-tracker/tokens": "workspace:*",
+    "@trata/api": "workspace:*",
+    "@trata/dates": "workspace:*",
+    "@trata/local-data": "workspace:*",
+    "@trata/money": "workspace:*",
+    "@trata/tokens": "workspace:*",
     "@expo/vector-icons": "^15.0.2",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@hookform/resolvers": "^5.9.1",

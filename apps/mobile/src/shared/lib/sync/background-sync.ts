@@ -16,7 +16,7 @@ import {
   createApiTransport,
   createSyncEngine,
   getOwnerUserId,
-} from '@expense-tracker/local-data'
+} from '@trata/local-data'
 
 // Headless task runs may skip the app entry, so this module binds the id
 // factory itself (idempotent, same as the _layout bootstrap).

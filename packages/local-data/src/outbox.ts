@@ -7,7 +7,7 @@
 // outbox so the later engine plugs in without schema or repository changes.
 
 import { and, asc, eq, inArray, isNotNull, isNull } from 'drizzle-orm'
-import { nowIso } from '@expense-tracker/dates'
+import { nowIso } from '@trata/dates'
 import type { LocalTransaction } from './types'
 import {
   accounts,

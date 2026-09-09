@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import type { Category, Transaction } from '@expense-tracker/api'
-import { currentPeriod, shiftPeriod } from '@expense-tracker/dates'
+import type { Category, Transaction } from '@trata/api'
+import { currentPeriod, shiftPeriod } from '@trata/dates'
 import { categoryTotals, percentLabel, periodTotal, toChartEntries } from './selectors'
 import { OTHER_ENTRY_ID } from './other-entry'
 

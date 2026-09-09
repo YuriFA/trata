@@ -6,7 +6,7 @@
 // permission-denied degradation.
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals'
-import type { PlannedPayment } from '@expense-tracker/api'
+import type { PlannedPayment } from '@trata/api'
 import * as Notifications from 'expo-notifications'
 import { formatAmount } from '@/shared/lib/format/format'
 import { planReminderDate, reschedule } from './reminders'

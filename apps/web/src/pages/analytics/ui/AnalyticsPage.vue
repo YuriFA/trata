@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { currentPeriod, monthLabel, periodToUtcDayRange } from '@expense-tracker/dates'
+import { currentPeriod, monthLabel, periodToUtcDayRange } from '@trata/dates'
 import { useTransactions } from '@/entities/transaction'
 import { useCategoriesIncludingArchived } from '@/entities/category'
 import { ErrorState } from '@/shared/ui/error-state'

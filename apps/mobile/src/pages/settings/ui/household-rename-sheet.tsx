@@ -8,7 +8,7 @@ import { useRef, useState } from 'react'
 import { View } from 'react-native'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
-import type { Household } from '@expense-tracker/api'
+import type { Household } from '@trata/api'
 import { useHouseholdActions } from '@/entities/household'
 import { getRepositoryErrorText } from '@/shared/lib/data/repository-errors-ru'
 import {

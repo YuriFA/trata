@@ -4,14 +4,14 @@ import type {
   DebtOperationRepository,
   DebtOperationQuery,
   UpdateDebtOperationPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 
 export type {
   CreateDebtOperationPayload,
   DebtOperationRepository,
   DebtOperationQuery,
   UpdateDebtOperationPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 
 export const DEBT_OPERATION_REPOSITORY_KEY: InjectionKey<DebtOperationRepository> = Symbol(
   'debt-operation-repository',

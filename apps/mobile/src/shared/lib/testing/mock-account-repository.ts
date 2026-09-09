@@ -9,7 +9,7 @@ import {
   type AccountRepository,
   type CreateAccountPayload,
   type UpdateAccountPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 
 export interface MockAccountRepository extends AccountRepository {
   /** Copy of the current in-memory rows. */

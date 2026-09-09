@@ -11,7 +11,7 @@
 // 0.45.2 has no `node-sqlite` driver — this adapter is the proven path.)
 //
 // NEVER import this from app code - it exists for `*.test.ts` files only
-// (through the `@expense-tracker/local-data/testing` entry).
+// (through the `@trata/local-data/testing` entry).
 
 import { DatabaseSync } from 'node:sqlite'
 import { drizzle } from 'drizzle-orm/expo-sqlite/driver'

@@ -12,7 +12,7 @@ import {
 } from '@/entities/household'
 import { notification } from '@/shared/services/notification'
 import type { ErrorAction } from '@/shared/services/notification'
-import type { HouseholdInvitation } from '@expense-tracker/api'
+import type { HouseholdInvitation } from '@trata/api'
 
 // Outgoing invitations (household-ux 3.2, owner only): the household's
 // invitations with status chips and the resend (re-invite refreshes the

@@ -1,7 +1,7 @@
 // Comlink's throw transfer preserves only an Error's message/name/stack -
 // structured clone drops the class, and with it the machine `code` every
 // frontend maps errors by (invariant #4). The worker-side repositories throw
-// the typed RepositoryError subclasses from @expense-tracker/api; each class
+// the typed RepositoryError subclasses from @trata/api; each class
 // has a unique `name`, so the main-thread bridge rehydrates the exact subclass
 // from the surviving name and rethrows it. `instanceof` and `error.code` keep
 // working across the worker boundary; `apiCode`/`retryAfter` do not cross
@@ -18,7 +18,7 @@ import {
   UnauthorizedError,
   UnknownReferencesError,
   VersionConflictError,
-} from '@expense-tracker/api'
+} from '@trata/api'
 
 const FACTORIES: Record<string, (message: string) => RepositoryError> = {
   NotFoundError: (message) => new NotFoundError(message),

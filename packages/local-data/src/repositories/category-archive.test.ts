@@ -7,7 +7,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest'
 import { eq, sql } from 'drizzle-orm'
-import { InvalidPayloadError, ReferentialIntegrityError } from '@expense-tracker/api'
+import { InvalidPayloadError, ReferentialIntegrityError } from '@trata/api'
 import { createTestDatabase } from '../testing/test-database'
 import { categories, syncOutbox, transactions } from '../schema'
 import type { LocalDatabase } from '../types'

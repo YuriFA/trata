@@ -1,15 +1,7 @@
 import { inject, type InjectionKey } from 'vue'
-import type {
-  CategoryRepository,
-  CreateCategoryPayload,
-  UpdateCategoryPayload,
-} from '@expense-tracker/api'
+import type { CategoryRepository, CreateCategoryPayload, UpdateCategoryPayload } from '@trata/api'
 
-export type {
-  CategoryRepository,
-  CreateCategoryPayload,
-  UpdateCategoryPayload,
-} from '@expense-tracker/api'
+export type { CategoryRepository, CreateCategoryPayload, UpdateCategoryPayload } from '@trata/api'
 
 export const CATEGORY_REPOSITORY_KEY: InjectionKey<CategoryRepository> =
   Symbol('category-repository')

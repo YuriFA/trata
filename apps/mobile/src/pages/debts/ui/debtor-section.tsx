@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { View } from 'react-native'
-import type { DebtDirection } from '@expense-tracker/api'
+import type { DebtDirection } from '@trata/api'
 import { Text } from '@/shared/ui/text'
 import { Pressable } from '@/shared/ui/pressable'
 import { Icon } from '@/shared/ui/icon'

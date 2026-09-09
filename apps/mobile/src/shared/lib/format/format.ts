@@ -1,8 +1,8 @@
 // Display formatting for amounts, shared by the dashboard and the
-// transactions tab: single-currency amounts via @expense-tracker/money
-// (integer minor units, Intl-free). Date labels live in @expense-tracker/dates.
+// transactions tab: single-currency amounts via @trata/money
+// (integer minor units, Intl-free). Date labels live in @trata/dates.
 
-import { formatMoney, type CurrencyCode } from '@expense-tracker/money'
+import { formatMoney, type CurrencyCode } from '@trata/money'
 
 export const DEFAULT_CURRENCY: CurrencyCode = 'RUB'
 const RU_LOCALE = 'ru'

@@ -3,7 +3,7 @@
 // set by the backend; RN's shared cookie store sends it with every request
 // (`credentials: 'include'` on the client), so these calls carry no tokens.
 
-import type { components } from '@expense-tracker/api'
+import type { components } from '@trata/api'
 import { apiClient } from '@/shared/api/client'
 import type { User } from '../model/types'
 

@@ -1,6 +1,6 @@
 import { memo, useMemo, useRef } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
-import { nowIso } from '@expense-tracker/dates'
+import { nowIso } from '@trata/dates'
 import type { BottomSheetRef } from '@/shared/ui/bottom-sheet'
 import { occurredAtForDaysAgo } from '../model/quick-dates'
 import type { CreateTransactionFormValues } from '../model/schema'

@@ -3,7 +3,7 @@
 // no netting across directions; integer minor units end to end - formatting
 // happens only at the display edge.
 
-import type { DebtDirection, DebtOperation } from '@expense-tracker/api'
+import type { DebtDirection, DebtOperation } from '@trata/api'
 
 /** A debtor's balances in the two independent directions. */
 export interface DirectionBalances {

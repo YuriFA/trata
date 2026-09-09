@@ -4,14 +4,14 @@ import type {
   TransactionQuery,
   TransactionRepository,
   UpdateTransactionPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 
 export type {
   CreateTransactionPayload,
   TransactionQuery,
   TransactionRepository,
   UpdateTransactionPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 
 export const TRANSACTION_REPOSITORY_KEY: InjectionKey<TransactionRepository> =
   Symbol('transaction-repository')

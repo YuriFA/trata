@@ -1,4 +1,4 @@
-import { isIsoDateTime } from '@expense-tracker/api'
+import { isIsoDateTime } from '@trata/api'
 import type { BrandedIsoDateTime, IsoDateTime } from './types'
 
 const asIsoDateTime = (value: string): BrandedIsoDateTime => value as BrandedIsoDateTime

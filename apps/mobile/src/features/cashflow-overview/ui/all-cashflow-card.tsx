@@ -3,8 +3,8 @@ import { Card } from '@/shared/ui/card'
 import { Icon } from '@/shared/ui/icon'
 import { Text } from '@/shared/ui/text'
 import { formatAmount } from '@/shared/lib/format/format'
-import { monthRangeLabelShort, relativeDayLabel } from '@expense-tracker/dates'
-import type { Category, Transaction } from '@expense-tracker/api'
+import { monthRangeLabelShort, relativeDayLabel } from '@trata/dates'
+import type { Category, Transaction } from '@trata/api'
 import type { LatestCashflowView } from './all-cashflow-card.types'
 import {
   cashflowDayGroups,

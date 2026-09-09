@@ -11,7 +11,7 @@ import {
   ReferentialIntegrityError,
   UnknownReferencesError,
   VersionConflictError,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import * as outboxModule from '../outbox'
 import { createTestDatabase } from '../testing/test-database'
 import { debtOperations, debtors, syncOutbox } from '../schema'

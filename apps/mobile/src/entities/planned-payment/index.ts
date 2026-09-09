@@ -2,7 +2,7 @@ export { PlannedPaymentRepositoryProvider } from './api/repository'
 export {
   createLocalPlannedPaymentRepository,
   type ConfirmPlannedPaymentInput,
-} from '@expense-tracker/local-data'
+} from '@trata/local-data'
 export {
   usePlannedPayments,
   useCreatePlannedPayment,
@@ -10,5 +10,5 @@ export {
   useDeletePlannedPayment,
   useConfirmPlannedPayment,
 } from './model/use-planned-payments'
-export { monthlyTotal } from '@expense-tracker/local-data'
+export { monthlyTotal } from '@trata/local-data'
 export { requestNotificationPermissions, reschedule } from './model/reminders'

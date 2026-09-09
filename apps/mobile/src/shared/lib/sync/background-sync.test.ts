@@ -5,14 +5,14 @@
 // run reports Failed instead of rejecting.
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals'
-import type { SyncPullPage, SyncPushOperation, SyncPushResultItem } from '@expense-tracker/api'
+import type { SyncPullPage, SyncPushOperation, SyncPushResultItem } from '@trata/api'
 import { createLocalCategoryRepository } from '@/entities/category'
-import { createTestDatabase } from '@expense-tracker/local-data/testing'
-import { setOwnerUserId, syncOutbox } from '@expense-tracker/local-data'
+import { createTestDatabase } from '@trata/local-data/testing'
+import { setOwnerUserId, syncOutbox } from '@trata/local-data'
 import type { LocalDatabase } from '@/shared/lib/db/database'
 import { BACKGROUND_SYNC_TASK, registerBackgroundSync } from './background-sync'
 
-// The transport seam lives in @expense-tracker/api (pushSyncOperations /
+// The transport seam lives in @trata/api (pushSyncOperations /
 // pullSyncChanges); redirect it to a per-test holder so the module under test
 // builds a real engine whose HTTP leg is fake.
 const mockTransport = {
@@ -20,8 +20,8 @@ const mockTransport = {
   pull: async (_cursor: number): Promise<SyncPullPage> => ({ changes: [], nextCursor: null }),
 }
 
-jest.mock('@expense-tracker/api', () => ({
-  ...(jest.requireActual('@expense-tracker/api') as object),
+jest.mock('@trata/api', () => ({
+  ...(jest.requireActual('@trata/api') as object),
   pushSyncOperations: (client: unknown, operations: SyncPushOperation[]) =>
     mockTransport.push(operations),
   pullSyncChanges: (client: unknown, cursor: number) => mockTransport.pull(cursor),

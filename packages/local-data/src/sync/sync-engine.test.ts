@@ -12,7 +12,7 @@ import {
   type SyncPushOperation,
   type SyncPullPage,
   type SyncPushResultItem,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import { createLocalAccountRepository } from '../repositories/account'
 import { createLocalCategoryRepository } from '../repositories/category'
 import { createLocalTransactionRepository } from '../repositories/transaction'

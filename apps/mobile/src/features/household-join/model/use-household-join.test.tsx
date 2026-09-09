@@ -9,9 +9,9 @@ import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { Alert } from 'react-native'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import type { Household } from '@expense-tracker/api'
-import { createTestDatabase } from '@expense-tracker/local-data/testing'
-import { getLastHousehold, getOwnerUserId, setLastHousehold } from '@expense-tracker/local-data'
+import type { Household } from '@trata/api'
+import { createTestDatabase } from '@trata/local-data/testing'
+import { getLastHousehold, getOwnerUserId, setLastHousehold } from '@trata/local-data'
 import { DatabaseProvider } from '@/shared/lib/db/database-context'
 import type { LocalDatabase } from '@/shared/lib/db/database'
 import { createQueryClient } from '@/shared/lib/query/query-client'
@@ -34,8 +34,8 @@ const HOUSEHOLD: Household = {
   ],
 }
 
-jest.mock('@expense-tracker/local-data', () => ({
-  ...(jest.requireActual('@expense-tracker/local-data') as Record<string, unknown>),
+jest.mock('@trata/local-data', () => ({
+  ...(jest.requireActual('@trata/local-data') as Record<string, unknown>),
   rebaseLocalDataForHousehold: jest.fn(),
   wipeLocalData: jest.fn(),
 }))
@@ -56,7 +56,7 @@ jest.mock('@/shared/lib/sync/sync-context', () => ({
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { rebaseLocalDataForHousehold: rebaseMock, wipeLocalData: wipeMock } =
-  require('@expense-tracker/local-data') as {
+  require('@trata/local-data') as {
     rebaseLocalDataForHousehold: ReturnType<typeof jest.fn>
     wipeLocalData: ReturnType<typeof jest.fn>
   }

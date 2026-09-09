@@ -18,12 +18,12 @@ import {
   pushSyncOperations,
   type ApiClient,
   type SyncPushOperation,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import { createLocalAccountRepository } from '@/entities/account'
 import { createLocalCategoryRepository } from '@/entities/category'
 import { createLocalTransactionRepository } from '@/entities/transaction'
 import type { LocalDatabase } from '@/shared/lib/db/database'
-import { createTestDatabase } from '@expense-tracker/local-data/testing'
+import { createTestDatabase } from '@trata/local-data/testing'
 import {
   categories as categoriesTable,
   transactions as transactionsTable,
@@ -33,7 +33,7 @@ import {
   restoreConflictAsNew,
   createApiTransport,
   createSyncEngine,
-} from '@expense-tracker/local-data'
+} from '@trata/local-data'
 import { eq } from 'drizzle-orm'
 
 const API_URL = process.env.SYNC_INTEGRATION_API ?? ''
@@ -401,7 +401,7 @@ maybe('sync engine vs real backend', () => {
     // We inject the corrupt conflict directly into the db (bypassing the
     // engine) to simulate a hypothetical corrupt preserved state.
     const { recordConflict, listUnresolvedConflicts: listConflicts } =
-      await import('@expense-tracker/local-data')
+      await import('@trata/local-data')
 
     const corruptConflictId = randomUUID()
     main.db.transaction((tx) =>

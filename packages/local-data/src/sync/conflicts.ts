@@ -8,8 +8,8 @@
 // the exact same transitions.
 
 import { and, desc, eq, isNull } from 'drizzle-orm'
-import { nowIso } from '@expense-tracker/dates'
-import type { SyncOperationData } from '@expense-tracker/api'
+import { nowIso } from '@trata/dates'
+import type { SyncOperationData } from '@trata/api'
 import type { LocalDatabase, LocalTransaction } from '../types'
 import { enqueueOperation } from '../outbox'
 import {

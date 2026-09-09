@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { SYNC_QUERY_KEY_ROOTS } from '@expense-tracker/local-data'
+import { SYNC_QUERY_KEY_ROOTS } from '@trata/local-data'
 import type {
   CreateDebtOperationPayload,
   CreateDebtorPayload,
   UpdateDebtOperationPayload,
   UpdateDebtorPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import { useDebtOperationRepository, useDebtorRepository } from '../api/repository'
 
 export function useDebtors() {

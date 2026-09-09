@@ -11,12 +11,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { Alert } from 'react-native'
-import {
-  VersionConflictError,
-  type Account,
-  type Category,
-  type Transaction,
-} from '@expense-tracker/api'
+import { VersionConflictError, type Account, type Category, type Transaction } from '@trata/api'
 import { ThemeProvider } from '@/shared/config/theme'
 import { createQueryClient } from '@/shared/lib/query/query-client'
 import { AccountRepositoryProvider } from '@/entities/account'
@@ -36,7 +31,7 @@ let mockAuth: { status: 'authenticated' | 'anonymous'; user: { id: string } | nu
   status: 'anonymous',
   user: null,
 }
-let mockMembers: readonly import('@expense-tracker/api').HouseholdMember[] | null = null
+let mockMembers: readonly import('@trata/api').HouseholdMember[] | null = null
 
 jest.mock('@/entities/session', () => ({
   ...(jest.requireActual('@/entities/session') as Record<string, unknown>),

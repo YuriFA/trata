@@ -1,12 +1,12 @@
 // Pure derived-data helpers for the analytics screens over the DOMAIN types
-// from @expense-tracker/api and the period model from @expense-tracker/dates,
+// from @trata/api and the period model from @trata/dates,
 // ported from the mobile selectors (web-screens-parity design D2). Integer
 // money math only (minor units): totals are plain integer sums and
 // percentages are display strings derived from them - UI components never
 // filter, group, or compute shares themselves.
 
-import type { Category, Transaction } from '@expense-tracker/api'
-import { transactionsInPeriod, type PeriodCursor } from '@expense-tracker/dates'
+import type { Category, Transaction } from '@trata/api'
+import { transactionsInPeriod, type PeriodCursor } from '@trata/dates'
 import { OTHER_ENTRY_COLOR, OTHER_ENTRY_ID } from './other-entry'
 
 /** Which cashflow direction an analytics view aggregates. */

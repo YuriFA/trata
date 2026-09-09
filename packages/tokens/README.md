@@ -1,4 +1,4 @@
-# @expense-tracker/tokens
+# @trata/tokens
 
 Design tokens as CSS - the single home of the shared palette. Two
 platform-specific copies live side by side in `src/` (dark-mode mechanics
@@ -7,8 +7,8 @@ must not re-declare token values.
 
 | Platform | File | App import | Theme mechanism |
 |---|---|---|---|
-| Web | `src/index.css` | `@import "@expense-tracker/tokens/css"` | `:root` / `.dark` + `@custom-variant dark` |
-| Mobile | `src/mobile.css` | `@import "@expense-tracker/tokens/mobile"` (from `apps/mobile/global.css`) | Uniwind `@variant light/dark` inside `@layer theme` |
+| Web | `src/index.css` | `@import "@trata/tokens/css"` | `:root` / `.dark` + `@custom-variant dark` |
+| Mobile | `src/mobile.css` | `@import "@trata/tokens/mobile"` (from `apps/mobile/global.css`) | Uniwind `@variant light/dark` inside `@layer theme` |
 
 The web copy also carries the radius tokens, the `@theme inline` sidebar
 wiring and a base layer (`border-border`, body bg/fg + Outfit font). The
@@ -33,4 +33,4 @@ for quick-action chips and category colors on mobile.
 
 ## License
 
-Private package for Expense Tracker project.
+Private package for the Trata project.

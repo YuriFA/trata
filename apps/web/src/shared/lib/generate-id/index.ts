@@ -1,1 +1,1 @@
-export { generateId } from '@expense-tracker/api'
+export { generateId } from '@trata/api'

@@ -6,7 +6,7 @@ import {
   monthLabel,
   periodToUtcDayRange,
   shiftPeriod,
-} from '@expense-tracker/dates'
+} from '@trata/dates'
 import DashboardPage from './DashboardPage.vue'
 import type { PlannedPayment } from '@/entities/planned-payment'
 import {

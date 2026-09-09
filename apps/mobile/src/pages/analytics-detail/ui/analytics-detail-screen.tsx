@@ -24,7 +24,7 @@ import {
   shiftPeriod,
   type AnalyticsPeriodKind,
   type PeriodCursor,
-} from '@expense-tracker/dates'
+} from '@trata/dates'
 import {
   DonutChart,
   OTHER_ENTRY_COLOR,

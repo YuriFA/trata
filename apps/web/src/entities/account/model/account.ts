@@ -1,5 +1,1 @@
-export {
-  normalizeAccount,
-  parseAccountsStorage,
-  serializeAccountsStorage,
-} from '@expense-tracker/api'
+export { normalizeAccount, parseAccountsStorage, serializeAccountsStorage } from '@trata/api'

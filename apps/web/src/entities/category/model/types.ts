@@ -1,1 +1,1 @@
-export type { Category } from '@expense-tracker/api'
+export type { Category } from '@trata/api'

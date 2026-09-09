@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { HouseholdInvitationPreview } from '@expense-tracker/api'
+import type { HouseholdInvitationPreview } from '@trata/api'
 import { Button } from '@/shared/ui/button'
 import { emailLocalPart, getHouseholdErrorMessage, householdApi } from '@/entities/household'
 import { useAuthStore } from '@/entities/session'

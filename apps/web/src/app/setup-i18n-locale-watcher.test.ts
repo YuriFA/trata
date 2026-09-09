@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { defineComponent, nextTick } from 'vue'
-import { DEFAULT_LOCALE } from '@expense-tracker/i18n'
+import { DEFAULT_LOCALE } from '@trata/i18n'
 import i18n from '@/shared/i18n'
 import { setupI18nLocaleWatcher } from './setup-i18n-locale-watcher'
 import { useSettingsStore } from '@/shared/store/use-settings-store'

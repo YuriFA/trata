@@ -6,7 +6,7 @@ import {
   type TransactionQuery,
   type TransactionRepository,
   type UpdateTransactionPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 
 export interface MockTransactionRepository extends TransactionRepository {
   snapshot(): Transaction[]

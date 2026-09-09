@@ -3,7 +3,7 @@
 // always-two-digits `formatMoney` is wrong for this: it must not pad or
 // normalize digits the user is still typing. No float math - string only.
 
-import { currencySymbol, type CurrencyCode } from '@expense-tracker/money'
+import { currencySymbol, type CurrencyCode } from '@trata/money'
 
 const GROUP_SEPARATOR = '\u202F'
 const SYMBOL_SEPARATOR = '\u00A0'

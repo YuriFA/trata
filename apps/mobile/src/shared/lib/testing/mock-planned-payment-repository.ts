@@ -18,7 +18,7 @@ import {
   type PlannedPaymentQuery,
   type PlannedPaymentRepository,
   type UpdatePlannedPaymentPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 
 /** The manual-confirmation input as recorded by the mock. */
 interface ConfirmInputRecord {

@@ -1,4 +1,4 @@
-import type { CurrencyCode } from '@expense-tracker/money'
+import type { CurrencyCode } from '@trata/money'
 import { Text } from '@/shared/ui/text'
 import { formatAmountInput } from '@/shared/lib/money/display'
 

@@ -1,5 +1,5 @@
 export { CategoryRepositoryProvider } from './api/repository'
-export { createLocalCategoryRepository } from '@expense-tracker/local-data'
+export { createLocalCategoryRepository } from '@trata/local-data'
 export {
   useCategories,
   useCategoriesIncludingArchived,

@@ -8,7 +8,7 @@
 // machine-readable error codes.
 
 import { and, asc, eq, isNull } from 'drizzle-orm'
-import { nowIso } from '@expense-tracker/dates'
+import { nowIso } from '@trata/dates'
 import {
   AlreadyExistsError,
   InvalidPayloadError,
@@ -27,7 +27,7 @@ import {
   type CreateDebtorPayload,
   type UpdateDebtOperationPayload,
   type UpdateDebtorPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import type { LocalDatabase } from '../types'
 import { enqueueOperation, hasSentOperations, removeOperationsFor } from '../outbox'
 import { getOwnerUserId } from '../sync/sync-meta'

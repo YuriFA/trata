@@ -12,7 +12,7 @@
 // Colors are raw hex DATA rendered via inline styles (tinted circle
 // backgrounds, chart fills), not Tailwind classes.
 
-import type { CategoryType } from '@expense-tracker/api'
+import type { CategoryType } from '@trata/api'
 
 export interface CategoryIconOption {
   icon: string

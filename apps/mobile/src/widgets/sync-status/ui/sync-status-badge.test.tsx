@@ -4,11 +4,11 @@
 import { describe, expect, it, beforeEach, jest } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { createTestDatabase } from '@expense-tracker/local-data/testing'
+import { createTestDatabase } from '@trata/local-data/testing'
 import { DatabaseProvider } from '@/shared/lib/db/database-context'
 import type { LocalDatabase } from '@/shared/lib/db/database'
 import { createQueryClient } from '@/shared/lib/query/query-client'
-import { enqueueOperation, recordConflict, syncOutbox } from '@expense-tracker/local-data'
+import { enqueueOperation, recordConflict, syncOutbox } from '@trata/local-data'
 import { eq } from 'drizzle-orm'
 import { SyncStatusBadge } from './sync-status-badge'
 

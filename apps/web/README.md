@@ -3,8 +3,8 @@
 Vue 3 + Vite client of the Trata expense tracker: an installable, local-first
 PWA (offline SQLite over OPFS, service-worker app shell) built with
 Feature-Sliced Design, Tailwind CSS v4 on shared design tokens
-(`@expense-tracker/tokens`), vue-i18n (ru default, en), and generated API
-types from `@expense-tracker/api` (OpenAPI is the contract source of truth).
+(`@trata/tokens`), vue-i18n (ru default, en), and generated API
+types from `@trata/api` (OpenAPI is the contract source of truth).
 
 Read `AGENTS.md` in this directory before changing code, and
 `docs/ARCHITECTURE.md` for the FSD layout. Root `README.md` covers the whole

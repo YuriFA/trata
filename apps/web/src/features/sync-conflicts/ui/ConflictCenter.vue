@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { LocalSyncConflict } from '@expense-tracker/local-data'
+import type { LocalSyncConflict } from '@trata/local-data'
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
 import { Button } from '@/shared/ui/button'
 import { useSyncController } from '@/shared/lib/local-db'

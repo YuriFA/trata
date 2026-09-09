@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals'
 import { formatAmount } from './format'
 
-// ru shaping from @expense-tracker/money: narrow no-break space (\u202F)
+// ru shaping from @trata/money: narrow no-break space (\u202F)
 // groups thousands, no-break space (\u00A0) glues the currency symbol.
 
 describe('format · formatAmount', () => {

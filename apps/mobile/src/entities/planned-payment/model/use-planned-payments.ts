@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { SYNC_QUERY_KEY_ROOTS, type ConfirmPlannedPaymentInput } from '@expense-tracker/local-data'
-import type { CreatePlannedPaymentPayload, UpdatePlannedPaymentPayload } from '@expense-tracker/api'
+import { SYNC_QUERY_KEY_ROOTS, type ConfirmPlannedPaymentInput } from '@trata/local-data'
+import type { CreatePlannedPaymentPayload, UpdatePlannedPaymentPayload } from '@trata/api'
 import { usePlannedPaymentRepository } from '../api/repository'
 
 /**

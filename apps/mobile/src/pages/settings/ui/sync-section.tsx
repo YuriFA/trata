@@ -4,14 +4,14 @@
 // renders nothing until the user is authenticated.
 
 import { useQuery } from '@tanstack/react-query'
-import { dateTimeLabel } from '@expense-tracker/dates'
+import { dateTimeLabel } from '@trata/dates'
 import { View } from 'react-native'
 import { Button } from '@/shared/ui/button'
 import { Icon } from '@/shared/ui/icon'
 import { Text } from '@/shared/ui/text'
 import { useAuth } from '@/entities/session'
 import { useLocalDatabase } from '@/shared/lib/db/database-context'
-import { readSyncStatus } from '@expense-tracker/local-data'
+import { readSyncStatus } from '@trata/local-data'
 import { useSyncController } from '@/shared/lib/sync/sync-context'
 import { Card } from '@/shared/ui/card'
 

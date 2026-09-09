@@ -19,7 +19,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useQueryCache } from '@pinia/colada'
-import type { Household } from '@expense-tracker/api'
+import type { Household } from '@trata/api'
 import i18n from '@/shared/i18n'
 import { getLocalDbApi } from '@/shared/lib/local-db'
 import { householdApi } from '@/entities/household'

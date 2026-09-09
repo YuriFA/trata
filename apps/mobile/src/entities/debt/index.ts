@@ -1,8 +1,5 @@
 export { DebtRepositoryProvider } from './api/repository'
-export {
-  createLocalDebtorRepository,
-  createLocalDebtOperationRepository,
-} from '@expense-tracker/local-data'
+export { createLocalDebtorRepository, createLocalDebtOperationRepository } from '@trata/local-data'
 export {
   useDebtors,
   useDebtOperations,

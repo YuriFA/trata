@@ -9,8 +9,8 @@ import type {
   TransactionRepository,
   DebtorRepository,
   DebtOperationRepository,
-} from '@expense-tracker/api'
-import type { LocalPlannedPaymentRepository } from '@expense-tracker/local-data'
+} from '@trata/api'
+import type { LocalPlannedPaymentRepository } from '@trata/local-data'
 import { ACCOUNT_REPOSITORY_KEY } from '@/entities/account'
 import { CATEGORY_REPOSITORY_KEY } from '@/entities/category'
 import { TRANSACTION_REPOSITORY_KEY } from '@/entities/transaction'

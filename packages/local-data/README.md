@@ -1,4 +1,4 @@
-# @expense-tracker/local-data
+# @trata/local-data
 
 The platform-neutral local-first data layer shared by the clients: the drizzle
 SQLite schema (6 entity tables + outbox/conflicts/meta plumbing), the outbox
@@ -91,5 +91,5 @@ transport binding, background sync (expo), React contexts, and UI.
 
 ## Testing entry
 
-`@expense-tracker/local-data/testing` exports `createTestDatabase()` for
+`@trata/local-data/testing` exports `createTestDatabase()` for
 app-side test suites (mobile jest maps it in `jest.config.js`).

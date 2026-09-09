@@ -1,6 +1,6 @@
 import { View } from 'react-native'
-import { formatMoney } from '@expense-tracker/money'
-import type { AccountWithBalance } from '@expense-tracker/api'
+import { formatMoney } from '@trata/money'
+import type { AccountWithBalance } from '@trata/api'
 import { Icon } from '@/shared/ui/icon'
 import { Text } from '@/shared/ui/text'
 import { Pressable } from '@/shared/ui/pressable'

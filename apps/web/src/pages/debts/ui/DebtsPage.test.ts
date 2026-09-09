@@ -8,7 +8,7 @@ import {
   createMockDebtOperationRepository,
 } from '@/__tests__/helpers/mock-repositories'
 import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'
-import type { DebtOperation } from '@expense-tracker/api'
+import type { DebtOperation } from '@trata/api'
 
 const debtors = [
   { id: 'd1', name: 'Анна', note: '', version: 1 },

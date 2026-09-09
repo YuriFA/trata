@@ -1,10 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { SYNC_QUERY_KEY_ROOTS } from '@expense-tracker/local-data'
-import type {
-  AccountWithBalance,
-  CreateAccountPayload,
-  UpdateAccountPayload,
-} from '@expense-tracker/api'
+import { SYNC_QUERY_KEY_ROOTS } from '@trata/local-data'
+import type { AccountWithBalance, CreateAccountPayload, UpdateAccountPayload } from '@trata/api'
 import { useAccountRepository } from '../api/repository'
 
 export function useAccounts() {

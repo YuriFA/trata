@@ -12,7 +12,7 @@ import {
   previousMonth,
   weekdayLabels,
   type MonthCursor,
-} from '@expense-tracker/dates'
+} from '@trata/dates'
 import {
   BottomSheet,
   BottomSheetHeader,

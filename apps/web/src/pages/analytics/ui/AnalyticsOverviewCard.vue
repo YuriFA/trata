@@ -3,8 +3,8 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { ChevronRight } from '@lucide/vue'
-import { currentPeriod, monthLabel } from '@expense-tracker/dates'
-import type { Category, Transaction } from '@expense-tracker/api'
+import { currentPeriod, monthLabel } from '@trata/dates'
+import type { Category, Transaction } from '@trata/api'
 import {
   categoryTotals,
   periodTotal,

@@ -15,15 +15,15 @@ module.exports = {
         'invariant #13: money/dates/i18n/tokens are leaves — no workspace imports allowed',
       severity: 'error',
       from: { path: '^packages/(money|dates|i18n|tokens)/src/' },
-      to: { path: '^@expense-tracker/' },
+      to: { path: '^@trata/' },
     },
     {
       name: 'api-only-money',
       comment:
-        'invariant #13: packages/api may import only @expense-tracker/money from the workspace',
+        'invariant #13: packages/api may import only @trata/money from the workspace',
       severity: 'error',
       from: { path: '^packages/api/src/' },
-      to: { path: '^@expense-tracker/(?!money)' },
+      to: { path: '^@trata/(?!money)' },
     },
     {
       name: 'pkg-no-platform-frameworks',

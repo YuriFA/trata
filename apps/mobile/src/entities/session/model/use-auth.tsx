@@ -17,16 +17,11 @@ import {
 } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Alert } from 'react-native'
-import { setUnauthorizedHandler, UnauthorizedError } from '@expense-tracker/api'
+import { setUnauthorizedHandler, UnauthorizedError } from '@trata/api'
 import { sessionApi } from '../api/session-api'
 import type { AuthResult, AuthStatus, User } from './types'
 import { useLocalDatabase } from '@/shared/lib/db/database-context'
-import {
-  adoptUnowned,
-  getOwnerUserId,
-  ownershipGateDecision,
-  rebindOwner,
-} from '@expense-tracker/local-data'
+import { adoptUnowned, getOwnerUserId, ownershipGateDecision, rebindOwner } from '@trata/local-data'
 
 export interface AuthController {
   status: AuthStatus

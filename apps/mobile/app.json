@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "expensetracker",
+    "scheme": "trata",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.mobile",

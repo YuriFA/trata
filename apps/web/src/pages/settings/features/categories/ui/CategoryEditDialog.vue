@@ -9,7 +9,7 @@ import { Field, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { SegmentedControl, type SegmentedControlOption } from '@/shared/ui/segmented-control'
 import { notification } from '@/shared/services/notification'
-import { VersionConflictError } from '@expense-tracker/api'
+import { VersionConflictError } from '@trata/api'
 import {
   CATEGORY_ICONS,
   categoryIconsForType,
@@ -20,7 +20,7 @@ import {
   useUpdateCategory,
 } from '@/entities/category'
 import { CategoryAvatar } from '@/shared/ui/category-avatar'
-import type { Category } from '@expense-tracker/api'
+import type { Category } from '@trata/api'
 
 // Edit/create dialog (category-management screens): one dialog for the
 // screen's full CRUD. Edit mode (category set) offers name + the

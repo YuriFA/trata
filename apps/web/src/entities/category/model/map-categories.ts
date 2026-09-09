@@ -3,7 +3,7 @@ import {
   mapCategory as mapCategoryBase,
   mapCategories as mapCategoriesBase,
   type Translator,
-} from '@expense-tracker/i18n'
+} from '@trata/i18n'
 import type { Category } from './types'
 
 // Adapt vue-i18n's keyed `t` to the package's plain `(key: string) => string`

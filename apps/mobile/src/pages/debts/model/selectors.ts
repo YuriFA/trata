@@ -1,5 +1,5 @@
 // Pure selectors for the debts screen over the DOMAIN types from
-// @expense-tracker/api: per-direction debtor sections with the settled
+// @trata/api: per-direction debtor sections with the settled
 // partition and balance-descending sort, plus the day-grouped history of one
 // debtor-direction ledger. Integer money math only (minor units); formatting
 // happens only at the display edge (formatAmount).
@@ -10,14 +10,14 @@ import type {
   DebtOperationKind,
   Debtor,
   HouseholdMember,
-} from '@expense-tracker/api'
-import { calendarDayKey, fullDayLabel } from '@expense-tracker/dates'
+} from '@trata/api'
+import { calendarDayKey, fullDayLabel } from '@trata/dates'
 import { formatAmount } from '@/shared/lib/format/format'
-import { balancesByDebtor, totalsByDirection } from '@expense-tracker/local-data'
+import { balancesByDebtor, totalsByDirection } from '@trata/local-data'
 import { authorLabel } from '@/entities/household'
 
-export type { DirectionBalances } from '@expense-tracker/local-data'
-export { totalsByDirection } from '@expense-tracker/local-data'
+export type { DirectionBalances } from '@trata/local-data'
+export { totalsByDirection } from '@trata/local-data'
 
 export interface DebtorBalanceView {
   debtor: Debtor

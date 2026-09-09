@@ -1,1 +1,1 @@
-export type { Debtor } from '@expense-tracker/api'
+export type { Debtor } from '@trata/api'

@@ -1,4 +1,4 @@
-// The sync controller adapter: the run-policy (@expense-tracker/local-data)
+// The sync controller adapter: the run-policy (@trata/local-data)
 // owns WHEN the engine runs - the post-mutation debounce, the gate order
 // (authenticated → household-current → run), and the post-cycle
 // invalidation; this main-thread composable only adapts platform sources
@@ -13,7 +13,7 @@
 import { onScopeDispose, provide, inject, ref, watch, type InjectionKey, type Ref } from 'vue'
 import { proxy } from 'comlink'
 import { useMutationCache, useQueryCache, type EntryKey } from '@pinia/colada'
-import { createSyncRunPolicy, type SyncEngineState } from '@expense-tracker/local-data'
+import { createSyncRunPolicy, type SyncEngineState } from '@trata/local-data'
 import { getLocalDbApi, onSyncRunComplete } from '@/shared/lib/local-db'
 
 interface SyncControllerOptions {

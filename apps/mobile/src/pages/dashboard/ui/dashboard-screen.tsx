@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { ScrollView, View } from 'react-native'
-import { monthToUtcDayRange } from '@expense-tracker/dates'
+import { monthToUtcDayRange } from '@trata/dates'
 import { Screen } from '@/shared/ui/screen'
 import { useAccounts } from '@/entities/account'
 import { useCategoriesIncludingArchived } from '@/entities/category'

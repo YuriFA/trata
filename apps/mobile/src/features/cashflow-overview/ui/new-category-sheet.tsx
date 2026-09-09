@@ -5,7 +5,7 @@
 // flow continues right in the sheet.
 
 import { BottomSheetView } from '@gorhom/bottom-sheet'
-import type { CategoryType } from '@expense-tracker/api'
+import type { CategoryType } from '@trata/api'
 import {
   BottomSheet,
   BottomSheetBody,

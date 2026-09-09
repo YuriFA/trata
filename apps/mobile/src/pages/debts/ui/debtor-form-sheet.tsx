@@ -8,7 +8,7 @@ import { useEffect, useMemo } from 'react'
 import { Alert, View } from 'react-native'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, FormProvider, useForm, useFormContext, useFormState } from 'react-hook-form'
-import type { Debtor } from '@expense-tracker/api'
+import type { Debtor } from '@trata/api'
 import { useDeleteDebtor, useUpdateDebtor } from '@/entities/debt'
 import { getRepositoryErrorText } from '@/shared/lib/data/repository-errors-ru'
 import {

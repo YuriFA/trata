@@ -45,7 +45,7 @@ RUN pnpm install --frozen-lockfile --filter web...
 COPY . .
 # The category-icons drift test imports the canonical mobile config (the
 # one file .dockerignore re-includes); its only import is a type from
-# @expense-tracker/api. The filtered install links workspace packages
+# @trata/api. The filtered install links workspace packages
 # under apps/web only, so give the mobile file the same module resolution
 # a full workspace install provides - point its node_modules there.
 RUN ln -s /repo/apps/web/node_modules /repo/apps/mobile/node_modules

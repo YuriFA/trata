@@ -28,7 +28,7 @@ Server/repository data goes through entity composables (Pinia Colada
 The seam is fixed and must not be short-circuited: component →
 `entities/<x>/model/use-*.ts` composable → `use<X>Repository()` (inject) →
 repository implementation bound to the `apiClient`. No component imports a
-repository, the `apiClient`, or `@expense-tracker/api` directly.
+repository, the `apiClient`, or `@trata/api` directly.
 
 ### Loading states: skeletons are for "no data yet" ONLY
 
@@ -190,5 +190,5 @@ breakouts (canonical example: `DebtorHistoryDialog`).
 - Dates: import only from `@/shared/lib/date` (invariant #14). The
   `@internationalized/date` adapter is app-local and isolated behind
   `BusinessDateAdapter`/`CalendarDay` so the planned migration onto
-  `@expense-tracker/dates` touches one file; its types (`DateValue`) may
+  `@trata/dates` touches one file; its types (`DateValue`) may
   appear only at the calendar bridge (`TransactionsDateFilter.vue`).

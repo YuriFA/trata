@@ -8,12 +8,7 @@
 
 import { View } from 'react-native'
 import Animated from 'react-native-reanimated'
-import type {
-  Category,
-  HouseholdMember,
-  PlannedPayment,
-  PlannedPaymentType,
-} from '@expense-tracker/api'
+import type { Category, HouseholdMember, PlannedPayment, PlannedPaymentType } from '@trata/api'
 import {
   BottomSheet,
   BottomSheetHeader,
@@ -29,7 +24,7 @@ import { formatAmount } from '@/shared/lib/format/format'
 import { authorLabel } from '@/entities/household'
 import { PLANS_COPY, PLANS_REGULARITY_PHRASES, PLAN_TYPE_VIEWS } from '../model/kind'
 import { isPlanOverdue, nextDueLabel, planRowTitle, plansSortedByNextDue } from '../model/selectors'
-import { calendarDayKey } from '@expense-tracker/dates'
+import { calendarDayKey } from '@trata/dates'
 
 const AnimatedBottomSheetScrollView = Animated.createAnimatedComponent(BottomSheetScrollView)
 

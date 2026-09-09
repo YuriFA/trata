@@ -4,7 +4,7 @@
 // simply don't resolve) - the same gating the settings section uses.
 
 import { useMemo } from 'react'
-import type { HouseholdMember } from '@expense-tracker/api'
+import type { HouseholdMember } from '@trata/api'
 import { useHousehold } from '@/entities/household'
 import { useAuth } from '@/entities/session'
 import type { CashflowAuthorContext } from './selectors'

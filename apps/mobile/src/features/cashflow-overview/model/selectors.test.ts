@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals'
-import type { Category, Transaction } from '@expense-tracker/api'
-import { isCurrentOrFutureMonth } from '@expense-tracker/dates'
+import type { Category, Transaction } from '@trata/api'
+import { isCurrentOrFutureMonth } from '@trata/dates'
 import { formatAmount } from '@/shared/lib/format/format'
 import {
   cashflowDayGroups,

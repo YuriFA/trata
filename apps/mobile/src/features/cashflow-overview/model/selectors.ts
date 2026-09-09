@@ -1,12 +1,12 @@
 // Pure derived-data helpers for month-scoped cashflow overviews (the
 // dashboard's expense view and the income screen) over the DOMAIN types
-// from @expense-tracker/api. Integer money math only (minor units);
+// from @trata/api. Integer money math only (minor units);
 // balances come pre-computed from the account repository (opening +
 // manualAdjustment + signed transaction impacts), so selectors only
 // aggregate them. The dashboard-only balance aggregates (monthlyBalance,
 // totalBalance) live in pages/dashboard/model.
 
-import type { Category, HouseholdMember, Transaction } from '@expense-tracker/api'
+import type { Category, HouseholdMember, Transaction } from '@trata/api'
 import {
   calendarDayKey,
   fullDayLabel,
@@ -15,7 +15,7 @@ import {
   transactionsInPeriod,
   type MonthCursor,
   type PeriodCursor,
-} from '@expense-tracker/dates'
+} from '@trata/dates'
 import type { IconName } from '@/shared/ui/icon'
 import { formatAmount } from '@/shared/lib/format/format'
 import { authorLabel } from '@/entities/household'
@@ -27,7 +27,7 @@ export {
   previousMonth,
   transactionsInMonth,
   type MonthCursor,
-} from '@expense-tracker/dates'
+} from '@trata/dates'
 
 /** Which cashflow direction an overview aggregates. */
 export type CashflowKind = 'income' | 'expense'

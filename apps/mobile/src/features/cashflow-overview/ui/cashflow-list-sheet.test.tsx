@@ -7,7 +7,7 @@ import { describe, expect, it, jest, beforeEach } from '@jest/globals'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { QueryClientProvider } from '@tanstack/react-query'
-import type { Category, Transaction } from '@expense-tracker/api'
+import type { Category, Transaction } from '@trata/api'
 import { ThemeProvider } from '@/shared/config/theme'
 import { createQueryClient } from '@/shared/lib/query/query-client'
 import { CategoryRepositoryProvider } from '@/entities/category'
@@ -26,7 +26,7 @@ let mockAuth: { status: 'authenticated' | 'anonymous'; user: { id: string } | nu
   status: 'anonymous',
   user: null,
 }
-let mockMembers: readonly import('@expense-tracker/api').HouseholdMember[] | null = null
+let mockMembers: readonly import('@trata/api').HouseholdMember[] | null = null
 
 jest.mock('@/entities/session', () => ({
   ...(jest.requireActual('@/entities/session') as Record<string, unknown>),

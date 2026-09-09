@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 import { flushPromises } from '@vue/test-utils'
-import type { LocalSyncConflict } from '@expense-tracker/local-data'
+import type { LocalSyncConflict } from '@trata/local-data'
 import type { LocalDbApi } from '@/shared/lib/local-db'
 import type { SyncController } from '@/shared/lib/local-db'
 import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'
@@ -74,7 +74,7 @@ const keepLocalMock = vi.fn<(id: string) => Promise<void>>()
 const takeServerMock = vi.fn<(id: string) => Promise<void>>()
 const markResolvedMock = vi.fn<(id: string) => Promise<void>>()
 const restoreConflictAsNewMock =
-  vi.fn<(id: string) => Promise<import('@expense-tracker/local-data').RestoreResult>>()
+  vi.fn<(id: string) => Promise<import('@trata/local-data').RestoreResult>>()
 const rebindOwnerMock = vi.fn<(userId: string) => Promise<void>>()
 const localDbApi = {
   sync: {

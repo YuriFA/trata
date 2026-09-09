@@ -21,7 +21,7 @@ import {
   revokeHouseholdInvitation,
   updateDisplayName,
   updateHouseholdName,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import { apiClient } from '@/shared/api/client'
 
 export const householdApi = {

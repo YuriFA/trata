@@ -2,7 +2,7 @@ import { computed, toValue, type ComputedRef, type MaybeRefOrGetter } from 'vue'
 import { useTransactions } from '@/entities/transaction'
 import { useAccounts } from '@/entities/account'
 import { usePlannedPayments } from '@/entities/planned-payment'
-import type { Category, PlannedPayment } from '@expense-tracker/api'
+import type { Category, PlannedPayment } from '@trata/api'
 
 /** Local-mirror usage facts for one category (management screen). */
 export interface CategoryUsage {

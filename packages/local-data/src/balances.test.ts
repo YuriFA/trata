@@ -3,7 +3,7 @@
 // directions, over-repayment yields a negative balance).
 
 import { describe, expect, it } from 'vitest'
-import type { DebtOperation } from '@expense-tracker/api'
+import type { DebtOperation } from '@trata/api'
 import { balanceInDirection, balancesByDebtor, totalsByDirection } from './balances'
 
 const op = (

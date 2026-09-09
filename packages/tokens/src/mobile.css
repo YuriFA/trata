@@ -2,7 +2,7 @@
  * Design tokens (mobile copy) - Uniwind / Tailwind CSS v4 theme.
  *
  * Imported by apps/mobile/global.css via
- * `@import '@expense-tracker/tokens/mobile'` (the app entry keeps only the
+ * `@import '@trata/tokens/mobile'` (the app entry keeps only the
  * framework imports: 'tailwindcss' and 'uniwind'). Contains the mobile theme:
  * `@theme` statics, the soft-brutalist card shadow utility, and the per-theme
  * semantic colors as `@variant light/dark` blocks (React Native has no DOM, so

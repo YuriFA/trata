@@ -5,7 +5,7 @@
 // operation history via the package's balance helpers (never stored) - the
 // debts capability's core rule.
 
-import { calendarDayKey, fullDayLabel } from '@expense-tracker/dates'
+import { calendarDayKey, fullDayLabel } from '@trata/dates'
 import type { DebtDirection, DebtOperation } from '@/entities/debt-operation'
 
 export { debtorSection, initialsOf } from '@/entities/debt-operation'

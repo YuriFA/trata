@@ -1,1 +1,1 @@
-export { formatMoney, formatMoneyCompact } from '@expense-tracker/money'
+export { formatMoney, formatMoneyCompact } from '@trata/money'

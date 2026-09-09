@@ -2,8 +2,8 @@
 // balances always derive from the operation history (debts capability) -
 // never stored, never netted across directions.
 
-import type { Debtor } from '@expense-tracker/api'
-import { balanceInDirection } from '@expense-tracker/local-data'
+import type { Debtor } from '@trata/api'
+import { balanceInDirection } from '@trata/local-data'
 import type { DebtDirection, DebtOperation } from './types'
 
 interface DebtorView {

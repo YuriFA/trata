@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { Debtor } from '@expense-tracker/api'
+import type { Debtor } from '@trata/api'
 import type { DebtOperation } from '@/entities/debt-operation'
 import { debtorHistoryGroups, debtorSection, initialsOf, lastOperationAt } from './selectors'
 

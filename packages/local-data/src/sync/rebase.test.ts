@@ -11,7 +11,7 @@ import type {
   SyncPullPage,
   SyncPushResultItem,
   SyncOperationData,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import { createLocalAccountRepository } from '../repositories/account'
 import { createTestDatabase } from '../testing/test-database'
 import type { LocalDatabase } from '../types'

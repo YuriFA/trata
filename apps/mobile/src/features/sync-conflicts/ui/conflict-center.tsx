@@ -19,7 +19,7 @@ import {
   resolveConflictTakeServer,
   restoreConflictAsNew,
   type LocalSyncConflict,
-} from '@expense-tracker/local-data'
+} from '@trata/local-data'
 import { catalogConflictEntityLabel } from '../model/sync-entity-catalog.generated'
 import { useLocalDatabase } from '@/shared/lib/db/database-context'
 import { useSyncController } from '@/shared/lib/sync/sync-context'

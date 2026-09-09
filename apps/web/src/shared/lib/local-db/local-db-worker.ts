@@ -33,7 +33,7 @@ import {
   setLastHousehold,
   setOwnerUserId,
   wipeLocalData,
-} from '@expense-tracker/local-data'
+} from '@trata/local-data'
 import { openLocalDatabase } from './sqlite-wasm-database'
 import {
   LOCAL_DB_BUSY_SIGNAL,

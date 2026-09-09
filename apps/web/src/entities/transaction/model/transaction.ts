@@ -10,4 +10,4 @@ export {
   serializeTransactionsStorage,
   type AccountRef,
   type CategoryRef,
-} from '@expense-tracker/api'
+} from '@trata/api'

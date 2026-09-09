@@ -1,17 +1,12 @@
 // Pure selectors for the plans screen over the DOMAIN types from
-// @expense-tracker/api: per-type card figures (live count + normalized
+// @trata/api: per-type card figures (live count + normalized
 // monthly total), the next-due-ascending list order (overdue plans come
 // first by construction), the overdue flag, and the name-or-category row
 // title. Integer money math only (minor units); formatting happens only at
 // the display edge (formatAmount).
 
-import type {
-  CalendarDay,
-  Category,
-  PlannedPayment,
-  PlannedPaymentType,
-} from '@expense-tracker/api'
-import { fullDayLabel } from '@expense-tracker/dates'
+import type { CalendarDay, Category, PlannedPayment, PlannedPaymentType } from '@trata/api'
+import { fullDayLabel } from '@trata/dates'
 import { monthlyTotal } from '@/entities/planned-payment'
 import { formatAmount } from '@/shared/lib/format/format'
 import { PLANS_COPY } from './kind'

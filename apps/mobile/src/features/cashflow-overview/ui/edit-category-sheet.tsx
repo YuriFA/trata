@@ -4,7 +4,7 @@
 // from the passed record and writes through `useUpdateCategory`.
 
 import { BottomSheetView } from '@gorhom/bottom-sheet'
-import type { Category } from '@expense-tracker/api'
+import type { Category } from '@trata/api'
 import {
   BottomSheet,
   BottomSheetBody,

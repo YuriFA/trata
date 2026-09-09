@@ -11,7 +11,7 @@ import {
   periodToUtcDayRange,
   shiftPeriod,
   type PeriodCursor,
-} from '@expense-tracker/dates'
+} from '@trata/dates'
 import { periodTotal, type AnalyticsDirection } from '@/entities/analytics'
 import { useAccounts } from '@/entities/account'
 import { useTransactions } from '@/entities/transaction'

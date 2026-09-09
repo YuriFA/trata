@@ -10,7 +10,7 @@
 // outbox operation in one transaction (design D5/D6).
 
 import { and, desc, eq, gte, isNull, lte, or, type SQL } from 'drizzle-orm'
-import { nowIso } from '@expense-tracker/dates'
+import { nowIso } from '@trata/dates'
 import {
   AlreadyExistsError,
   InvalidPayloadError,
@@ -22,7 +22,7 @@ import {
   type TransactionQuery,
   type TransactionRepository,
   type UpdateTransactionPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import type { LocalDatabase } from '../types'
 import { enqueueOperation, hasSentOperations, removeOperationsFor } from '../outbox'
 import { getOwnerUserId } from '../sync/sync-meta'
@@ -37,10 +37,10 @@ type LocalTx = Parameters<Parameters<LocalDatabase['transaction']>[0]>[0]
  * ignored like the backend's PATCH, which cannot express them.
  */
 type TransactionPatch = { version: number } & Partial<
-  Omit<import('@expense-tracker/api').CashflowTransaction, 'id' | 'version' | 'type'>
+  Omit<import('@trata/api').CashflowTransaction, 'id' | 'version' | 'type'>
 > &
-  Partial<Omit<import('@expense-tracker/api').TransferTransaction, 'id' | 'version' | 'type'>> &
-  Partial<Omit<import('@expense-tracker/api').AdjustmentTransaction, 'id' | 'version' | 'type'>>
+  Partial<Omit<import('@trata/api').TransferTransaction, 'id' | 'version' | 'type'>> &
+  Partial<Omit<import('@trata/api').AdjustmentTransaction, 'id' | 'version' | 'type'>>
 
 const PAGE_SIZE = 100
 

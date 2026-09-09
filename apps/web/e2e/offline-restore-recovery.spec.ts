@@ -18,7 +18,7 @@ const ME = {
 
 // Root-anchored /api matcher: a plain `**/api/**` glob would also swallow
 // the dev server's workspace-module URLs
-// (`/node_modules/@expense-tracker/api/src/...`) and hang the module graph.
+// (`/node_modules/@trata/api/src/...`) and hang the module graph.
 const API_URL = /^[a-z]+:\/\/[^/]+\/api\//
 
 test('a network-failed restore recovers when connectivity returns', async ({ page }) => {

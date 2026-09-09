@@ -1,7 +1,7 @@
-import type { CalendarDay, IsoDateTime } from '@expense-tracker/api'
+import type { CalendarDay, IsoDateTime } from '@trata/api'
 
 // The unbranded `CalendarDay` / `IsoDateTime` primitives live in the shared
-// `@expense-tracker/api` package (used by the domain model + repository
+// `@trata/api` package (used by the domain model + repository
 // contracts). Re-exported here so the web date lib's historical import paths
 // keep resolving.
 export type { CalendarDay, IsoDateTime }

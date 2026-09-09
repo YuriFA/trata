@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Plus } from '@lucide/vue'
-import type { Debtor } from '@expense-tracker/api'
+import type { Debtor } from '@trata/api'
 import type { DebtDirection, DebtOperation } from '@/entities/debt-operation'
 import { debtorSection } from '../model/selectors'
 import DebtorRow from './DebtorRow.vue'

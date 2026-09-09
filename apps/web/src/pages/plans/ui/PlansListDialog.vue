@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { Category } from '@expense-tracker/api'
+import type { Category } from '@trata/api'
 import type { PlannedPayment } from '@/entities/planned-payment'
 import { monthlyTotal } from '@/entities/planned-payment'
 import { CategoryAvatar } from '@/shared/ui/category-avatar'

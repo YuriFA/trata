@@ -17,7 +17,7 @@
 import { useCallback, useMemo } from 'react'
 import { Alert } from 'react-native'
 import { useQueryClient } from '@tanstack/react-query'
-import type { Household } from '@expense-tracker/api'
+import type { Household } from '@trata/api'
 import {
   householdNeedsRebase,
   rebaseLocalDataForHousehold,
@@ -25,7 +25,7 @@ import {
   setOwnerUserId,
   wipeLocalData,
   type LocalDatabase,
-} from '@expense-tracker/local-data'
+} from '@trata/local-data'
 import { householdApi } from '@/entities/household'
 import { useAuth } from '@/entities/session'
 import { useLocalDatabase } from '@/shared/lib/db/database-context'

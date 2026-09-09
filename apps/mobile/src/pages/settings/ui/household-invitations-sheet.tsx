@@ -7,8 +7,8 @@
 
 import { useRef } from 'react'
 import { Alert, View } from 'react-native'
-import { dateTimeLabel } from '@expense-tracker/dates'
-import type { HouseholdInvitation } from '@expense-tracker/api'
+import { dateTimeLabel } from '@trata/dates'
+import type { HouseholdInvitation } from '@trata/api'
 import { useHouseholdActions, useHouseholdInvitations } from '@/entities/household'
 import { getRepositoryErrorText } from '@/shared/lib/data/repository-errors-ru'
 import {

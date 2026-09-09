@@ -46,7 +46,7 @@ suite covers only the checkable subset — the rest of the canvas still applies.
 - Never hand-write fetch/types. `pnpm gen:api` regenerates
   `packages/api/src/schema.ts`; re-run + commit after spec changes. The client
   factory, error mapping, repository interfaces, and HTTP implementations all
-  live in `@expense-tracker/api`; web only adds Vite base-URL resolution
+  live in `@trata/api`; web only adds Vite base-URL resolution
   (`shared/api/client.ts`). Old import paths (`@/shared/api`, `@/shared/lib/data`,
   entity `model/*`) stay stable via thin re-export barrels.
 - Error mapping is code-driven: every non-2xx -> `RepositoryError` keyed on
@@ -69,7 +69,7 @@ suite covers only the checkable subset — the rest of the canvas still applies.
 
 ## i18n (`web-locales` capability)
 
-- RU is the product default (`DEFAULT_LOCALE` in `@expense-tracker/i18n`);
+- RU is the product default (`DEFAULT_LOCALE` in `@trata/i18n`);
   EN is complete (strict `pnpm i18n:lint` + a package key-parity test).
   The settings screen has a RU/EN switcher; the choice persists in
   localStorage and `app/setup-i18n-locale-watcher.ts` applies it
@@ -87,14 +87,14 @@ suite covers only the checkable subset — the rest of the canvas still applies.
   anonymous); login/register/restored sessions pass the ownership gate
   (different owner => wipe-or-cancel AlertDialog); logout keeps local data.
   Ownership gate policy (decision table + atomic rebind) lives in
-  `@expense-tracker/local-data` (`sync/ownership.ts`); the store keeps only
+  `@trata/local-data` (`sync/ownership.ts`); the store keeps only
   presentation (AlertDialog) and control-plane side effects (server logout,
   cache invalidation). The router is public-by-default; `main.ts` wires the
   401 interceptor (`setUnauthorizedHandler` -> clearSession, no redirect).
   Session APIs call the apiClient directly - the sanctioned control-plane
   exception to the repository seam (invariant #11).
 - **Repos:** a single `local` variant - Comlink remotes of the worker-side
-  `@expense-tracker/local-data` repositories, provided in
+  `@trata/local-data` repositories, provided in
   `app/repositories.ts` (calls queue behind the worker's ready handshake;
   worker errors rehydrate into typed RepositoryErrors). The worker holds a
   Web Locks guard for single-tab exclusivity: a second tab gets the

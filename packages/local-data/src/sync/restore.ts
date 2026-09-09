@@ -12,7 +12,7 @@ import type {
   CreateDebtorPayload,
   CreatePlannedPaymentPayload,
   CreateTransactionPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import type { LocalDatabase } from '../types'
 import { createLocalAccountRepository } from '../repositories/account'
 import { createLocalCategoryRepository } from '../repositories/category'

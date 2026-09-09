@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
-import type { Category } from '@expense-tracker/api'
+import type { Category } from '@trata/api'
 import { categoryIconsForType } from '@/entities/category'
 import { createMockCategoryRepository } from '@/__tests__/helpers/mock-repositories'
 import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'

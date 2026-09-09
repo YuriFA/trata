@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { payloadToSyncData, syncDataToRowPatch } from './sync-data'
-import type { CashflowTransaction } from '@expense-tracker/api'
+import type { CashflowTransaction } from '@trata/api'
 
 const accountlessExpense: CashflowTransaction = {
   id: '11111111-1111-4111-8111-111111111111',

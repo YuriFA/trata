@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react'
 import { useController, useFormContext } from 'react-hook-form'
-import { fullDayLabel } from '@expense-tracker/dates'
+import { fullDayLabel } from '@trata/dates'
 import { useAccounts } from '@/entities/account'
 import { useCategories } from '@/entities/category'
 import { BottomSheetInput, type BottomSheetRef } from '@/shared/ui/bottom-sheet'

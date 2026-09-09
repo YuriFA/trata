@@ -15,7 +15,7 @@
 import { Fragment, useMemo, useRef, useState } from 'react'
 import { View } from 'react-native'
 import Animated from 'react-native-reanimated'
-import type { Category } from '@expense-tracker/api'
+import type { Category } from '@trata/api'
 import {
   monthRangeLabelShort,
   periodRangeLabel,
@@ -23,7 +23,7 @@ import {
   shiftPeriod,
   type MonthCursor,
   type PeriodCursor,
-} from '@expense-tracker/dates'
+} from '@trata/dates'
 import { useTransactions } from '@/entities/transaction'
 import { Icon } from '@/shared/ui/icon'
 import { IconButton } from '@/shared/ui/icon-button'

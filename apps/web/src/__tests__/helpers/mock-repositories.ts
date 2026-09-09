@@ -5,8 +5,8 @@ import type {
   TransactionRepository,
   DebtorRepository,
   DebtOperationRepository,
-} from '@expense-tracker/api'
-import type { LocalPlannedPaymentRepository } from '@expense-tracker/local-data'
+} from '@trata/api'
+import type { LocalPlannedPaymentRepository } from '@trata/local-data'
 
 export type MockedAccountRepository = {
   [K in keyof AccountRepository]: MockedFunction<AccountRepository[K]>

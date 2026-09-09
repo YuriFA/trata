@@ -4,7 +4,7 @@
 // `operation-form.tsx` (conventions forms.md §3). Create is always
 // fixed-context (a contact's history sheet, design D9).
 
-import type { DebtDirection, DebtOperation } from '@expense-tracker/api'
+import type { DebtDirection, DebtOperation } from '@trata/api'
 import { BottomSheet, BottomSheetView, type BottomSheetRef } from '@/shared/ui/bottom-sheet'
 import { useSheetContentPickers } from '@/shared/ui/sheet-content-portal'
 import { OperationForm } from './operation-form'

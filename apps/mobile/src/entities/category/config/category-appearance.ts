@@ -15,7 +15,7 @@
 // Glyphs are single-codepoint emoji only (no ZWJ sequences): they render
 // predictably across the platform emoji fonts and older Android.
 
-import type { CategoryType } from '@expense-tracker/api'
+import type { CategoryType } from '@trata/api'
 
 export interface CategoryIconOption {
   icon: string

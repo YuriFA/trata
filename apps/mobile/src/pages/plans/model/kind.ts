@@ -8,7 +8,7 @@ import type {
   PlannedPaymentRegularity,
   PlannedPaymentReminder,
   PlannedPaymentType,
-} from '@expense-tracker/api'
+} from '@trata/api'
 
 interface PlanTypeCopy {
   /** Card title and per-type list sheet title: «Расходы» / «Доходы». */

@@ -9,7 +9,7 @@ import type {
   DebtorRepository,
   DebtOperationRepository,
   TransactionRepository,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import type {
   LocalPlannedPaymentRepository,
   LocalSyncConflict,
@@ -17,7 +17,7 @@ import type {
   SyncEngineState,
   SyncRunOutcome,
   SyncStatusSnapshot,
-} from '@expense-tracker/local-data'
+} from '@trata/local-data'
 
 /** Worker -> main boot signals (plain strings: Comlink ignores id-less messages). */
 export const LOCAL_DB_READY_SIGNAL = 'expense-tracker:local-db-ready'

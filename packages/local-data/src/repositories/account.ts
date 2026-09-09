@@ -4,13 +4,13 @@
 // non-deleted transactions (income +, expense -, transfer -from +to,
 // adjustment = its signed amount) - mirroring the backend's
 // `account_contributions` view and
-// @expense-tracker/money's integer math. Mutations write the row and its
+// @trata/money's integer math. Mutations write the row and its
 // outbox operation in one transaction (design D5/D6); deletes are guarded
 // against in-use and tombstone records only.
 
 import { and, eq, isNull, or, sql } from 'drizzle-orm'
-import { nowIso } from '@expense-tracker/dates'
-import { isCurrencyCode } from '@expense-tracker/money'
+import { nowIso } from '@trata/dates'
+import { isCurrencyCode } from '@trata/money'
 import {
   AlreadyExistsError,
   InvalidPayloadError,
@@ -22,7 +22,7 @@ import {
   type AccountRepository,
   type CreateAccountPayload,
   type UpdateAccountPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import type { LocalDatabase } from '../types'
 import { enqueueOperation, hasSentOperations, removeOperationsFor } from '../outbox'
 import { getOwnerUserId } from '../sync/sync-meta'

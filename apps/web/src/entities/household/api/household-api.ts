@@ -2,7 +2,7 @@
 // reads and the join/leave lifecycle. Like the session API, this is
 // control-plane traffic over the shared apiClient (not synced data - the sync
 // engine owns that), so it sits at the same sanctioned seam (invariant #11).
-// The underlying calls come from `@expense-tracker/api`; errors reject as
+// The underlying calls come from `@trata/api`; errors reject as
 // RepositoryError keyed on the backend code (e.g. HOUSEHOLD_CODE_INVALID) and
 // map to messages via `model/household-errors.ts`.
 
@@ -22,7 +22,7 @@ import {
   revokeHouseholdInvitation,
   updateDisplayName,
   updateHouseholdName,
-} from '@expense-tracker/api'
+} from '@trata/api'
 
 export const householdApi = {
   /** The signed-in user's household (name + members). */

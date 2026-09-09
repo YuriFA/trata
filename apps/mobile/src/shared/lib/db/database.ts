@@ -1,16 +1,16 @@
 // Runtime wiring of the local database: opens the on-device SQLite file
 // (expo-sqlite, JSI) and applies the shared drizzle-kit migrations at app
 // start. The schema, migrations, and the generic database types live in
-// @expense-tracker/local-data; this module only supplies the expo driver
+// @trata/local-data; this module only supplies the expo driver
 // (the package stays free of expo types — design D2). Unit tests bypass
 // this module and use the package's node:sqlite factory instead.
 
 import { drizzle } from 'drizzle-orm/expo-sqlite'
 import { migrate } from 'drizzle-orm/expo-sqlite/migrator'
 import { openDatabaseSync } from 'expo-sqlite'
-import { migrations, schema, type LocalDatabase } from '@expense-tracker/local-data'
+import { migrations, schema, type LocalDatabase } from '@trata/local-data'
 
-export type { LocalDatabase } from '@expense-tracker/local-data'
+export type { LocalDatabase } from '@trata/local-data'
 
 const DATABASE_NAME = 'expense-tracker.db'
 

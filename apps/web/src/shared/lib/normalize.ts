@@ -7,4 +7,4 @@ export {
   asPositiveNumber,
   asPositiveInteger,
   asDateTimeString,
-} from '@expense-tracker/api'
+} from '@trata/api'

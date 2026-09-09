@@ -1,1 +1,1 @@
-export type { Account, AccountWithBalance } from '@expense-tracker/api'
+export type { Account, AccountWithBalance } from '@trata/api'

@@ -1,5 +1,5 @@
 /**
- * Jest setup for @expense-tracker/mobile.
+ * Jest setup for @trata/mobile.
  *
  * Mocks `react-native-reanimated` so animated components render synchronously.
  * Reanimated 4.x ships no jest helpers in its built `lib`, and its UI-thread

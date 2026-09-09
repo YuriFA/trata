@@ -1,5 +1,5 @@
 import i18n from '@/shared/i18n'
-import type { RepositoryErrorMessages } from '@expense-tracker/api'
+import type { RepositoryErrorMessages } from '@trata/api'
 
 export const getRepositoryErrorMessages = (): RepositoryErrorMessages => ({
   notFound: i18n.global.t('errors.notFound'),

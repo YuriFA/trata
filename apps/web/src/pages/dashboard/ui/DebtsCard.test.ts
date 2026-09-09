@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import DebtsCard from './DebtsCard.vue'
-import type { DebtOperation } from '@expense-tracker/api'
+import type { DebtOperation } from '@trata/api'
 import {
   createMockDebtOperationRepository,
   createMockDebtorRepository,

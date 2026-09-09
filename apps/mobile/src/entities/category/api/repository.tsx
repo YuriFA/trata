@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react'
-import type { CategoryRepository } from '@expense-tracker/api'
+import type { CategoryRepository } from '@trata/api'
 
 const CategoryRepositoryContext = createContext<CategoryRepository | null>(null)
 

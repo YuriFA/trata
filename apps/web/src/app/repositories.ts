@@ -19,7 +19,7 @@ type RepositorySegment =
 /**
  * The single repository variant (design D4): Comlink `Remote` repositories
  * from the local-db worker, cast to the shared `Repository` interfaces behind
- * DI keys from `@expense-tracker/api`. `provide()` is synchronous while the
+ * DI keys from `@trata/api`. `provide()` is synchronous while the
  * worker handshake is not, so each repository is a forwarding Proxy - the
  * queueing contract of design D1: repository interfaces are entirely async,
  * and every method call awaits the ready handshake before RPCing into the

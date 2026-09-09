@@ -17,7 +17,7 @@ import {
   UnauthorizedError,
   type Household,
   type HouseholdInvitationPreview,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import { ThemeProvider } from '@/shared/config/theme'
 import { createQueryClient } from '@/shared/lib/query/query-client'
 import { InviteScreen } from './invite-screen'

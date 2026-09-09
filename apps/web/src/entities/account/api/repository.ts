@@ -1,15 +1,7 @@
 import { inject, type InjectionKey } from 'vue'
-import type {
-  AccountRepository,
-  CreateAccountPayload,
-  UpdateAccountPayload,
-} from '@expense-tracker/api'
+import type { AccountRepository, CreateAccountPayload, UpdateAccountPayload } from '@trata/api'
 
-export type {
-  AccountRepository,
-  CreateAccountPayload,
-  UpdateAccountPayload,
-} from '@expense-tracker/api'
+export type { AccountRepository, CreateAccountPayload, UpdateAccountPayload } from '@trata/api'
 
 export const ACCOUNT_REPOSITORY_KEY: InjectionKey<AccountRepository> = Symbol('account-repository')
 

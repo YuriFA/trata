@@ -4,7 +4,7 @@
 // hardcoded, and the ISO `occurredAt` they produce keeps the current time
 // of day (the sheet picks a day, not a moment).
 
-import { isoDaysAgo, shortDayLabel, todayLabel, yesterdayLabel } from '@expense-tracker/dates'
+import { isoDaysAgo, shortDayLabel, todayLabel, yesterdayLabel } from '@trata/dates'
 
 export interface QuickDateOption {
   daysAgo: number

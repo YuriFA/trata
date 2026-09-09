@@ -9,11 +9,7 @@
 import { describe, expect, it, beforeEach, jest } from '@jest/globals'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import { QueryClientProvider } from '@tanstack/react-query'
-import {
-  AlreadyExistsError,
-  type AccountRepository,
-  type AccountWithBalance,
-} from '@expense-tracker/api'
+import { AlreadyExistsError, type AccountRepository, type AccountWithBalance } from '@trata/api'
 import { ThemeProvider } from '@/shared/config/theme'
 import { createQueryClient } from '@/shared/lib/query/query-client'
 import { AccountRepositoryProvider } from '@/entities/account'

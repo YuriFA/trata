@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react'
-import type { LocalPlannedPaymentRepository } from '@expense-tracker/local-data'
+import type { LocalPlannedPaymentRepository } from '@trata/local-data'
 
 const PlannedPaymentRepositoryContext = createContext<LocalPlannedPaymentRepository | null>(null)
 

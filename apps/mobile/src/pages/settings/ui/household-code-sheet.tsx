@@ -8,7 +8,7 @@
 
 import { useRef, useState } from 'react'
 import { Alert, View } from 'react-native'
-import type { HouseholdCode } from '@expense-tracker/api'
+import type { HouseholdCode } from '@trata/api'
 import { useHouseholdActions } from '@/entities/household'
 import { getRepositoryErrorText } from '@/shared/lib/data/repository-errors-ru'
 import {

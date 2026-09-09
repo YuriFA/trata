@@ -1,5 +1,5 @@
 import { View } from 'react-native'
-import type { Category } from '@expense-tracker/api'
+import type { Category } from '@trata/api'
 import { Icon } from '@/shared/ui/icon'
 import { CategoryAvatar } from '@/shared/ui/category-avatar'
 import { Text } from '@/shared/ui/text'

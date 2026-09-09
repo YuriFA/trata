@@ -8,7 +8,7 @@
 // NOTE: EXPO_PUBLIC_* vars are inlined by Metro at bundle time - restart the
 // dev server (and reinstall the Expo Go bundle) after changing them.
 
-import { createApiClient } from '@expense-tracker/api'
+import { createApiClient } from '@trata/api'
 import { API_BASE_URL } from '@/shared/config/api'
 
 export const apiClient = createApiClient({

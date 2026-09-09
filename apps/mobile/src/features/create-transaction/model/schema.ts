@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { nowIso } from '@expense-tracker/dates'
+import { nowIso } from '@trata/dates'
 import { parseMajorUnitsToMinor } from '@/shared/lib/money/parse'
 
 // TODO(i18n): RU validation messages until mobile i18n wiring lands.

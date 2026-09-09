@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react'
-import type { AccountRepository } from '@expense-tracker/api'
+import type { AccountRepository } from '@trata/api'
 
 const AccountRepositoryContext = createContext<AccountRepository | null>(null)
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import OperationFormDialog from './OperationFormDialog.vue'
-import type { Debtor, DebtOperation } from '@expense-tracker/api'
+import type { Debtor, DebtOperation } from '@trata/api'
 import {
   createMockDebtorRepository,
   createMockDebtOperationRepository,

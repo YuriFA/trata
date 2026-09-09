@@ -13,7 +13,7 @@ import {
   NotFoundError,
   UnknownReferencesError,
   VersionConflictError,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import { createLocalAccountRepository } from '../repositories/account'
 import { createLocalCategoryRepository } from '../repositories/category'
 import { createTestDatabase } from '../testing/test-database'

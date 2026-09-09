@@ -14,7 +14,7 @@
 
 import { useRef, useState } from 'react'
 import { View } from 'react-native'
-import type { DebtDirection, DebtOperation, Debtor } from '@expense-tracker/api'
+import type { DebtDirection, DebtOperation, Debtor } from '@trata/api'
 import { useDebtOperations, useDebtors } from '@/entities/debt'
 import { useHousehold } from '@/entities/household'
 import { useAuth } from '@/entities/session'

@@ -1,1 +1,1 @@
-export { toMinorUnits, toMajorUnits } from '@expense-tracker/money'
+export { toMinorUnits, toMajorUnits } from '@trata/money'

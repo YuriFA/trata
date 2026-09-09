@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises } from '@vue/test-utils'
-import type { Household } from '@expense-tracker/api'
+import type { Household } from '@trata/api'
 import type { LocalDbApi } from '@/shared/lib/local-db'
 import { UnauthorizedError } from '@/shared/lib/data'
 

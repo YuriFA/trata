@@ -1,4 +1,4 @@
-// Coverage for the @expense-tracker/dates package as consumed by the app.
+// Coverage for the @trata/dates package as consumed by the app.
 // Local-time fixtures (`new Date(y, m, d, …)`) keep the calendar dates stable
 // across timezones; ISO fixtures use midday UTC for the same reason.
 
@@ -23,7 +23,7 @@ import {
   transactionsInMonth,
   weekdayLabels,
   yesterdayLabel,
-} from '@expense-tracker/dates'
+} from '@trata/dates'
 
 describe('dates · period labels', () => {
   it('monthRangeLabel keeps the uppercase summary-card style', () => {

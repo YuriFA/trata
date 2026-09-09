@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
-import type { Household, HouseholdCode, HouseholdMember } from '@expense-tracker/api'
+import type { Household, HouseholdCode, HouseholdMember } from '@trata/api'
 import type { User } from '@/entities/session'
 import SettingsPage from './SettingsPage.vue'
 import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'
@@ -30,15 +30,15 @@ vi.mock('@/entities/session', () => ({
 // the package, not the entity barrel - and deep entity paths would sidestep
 // the public API); the label fallback stays real so the display-name
 // derivation is exercised.
-vi.mock('@expense-tracker/api', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@expense-tracker/api')>()),
+vi.mock('@trata/api', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@trata/api')>()),
   fetchHousehold: vi.fn<() => Promise<Household>>(),
   updateDisplayName: vi.fn<(displayName: string) => Promise<string>>(),
   generateHouseholdCode: vi.fn<() => Promise<HouseholdCode>>(),
   listHouseholdInvitations: vi.fn<() => Promise<unknown[]>>().mockResolvedValue([]),
 }))
 
-const { fetchHousehold, generateHouseholdCode } = await import('@expense-tracker/api')
+const { fetchHousehold, generateHouseholdCode } = await import('@trata/api')
 
 const user: User = {
   id: 'u2',

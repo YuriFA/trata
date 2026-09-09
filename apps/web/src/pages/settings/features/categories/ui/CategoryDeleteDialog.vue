@@ -11,7 +11,7 @@ import { notification } from '@/shared/services/notification'
 import { formatMoney } from '@/shared/lib/money'
 import { useAccounts } from '@/entities/account'
 import { useDeleteCategory, useSetCategoryArchived } from '@/entities/category'
-import type { Category } from '@expense-tracker/api'
+import type { Category } from '@trata/api'
 import type { CategoryUsage } from '../model/use-category-usage'
 
 // Hybrid delete (category-management screens): the dialog branches by the

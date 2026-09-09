@@ -17,7 +17,7 @@ import { useEffect, useMemo } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormProvider, useController, useForm, useFormContext, useWatch } from 'react-hook-form'
 import { Alert, View } from 'react-native'
-import type { DebtDirection, DebtOperation, DebtOperationRepository } from '@expense-tracker/api'
+import type { DebtDirection, DebtOperation, DebtOperationRepository } from '@trata/api'
 import { AmountKeypad, applyKeypadInput, type KeypadKey } from '@/features/create-transaction'
 import {
   useCreateDebtOperation,
@@ -26,7 +26,7 @@ import {
   useDebtOperations,
   useUpdateDebtOperation,
 } from '@/entities/debt'
-import { balanceInDirection } from '@expense-tracker/local-data'
+import { balanceInDirection } from '@trata/local-data'
 import { getRepositoryErrorText } from '@/shared/lib/data/repository-errors-ru'
 import { formatAmount } from '@/shared/lib/format/format'
 import { parseMajorUnitsToMinor } from '@/shared/lib/money/parse'

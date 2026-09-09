@@ -1,4 +1,4 @@
-// Public surface of @expense-tracker/local-data — the platform-neutral
+// Public surface of @trata/local-data — the platform-neutral
 // local-first data layer shared by the mobile (and, from roadmap stage 4,
 // web) clients: schema, outbox, sync engine with conflict records, local
 // repositories, and the migrations journal. App-side wiring (drivers,

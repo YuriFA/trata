@@ -27,7 +27,7 @@ import { RemoveMemberDialog } from '../features/remove-member'
 import { RenameHouseholdDialog } from '../features/rename-household'
 import { notification } from '@/shared/services/notification'
 import type { Session } from '@/entities/session'
-import type { HouseholdMember } from '@expense-tracker/api'
+import type { HouseholdMember } from '@trata/api'
 
 const { t, locale, availableLocales } = useI18n()
 const settings = useSettingsStore()

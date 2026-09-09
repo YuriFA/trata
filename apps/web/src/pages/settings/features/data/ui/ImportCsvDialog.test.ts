@@ -7,7 +7,7 @@ import { flushPromises, type VueWrapper } from '@vue/test-utils'
 import { defineComponent, h, ref } from 'vue'
 // The local repository rejects duplicate ids with AlreadyExistsError (the
 // coarse `already-exists` code survives the worker bridge; apiCode does not).
-import { AlreadyExistsError } from '@expense-tracker/api'
+import { AlreadyExistsError } from '@trata/api'
 import ImportCsvDialog from './ImportCsvDialog.vue'
 import type { AccountWithBalance } from '@/entities/account'
 import {

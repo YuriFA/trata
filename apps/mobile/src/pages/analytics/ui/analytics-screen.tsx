@@ -7,13 +7,8 @@
 
 import { ScrollView, View } from 'react-native'
 import { useRouter } from 'expo-router'
-import type { Category, Transaction } from '@expense-tracker/api'
-import {
-  currentPeriod,
-  monthLabel,
-  periodToUtcDayRange,
-  type PeriodCursor,
-} from '@expense-tracker/dates'
+import type { Category, Transaction } from '@trata/api'
+import { currentPeriod, monthLabel, periodToUtcDayRange, type PeriodCursor } from '@trata/dates'
 import {
   ChartLegend,
   DonutChart,

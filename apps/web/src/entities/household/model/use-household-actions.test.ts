@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { defineComponent, h } from 'vue'
 import { flushPromises } from '@vue/test-utils'
-import type { Household, HouseholdInvitation } from '@expense-tracker/api'
+import type { Household, HouseholdInvitation } from '@trata/api'
 import { useHousehold } from './use-household'
 import { useHouseholdActions } from './use-household-actions'
 import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'

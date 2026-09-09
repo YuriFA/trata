@@ -1,4 +1,4 @@
-import type { AccountWithBalance } from '@expense-tracker/api'
+import type { AccountWithBalance } from '@trata/api'
 import { Icon } from '@/shared/ui/icon'
 import { Text } from '@/shared/ui/text'
 import { Pressable } from '@/shared/ui/pressable'

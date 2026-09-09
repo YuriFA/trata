@@ -7,7 +7,7 @@
 // page owns all sheet composition).
 
 import { View } from 'react-native'
-import type { DebtDirection, DebtOperation, Debtor } from '@expense-tracker/api'
+import type { DebtDirection, DebtOperation, Debtor } from '@trata/api'
 import {
   BottomSheet,
   BottomSheetHeader,
@@ -21,7 +21,7 @@ import { Pressable } from '@/shared/ui/pressable'
 import { Text } from '@/shared/ui/text'
 import { cn } from '@/shared/lib/utils'
 import { formatAmount } from '@/shared/lib/format/format'
-import { balanceInDirection } from '@expense-tracker/local-data'
+import { balanceInDirection } from '@trata/local-data'
 import { DEBTS_COPY, DEBT_DIRECTION_VIEWS, DEBT_KIND_LABELS } from '../model/kind'
 import { debtorHistoryGroups, type DebtAuthorContext } from '../model/selectors'
 

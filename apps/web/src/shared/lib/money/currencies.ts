@@ -4,4 +4,4 @@ export {
   DEFAULT_CURRENCY,
   isCurrencyCode,
   getDineroCurrency,
-} from '@expense-tracker/money'
+} from '@trata/money'

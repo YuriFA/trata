@@ -3,13 +3,8 @@ import { flushPromises } from '@vue/test-utils'
 import CategoryBreakdownCard from './CategoryBreakdownCard.vue'
 import { CategoryCashflowDialog } from '@/widgets/category-cashflow-dialog'
 import type { CashflowTransaction } from '@/entities/transaction'
-import type { Category } from '@expense-tracker/api'
-import {
-  currentPeriod,
-  periodToUtcDayRange,
-  shiftPeriod,
-  type PeriodCursor,
-} from '@expense-tracker/dates'
+import type { Category } from '@trata/api'
+import { currentPeriod, periodToUtcDayRange, shiftPeriod, type PeriodCursor } from '@trata/dates'
 import {
   createMockAccountRepository,
   createMockCategoryRepository,

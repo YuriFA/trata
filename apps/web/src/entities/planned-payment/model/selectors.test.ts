@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { Category } from '@expense-tracker/api'
+import type { Category } from '@trata/api'
 import type { PlannedPayment } from './types'
 import { isPlanOverdue, nextDueLabel, planRowTitle, plansSortedByNextDue } from './selectors'
 

@@ -1,6 +1,6 @@
 import { useController, useFormContext, useWatch } from 'react-hook-form'
 import { View } from 'react-native'
-import { currencySymbol } from '@expense-tracker/money'
+import { currencySymbol } from '@trata/money'
 import { useAccounts } from '@/entities/account'
 import { FormError } from '@/shared/ui/form'
 import { Text } from '@/shared/ui/text'

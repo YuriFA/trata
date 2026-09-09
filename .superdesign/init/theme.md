@@ -2,7 +2,7 @@
 
 ## Part 1 — Compact token summary
 
-Stack: Tailwind CSS v4 CSS-first (`@theme`), no tailwind.config file. Shared palette lives in the workspace package `@expense-tracker/tokens` (imported by `apps/web/src/style.css` line 3 as `@import '@expense-tracker/tokens/css'`). App CSS must NOT re-declare shared values — web-only extras (chart/sidebar/avatar vars) live in `apps/web/src/style.css`. A MOBILE copy (`mobile.css`) must keep identical sRGB hex values (mobile copy is canonical).
+Stack: Tailwind CSS v4 CSS-first (`@theme`), no tailwind.config file. Shared palette lives in the workspace package `@trata/tokens` (imported by `apps/web/src/style.css` line 3 as `@import '@trata/tokens/css'`). App CSS must NOT re-declare shared values — web-only extras (chart/sidebar/avatar vars) live in `apps/web/src/style.css`. A MOBILE copy (`mobile.css`) must keep identical sRGB hex values (mobile copy is canonical).
 
 ### Fonts
 - Family: `"Outfit", system-ui, -apple-system, sans-serif` (Google Fonts import, weights 400/500/600/700). `--font-heading: var(--font-sans)`.
@@ -54,7 +54,7 @@ background `#16151c` · foreground `#f4f2fa` · card `#211f2b` · primary `#818c
 /**
  * Design tokens (web copy) - CSS custom properties for Tailwind CSS v4.
  *
- * Consumed by apps/web via `@import '@expense-tracker/tokens/css'`. The
+ * Consumed by apps/web via `@import '@trata/tokens/css'`. The
  * MOBILE copy lives in `packages/tokens/src/mobile.css` (Uniwind
  * `@variant light/dark` blocks - React Native cannot use `.dark` class
  * selectors). Keep the two in sync by hand: same sRGB hex values, no
@@ -180,7 +180,7 @@ background `#16151c` · foreground `#f4f2fa` · card `#211f2b` · primary `#818c
  * Design tokens (mobile copy) - Uniwind / Tailwind CSS v4 theme.
  *
  * Imported by apps/mobile/global.css via
- * `@import '@expense-tracker/tokens/mobile'` (the app entry keeps only the
+ * `@import '@trata/tokens/mobile'` (the app entry keeps only the
  * framework imports: 'tailwindcss' and 'uniwind'). Contains the mobile theme:
  * `@theme` statics, the soft-brutalist card shadow utility, and the per-theme
  * semantic colors as `@variant light/dark` blocks (React Native has no DOM, so
@@ -303,14 +303,14 @@ background `#16151c` · foreground `#f4f2fa` · card `#211f2b` · primary `#818c
 ```css
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
-@import '@expense-tracker/tokens/css';
+@import '@trata/tokens/css';
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
 /*
  * The shared semantic palette (:root/.dark, radius, base layer, Tailwind) is
- * imported from @expense-tracker/tokens/css above - do NOT re-declare it here.
+ * imported from @trata/tokens/css above - do NOT re-declare it here.
  * This file only carries web-only extras: the Tailwind `--color-*` wiring for
  * them plus chart/sidebar/avatar values (sRGB hex; keep them sRGB so the web
  * copy stays diff-able against apps/mobile/global.css).

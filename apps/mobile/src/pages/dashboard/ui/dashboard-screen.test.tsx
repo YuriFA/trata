@@ -2,7 +2,7 @@ import { describe, expect, it, jest } from '@jest/globals'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { QueryClientProvider } from '@tanstack/react-query'
-import type { Account, Category, Transaction } from '@expense-tracker/api'
+import type { Account, Category, Transaction } from '@trata/api'
 import { ThemeProvider } from '@/shared/config/theme'
 import { createQueryClient } from '@/shared/lib/query/query-client'
 import { AccountRepositoryProvider } from '@/entities/account'
@@ -13,7 +13,7 @@ import { TransactionRepositoryProvider } from '@/entities/transaction'
 import { createMockTransactionRepository } from '@/shared/lib/testing/mock-transaction-repository'
 import { BottomSheetProvider } from '@/shared/ui/bottom-sheet/bottom-sheet-provider'
 import { formatAmount } from '@/shared/lib/format/format'
-import { monthRangeLabelShort } from '@expense-tracker/dates'
+import { monthRangeLabelShort } from '@trata/dates'
 import {
   cashflowDayGroups,
   cashflowInMonth,

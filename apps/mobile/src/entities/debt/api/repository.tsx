@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react'
-import type { DebtOperationRepository, DebtorRepository } from '@expense-tracker/api'
+import type { DebtOperationRepository, DebtorRepository } from '@trata/api'
 
 interface DebtRepositories {
   debtorRepository: DebtorRepository

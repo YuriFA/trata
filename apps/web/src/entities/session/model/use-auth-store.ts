@@ -10,8 +10,8 @@ import type {
   User,
 } from '../model/types'
 import { getLocalDbApi } from '@/shared/lib/local-db'
-import { ownershipGateDecision } from '@expense-tracker/local-data'
-import { UnauthorizedError } from '@expense-tracker/api'
+import { ownershipGateDecision } from '@trata/local-data'
+import { UnauthorizedError } from '@trata/api'
 
 /**
  * Auth state with the mobile status machine (design D5):

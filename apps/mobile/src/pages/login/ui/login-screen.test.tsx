@@ -6,7 +6,7 @@
 import { describe, expect, it, beforeEach, jest } from '@jest/globals'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { UnauthorizedError } from '@expense-tracker/api'
+import { UnauthorizedError } from '@trata/api'
 import { ThemeProvider } from '@/shared/config/theme'
 import { LoginScreen } from './login-screen'
 

@@ -2,7 +2,7 @@
 // The one sanctioned x100 rounding (Math.round) happens here, at the
 // boundary; everything downstream is integer arithmetic.
 
-import { toMinorUnits } from '@expense-tracker/money'
+import { toMinorUnits } from '@trata/money'
 
 /** Parses "12,50" / "12.50" into minor units; null when unparseable. */
 export function parseMajorUnitsToMinor(input: string): number | null {

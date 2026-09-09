@@ -8,7 +8,7 @@ import {
   AlreadyExistsError,
   InvalidPayloadError,
   ReferentialIntegrityError,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import * as outboxModule from '../outbox'
 import { createTestDatabase } from '../testing/test-database'
 import { categories, syncOutbox } from '../schema'

@@ -12,10 +12,10 @@
 
 import { useEffect } from 'react'
 import { Alert, View } from 'react-native'
-import { nowIso } from '@expense-tracker/dates'
+import { nowIso } from '@trata/dates'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormProvider, useForm, useFormContext, useFormState } from 'react-hook-form'
-import type { Transaction, TransactionType, UpdateTransactionPayload } from '@expense-tracker/api'
+import type { Transaction, TransactionType, UpdateTransactionPayload } from '@trata/api'
 import { useTransaction, useDeleteTransaction, useUpdateTransaction } from '@/entities/transaction'
 import { authorLabel, useHousehold } from '@/entities/household'
 import { useAuth } from '@/entities/session'

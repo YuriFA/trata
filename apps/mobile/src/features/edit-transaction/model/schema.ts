@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { Transaction } from '@expense-tracker/api'
+import type { Transaction } from '@trata/api'
 import { minorToInputValue } from '@/shared/lib/money/display'
 import { parseMajorUnitsToMinor } from '@/shared/lib/money/parse'
 

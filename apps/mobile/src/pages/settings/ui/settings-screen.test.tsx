@@ -8,12 +8,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { Alert } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { RepositoryError } from '@expense-tracker/api'
-import { createTestDatabase } from '@expense-tracker/local-data/testing'
+import { RepositoryError } from '@trata/api'
+import { createTestDatabase } from '@trata/local-data/testing'
 import { DatabaseProvider } from '@/shared/lib/db/database-context'
 import type { LocalDatabase } from '@/shared/lib/db/database'
 import { createQueryClient } from '@/shared/lib/query/query-client'
-import { enqueueOperation, recordConflict } from '@expense-tracker/local-data'
+import { enqueueOperation, recordConflict } from '@trata/local-data'
 import { SettingsScreen } from './settings-screen'
 
 const mockUseAuth: {
@@ -44,25 +44,19 @@ jest.mock('@/entities/household', () => ({
 
 jest.mock('@/entities/transaction/api/repository', () => ({
   useTransactionRepository: () => ({
-    query: jest
-      .fn<() => Promise<import('@expense-tracker/api').Transaction[]>>()
-      .mockResolvedValue([]),
+    query: jest.fn<() => Promise<import('@trata/api').Transaction[]>>().mockResolvedValue([]),
   }),
 }))
 
 jest.mock('@/entities/debt/api/repository', () => ({
   useDebtOperationRepository: () => ({
-    getAll: jest
-      .fn<() => Promise<import('@expense-tracker/api').DebtOperation[]>>()
-      .mockResolvedValue([]),
+    getAll: jest.fn<() => Promise<import('@trata/api').DebtOperation[]>>().mockResolvedValue([]),
   }),
 }))
 
 jest.mock('@/entities/planned-payment/api/repository', () => ({
   usePlannedPaymentRepository: () => ({
-    query: jest
-      .fn<() => Promise<import('@expense-tracker/api').PlannedPayment[]>>()
-      .mockResolvedValue([]),
+    query: jest.fn<() => Promise<import('@trata/api').PlannedPayment[]>>().mockResolvedValue([]),
   }),
 }))
 

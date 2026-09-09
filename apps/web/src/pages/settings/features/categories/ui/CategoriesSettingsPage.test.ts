@@ -1,11 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
-import type {
-  AccountWithBalance,
-  Category,
-  PlannedPayment,
-  Transaction,
-} from '@expense-tracker/api'
+import type { AccountWithBalance, Category, PlannedPayment, Transaction } from '@trata/api'
 import { CategoriesSettingsPage } from '../'
 import {
   createMockAccountRepository,

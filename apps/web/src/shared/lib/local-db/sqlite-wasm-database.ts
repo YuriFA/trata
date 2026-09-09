@@ -1,4 +1,4 @@
-// Web wiring for @expense-tracker/local-data over the official SQLite WASM
+// Web wiring for @trata/local-data over the official SQLite WASM
 // build. Mirrors apps/mobile's database.ts - the platform driver lives in the
 // app, the package stays untouched. The adapter implements the same
 // `prepareSync` surface drizzle's expo driver consumes (the pattern proven by
@@ -11,7 +11,7 @@ import initSqlite3Module, {
   type Sqlite3Static,
 } from '@sqlite.org/sqlite-wasm'
 import wasmUrl from '@sqlite.org/sqlite-wasm/sqlite3.wasm?url'
-import { migrations, schema, type LocalDatabase } from '@expense-tracker/local-data'
+import { migrations, schema, type LocalDatabase } from '@trata/local-data'
 
 let sqlite3Promise: Promise<Sqlite3Static> | undefined
 

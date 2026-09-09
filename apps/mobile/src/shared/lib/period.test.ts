@@ -1,4 +1,4 @@
-// Coverage for the week/month/year period model from @expense-tracker/dates.
+// Coverage for the week/month/year period model from @trata/dates.
 // Same constraint as month-to-utc-day-range.test.ts (see there for the full
 // rationale): the model's output is timezone-dependent by design and a Jest
 // process cannot change its own zone, so each case spawns a child Node process

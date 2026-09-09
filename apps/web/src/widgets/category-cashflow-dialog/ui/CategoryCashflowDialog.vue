@@ -9,8 +9,8 @@ import {
   shiftPeriod,
   transactionsInPeriod,
   type PeriodCursor,
-} from '@expense-tracker/dates'
-import type { Category, Transaction } from '@expense-tracker/api'
+} from '@trata/dates'
+import type { Category, Transaction } from '@trata/api'
 import type { AnalyticsDirection } from '@/entities/analytics'
 import { useAccounts } from '@/entities/account'
 import { useTransactions } from '@/entities/transaction'

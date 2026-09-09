@@ -1,11 +1,11 @@
-@import '@expense-tracker/tokens/css';
+@import '@trata/tokens/css';
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
 /*
  * The shared semantic palette (:root/.dark, radius, base layer, Tailwind) is
- * imported from @expense-tracker/tokens/css above - do NOT re-declare it here.
+ * imported from @trata/tokens/css above - do NOT re-declare it here.
  * This file only carries web-only extras: the Tailwind `--color-*` wiring for
  * them plus chart/sidebar/avatar values (sRGB hex; keep them sRGB so the web
  * copy stays diff-able against apps/mobile/global.css).

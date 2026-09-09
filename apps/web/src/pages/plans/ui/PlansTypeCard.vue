@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ChevronRight } from '@lucide/vue'
-import type { PlannedPayment } from '@expense-tracker/api'
+import type { PlannedPayment } from '@trata/api'
 import { monthlyTotal } from '@/entities/planned-payment'
 import { DEFAULT_CURRENCY, formatMoney } from '@/shared/lib/money'
 

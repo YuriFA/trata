@@ -6,7 +6,7 @@ import { describe, expect, it, beforeEach, jest } from '@jest/globals'
 import { render, waitFor, act } from '@testing-library/react-native'
 import { Alert } from 'react-native'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { createTestDatabase } from '@expense-tracker/local-data/testing'
+import { createTestDatabase } from '@trata/local-data/testing'
 import { DatabaseProvider } from '@/shared/lib/db/database-context'
 import type { LocalDatabase } from '@/shared/lib/db/database'
 import { createQueryClient } from '@/shared/lib/query/query-client'
@@ -26,7 +26,7 @@ import {
   transactions,
   listUnresolvedConflicts,
   recordConflict,
-} from '@expense-tracker/local-data'
+} from '@trata/local-data'
 import { eq } from 'drizzle-orm'
 import { ConflictCenter } from './conflict-center'
 

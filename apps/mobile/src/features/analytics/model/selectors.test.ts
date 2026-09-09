@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals'
-import type { CashflowTransaction, Category, TransferTransaction } from '@expense-tracker/api'
-import { currentPeriod, type PeriodCursor } from '@expense-tracker/dates'
+import type { CashflowTransaction, Category, TransferTransaction } from '@trata/api'
+import { currentPeriod, type PeriodCursor } from '@trata/dates'
 import { OTHER_ENTRY_COLOR, OTHER_ENTRY_ID } from '../config/other-entry'
 import { categoryTotals, percentLabel, periodTotal, toChartEntries } from './selectors'
 

@@ -2,7 +2,7 @@
 // stems, mirroring the cashflow-overview `kind.ts` pattern.
 // TODO(i18n): RU strings are hardcoded until react-i18next is wired.
 
-import type { DebtDirection, DebtOperationKind } from '@expense-tracker/api'
+import type { DebtDirection, DebtOperationKind } from '@trata/api'
 
 interface DebtDirectionCopy {
   /** Summary row label: «Мне должны» / «Я должен». */

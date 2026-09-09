@@ -26,7 +26,7 @@ import {
   type SyncPushOperation,
   type SyncPushResultItem,
   type SyncPullPage,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import type { LocalDatabase, LocalTransaction } from '../types'
 import {
   applyPushConfirmations,

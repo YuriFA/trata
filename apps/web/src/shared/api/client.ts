@@ -1,4 +1,4 @@
-import { createApiClient } from '@expense-tracker/api'
+import { createApiClient } from '@trata/api'
 
 // Request-timeout tiers for the web app (web-offline-resilience design D1):
 // on carrier-whitelisted mobile networks a blackholed backend stalls callers

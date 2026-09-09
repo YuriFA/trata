@@ -4,7 +4,7 @@
 
 import { useRef, useState } from 'react'
 import { Pressable, View } from 'react-native'
-import { formatMoney } from '@expense-tracker/money'
+import { formatMoney } from '@trata/money'
 import { Screen } from '@/shared/ui/screen'
 import { ScreenHeader, ScreenScrollView } from '@/shared/ui/screen-header'
 import { Card } from '@/shared/ui/card'

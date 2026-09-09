@@ -1,4 +1,4 @@
-// Coverage for `monthToUtcDayRange` from @expense-tracker/dates. The
+// Coverage for `monthToUtcDayRange` from @trata/dates. The
 // helper's output is timezone-dependent by design, but a Jest test process
 // cannot change its own zone: Jest sandboxes `process.env` (TZ writes never
 // reach the real environment) and fake timers' `timeZone` only overrides

@@ -7,7 +7,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { View } from 'react-native'
-import type { CreateAccountPayload } from '@expense-tracker/api'
+import type { CreateAccountPayload } from '@trata/api'
 import { BottomSheetInput } from '@/shared/ui/bottom-sheet'
 import { Button } from '@/shared/ui/button'
 import { FormError, FormField, FormLabel } from '@/shared/ui/form'

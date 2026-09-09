@@ -1,7 +1,7 @@
 /**
  * Design tokens (web copy) - CSS custom properties for Tailwind CSS v4.
  *
- * Consumed by apps/web via `@import '@expense-tracker/tokens/css'`. The
+ * Consumed by apps/web via `@import '@trata/tokens/css'`. The
  * MOBILE copy lives in `packages/tokens/src/mobile.css` (Uniwind
  * `@variant light/dark` blocks - React Native cannot use `.dark` class
  * selectors). Keep the two in sync by hand: same sRGB hex values, no

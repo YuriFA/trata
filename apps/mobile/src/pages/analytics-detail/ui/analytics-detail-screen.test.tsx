@@ -2,13 +2,8 @@ import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { QueryClientProvider } from '@tanstack/react-query'
-import type { Category, Transaction } from '@expense-tracker/api'
-import {
-  currentPeriod,
-  periodRangeLabel,
-  shiftPeriod,
-  type PeriodCursor,
-} from '@expense-tracker/dates'
+import type { Category, Transaction } from '@trata/api'
+import { currentPeriod, periodRangeLabel, shiftPeriod, type PeriodCursor } from '@trata/dates'
 import { ThemeProvider } from '@/shared/config/theme'
 import { createQueryClient } from '@/shared/lib/query/query-client'
 import { CategoryRepositoryProvider } from '@/entities/category'

@@ -5,7 +5,7 @@ import {
   type CategoryRepository,
   type CreateCategoryPayload,
   type UpdateCategoryPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 
 export interface MockCategoryRepository extends CategoryRepository {
   snapshot(): Category[]

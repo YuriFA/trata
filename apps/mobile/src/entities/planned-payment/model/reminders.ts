@@ -11,7 +11,7 @@
 // TODO(i18n): RU copy is hardcoded until react-i18next is wired.
 
 import * as Notifications from 'expo-notifications'
-import type { PlannedPayment } from '@expense-tracker/api'
+import type { PlannedPayment } from '@trata/api'
 import { formatAmount } from '@/shared/lib/format/format'
 
 const ID_PREFIX = 'plan-reminder-'

@@ -2,7 +2,7 @@
 
 ## Summary
 
-Created `@expense-tracker/tokens` package as the **single source of truth** for design tokens across web and mobile platforms.
+Created `@trata/tokens` package as the **single source of truth** for design tokens across web and mobile platforms.
 
 ## Problem
 
@@ -148,7 +148,7 @@ Exports CSS custom properties for Tailwind CSS v4:
 
 Usage in web app:
 ```css
-@import "@expense-tracker/tokens/css";
+@import "@trata/tokens/css";
 ```
 
 ### Mobile: `react-native.ts`
@@ -164,7 +164,7 @@ export { borderRadius } from "./tokens/borderRadius"
 
 Usage in mobile app:
 ```tsx
-import { colors, spacing, typography } from "@expense-tracker/tokens/react-native"
+import { colors, spacing, typography } from "@trata/tokens/react-native"
 
 const styles = StyleSheet.create({
   container: {
@@ -194,7 +194,7 @@ export type { ColorToken, SpacingToken, TypographyVariant, BorderRadiusToken }
 
 ```json
 {
-  "name": "@expense-tracker/tokens",
+  "name": "@trata/tokens",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -214,7 +214,7 @@ Updated both apps to use the shared package:
 ```json
 {
   "dependencies": {
-    "@expense-tracker/tokens": "workspace:*",
+    "@trata/tokens": "workspace:*",
     // ... other deps
   }
 }
@@ -224,7 +224,7 @@ Updated both apps to use the shared package:
 ```json
 {
   "dependencies": {
-    "@expense-tracker/tokens": "workspace:*",
+    "@trata/tokens": "workspace:*",
     // ... other deps
   }
 }
@@ -236,7 +236,7 @@ Updated both apps to use the shared package:
 
 Import in CSS:
 ```css
-@import "@expense-tracker/tokens/css";
+@import "@trata/tokens/css";
 ```
 
 Use in components:
@@ -252,7 +252,7 @@ Use in components:
 
 **Option 1: StyleSheet with tokens**
 ```tsx
-import { colors, spacing, typography } from "@expense-tracker/tokens/react-native"
+import { colors, spacing, typography } from "@trata/tokens/react-native"
 
 const styles = StyleSheet.create({
   container: {
@@ -287,7 +287,7 @@ The mobile app's `app.css` now references the shared tokens with hex values.
 ## Migration Notes
 
 ### Web App
-- Changed: `@import 'tailwindcss'` → `@import '@expense-tracker/tokens/css'`
+- Changed: `@import 'tailwindcss'` → `@import '@trata/tokens/css'`
 - Result: Same appearance, now using shared tokens
 
 ### Mobile App
@@ -350,4 +350,4 @@ The mobile app's `app.css` now references the shared tokens with hex values.
 
 ---
 
-The shared design tokens package is now the authoritative source for all design system values. Both platforms consume from this single source, ensuring consistency across the Expense Tracker application.
+The shared design tokens package is now the authoritative source for all design system values. Both platforms consume from this single source, ensuring consistency across the Trata application.

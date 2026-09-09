@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import type { AccountWithBalance, Transaction } from '@expense-tracker/api'
+import type { AccountWithBalance, Transaction } from '@trata/api'
 import { BottomSheetRef } from '@/shared/ui/bottom-sheet'
 import { formatAmount } from '@/shared/lib/format/format'
 import { SummaryCard, totalCashflow, type MonthCursor } from '@/features/cashflow-overview'

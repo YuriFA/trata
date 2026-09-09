@@ -11,7 +11,7 @@
 import { memo, useCallback, useMemo, useRef, useState } from 'react'
 import { useController, useFormContext, useFormState, useWatch } from 'react-hook-form'
 import { View } from 'react-native'
-import { nowIso } from '@expense-tracker/dates'
+import { nowIso } from '@trata/dates'
 import {
   DateButton,
   NoteButton,

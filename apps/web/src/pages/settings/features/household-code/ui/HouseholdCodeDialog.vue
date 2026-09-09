@@ -15,7 +15,7 @@ import { Button } from '@/shared/ui/button'
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
 import { getHouseholdErrorMessage, useHouseholdActions } from '@/entities/household'
 import { notification } from '@/shared/services/notification'
-import type { HouseholdCode } from '@expense-tracker/api'
+import type { HouseholdCode } from '@trata/api'
 
 // The home-code panel (household-ux 3.2, owner only). The API offers no read
 // for an existing code - only generate/rotate and revoke - so the panel starts

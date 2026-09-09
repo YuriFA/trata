@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { View } from 'react-native'
-import { monthToUtcDayRange } from '@expense-tracker/dates'
+import { monthToUtcDayRange } from '@trata/dates'
 import { useCategoriesIncludingArchived } from '@/entities/category'
 import { useTransactions } from '@/entities/transaction'
 import { NewTransactionSheet } from '@/features/create-transaction'

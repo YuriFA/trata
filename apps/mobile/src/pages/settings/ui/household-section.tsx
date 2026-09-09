@@ -13,8 +13,8 @@
 import { useState } from 'react'
 import { Alert, View } from 'react-native'
 import { router } from 'expo-router'
-import { fullDayLabel } from '@expense-tracker/dates'
-import type { HouseholdMember } from '@expense-tracker/api'
+import { fullDayLabel } from '@trata/dates'
+import type { HouseholdMember } from '@trata/api'
 import {
   householdApi,
   householdDisplayName,

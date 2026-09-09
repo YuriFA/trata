@@ -6,4 +6,4 @@
  */
 @import 'tailwindcss';
 @import 'uniwind';
-@import '@expense-tracker/tokens/mobile';
+@import '@trata/tokens/mobile';

@@ -3,7 +3,7 @@ import {
   type CreateCategoryPayload,
   type UpdateCategoryPayload,
 } from '../api/repository'
-import { SYNC_QUERY_KEY_ROOTS } from '@expense-tracker/local-data'
+import { SYNC_QUERY_KEY_ROOTS } from '@trata/local-data'
 import { useMutation, useQuery, useQueryCache } from '@pinia/colada'
 import { toValue, type MaybeRefOrGetter } from 'vue'
 import { useOptimisticMutation } from '@/shared/lib/use-optimistic-mutation'

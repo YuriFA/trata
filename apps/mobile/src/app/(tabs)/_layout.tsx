@@ -18,7 +18,7 @@ interface TabDef extends TabConfig {
 }
 
 // TODO(i18n): replace the hardcoded `label`s with the shared
-// @expense-tracker/i18n bundle once react-i18next is wired in shared/i18n.
+// @trata/i18n bundle once react-i18next is wired in shared/i18n.
 const TABS: readonly TabDef[] = [
   { name: 'index', href: '/', label: 'Главная', testId: 'tab-dashboard', icon: 'wallet-outline' },
   {

@@ -6,13 +6,13 @@
 // dates are legal (a plan may start already overdue).
 
 import { z } from 'zod'
-import { calendarDayKey } from '@expense-tracker/dates'
+import { calendarDayKey } from '@trata/dates'
 import type {
   CreatePlannedPaymentPayload,
   PlannedPayment,
   PlannedPaymentType,
   UpdatePlannedPaymentPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 import { minorToInputValue } from '@/shared/lib/money/display'
 import { parseMajorUnitsToMinor } from '@/shared/lib/money/parse'
 

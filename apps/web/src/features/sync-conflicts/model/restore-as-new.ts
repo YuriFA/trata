@@ -1,9 +1,9 @@
 import { useMutation, useQueryCache } from '@pinia/colada'
-import type { LocalSyncConflict, RestoreResult } from '@expense-tracker/local-data'
+import type { LocalSyncConflict, RestoreResult } from '@trata/local-data'
 import { getLocalDbApi, useSyncController } from '@/shared/lib/local-db'
 
 // Restore-as-new: delegates the decode + create + mark-resolved pipeline to
-// the @expense-tracker/local-data package via the Comlink bridge
+// the @trata/local-data package via the Comlink bridge
 // (restoreConflictAsNew). The composable's role is cache refresh and sync kick;
 // the calling component handles error presentation for refused restores.
 
@@ -25,4 +25,4 @@ export function useRestoreConflictAsNew() {
 }
 
 /** True when the preserved local state carries the fields a re-create needs. */
-export { canRestoreAsNew } from '@expense-tracker/local-data'
+export { canRestoreAsNew } from '@trata/local-data'

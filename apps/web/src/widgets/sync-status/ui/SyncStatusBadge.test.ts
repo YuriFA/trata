@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 import { flushPromises } from '@vue/test-utils'
-import type { SyncEngineState, SyncStatusSnapshot } from '@expense-tracker/local-data'
+import type { SyncEngineState, SyncStatusSnapshot } from '@trata/local-data'
 import type { LocalDbApi } from '@/shared/lib/local-db'
 import type { SyncController } from '@/shared/lib/local-db'
 import type { User } from '@/entities/session'

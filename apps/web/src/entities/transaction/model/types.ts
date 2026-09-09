@@ -4,4 +4,4 @@ export type {
   TransferTransaction,
   AdjustmentTransaction,
   TransactionType,
-} from '@expense-tracker/api'
+} from '@trata/api'

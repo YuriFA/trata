@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useForm, Field as VeeField } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { calendarDayKey } from '@expense-tracker/dates'
+import { calendarDayKey } from '@trata/dates'
 import type { PlannedPayment } from '@/entities/planned-payment'
 import {
   useCreatePlannedPayment,

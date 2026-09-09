@@ -3,9 +3,9 @@
 // calendar day (planned-payments capability); advancement math itself lives
 // in the package (advanceNextDue) - the web adds no recurrence logic.
 
-import type { Category } from '@expense-tracker/api'
+import type { Category } from '@trata/api'
 import type { PlannedPayment } from './types'
-import { fullDayLabel } from '@expense-tracker/dates'
+import { fullDayLabel } from '@trata/dates'
 
 /** Next-due ascending (overdue plans first by construction); ties by id. */
 export function plansSortedByNextDue(plans: readonly PlannedPayment[]): PlannedPayment[] {

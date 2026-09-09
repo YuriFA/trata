@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import AnalyticsPage from './AnalyticsPage.vue'
 import type { CashflowTransaction } from '@/entities/transaction'
-import type { Category } from '@expense-tracker/api'
+import type { Category } from '@trata/api'
 import {
   createMockAccountRepository,
   createMockCategoryRepository,

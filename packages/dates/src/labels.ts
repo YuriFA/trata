@@ -18,7 +18,7 @@ const asDate = (value: Date | string): Date => (typeof value === 'string' ? new 
 
 // TODO(i18n): these two labels are app copy living here as the single source
 // (mobile used to hardcode them twice); move them into the shared
-// @expense-tracker/i18n bundle once mobile wires react-i18next.
+// @trata/i18n bundle once mobile wires react-i18next.
 
 /** "Сегодня" / "Today". */
 export function todayLabel(locale: string = DEFAULT_DATE_LOCALE): string {

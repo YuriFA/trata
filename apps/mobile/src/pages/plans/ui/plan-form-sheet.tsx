@@ -22,7 +22,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormProvider, useForm } from 'react-hook-form'
 import { Alert } from 'react-native'
-import type { PlannedPayment, PlannedPaymentType } from '@expense-tracker/api'
+import type { PlannedPayment, PlannedPaymentType } from '@trata/api'
 import {
   useCreatePlannedPayment,
   useDeletePlannedPayment,

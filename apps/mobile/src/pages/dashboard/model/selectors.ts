@@ -1,12 +1,12 @@
 // Dashboard-only summary aggregates over the DOMAIN types from
-// @expense-tracker/api. The month-scoped cashflow selectors shared with the
+// @trata/api. The month-scoped cashflow selectors shared with the
 // income screen live in @/features/cashflow-overview. Integer money math
 // only (minor units); balances come pre-computed from the account repository
 // (opening + signed transaction impacts, adjustments included), so selectors
 // only aggregate them.
 
-import type { AccountWithBalance, Transaction } from '@expense-tracker/api'
-import { transactionsInMonth, type MonthCursor } from '@expense-tracker/dates'
+import type { AccountWithBalance, Transaction } from '@trata/api'
+import { transactionsInMonth, type MonthCursor } from '@trata/dates'
 
 /**
  * Monthly balance = income − expenses for the period. Transfers never

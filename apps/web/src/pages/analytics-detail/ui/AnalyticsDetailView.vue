@@ -8,8 +8,8 @@ import {
   shiftPeriod,
   type AnalyticsPeriodKind,
   type PeriodCursor,
-} from '@expense-tracker/dates'
-import type { Category, TransactionQuery } from '@expense-tracker/api'
+} from '@trata/dates'
+import type { Category, TransactionQuery } from '@trata/api'
 import {
   categoryTotals,
   percentLabel,

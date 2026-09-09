@@ -1,5 +1,5 @@
 {
-  "name": "@expense-tracker/api",
+  "name": "@trata/api",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -17,7 +17,7 @@
     "gen:api": "node scripts/gen-api.mjs"
   },
   "dependencies": {
-    "@expense-tracker/money": "workspace:*",
+    "@trata/money": "workspace:*",
     "openapi-fetch": "^0.17.0"
   },
   "devDependencies": {

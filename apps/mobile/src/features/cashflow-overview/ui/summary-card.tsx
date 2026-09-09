@@ -2,7 +2,7 @@ import { Pressable, View } from 'react-native'
 import { Icon } from '@/shared/ui/icon'
 import { IconButton } from '@/shared/ui/icon-button'
 import { Text } from '@/shared/ui/text'
-import { monthRangeLabel } from '@expense-tracker/dates'
+import { monthRangeLabel } from '@trata/dates'
 import type { MonthCursor } from '../model/selectors'
 
 export interface SummaryCardProps {

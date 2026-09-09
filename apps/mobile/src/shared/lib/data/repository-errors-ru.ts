@@ -1,6 +1,6 @@
 // RU error messages for the shared repository error model. Mobile has no
 // react-i18next wiring yet (AGENTS.md: i18n is a pending concern), so these
-// mirror the wording of the shared @expense-tracker/i18n RU bundle as a
+// mirror the wording of the shared @trata/i18n RU bundle as a
 // static map - the web app's repository-i18n.ts is the twin of this file.
 // When mobile i18n lands, this module becomes a thin t() adapter.
 
@@ -8,7 +8,7 @@ import {
   getRepositoryErrorMessage,
   RepositoryError,
   type RepositoryErrorMessages,
-} from '@expense-tracker/api'
+} from '@trata/api'
 
 const REPOSITORY_ERRORS_RU: RepositoryErrorMessages = {
   notFound: 'Не найдено',

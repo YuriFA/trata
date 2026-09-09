@@ -40,14 +40,14 @@ import {
   createSyncEngine,
   createSyncRunPolicy,
   type SyncEngineState,
-} from '@expense-tracker/local-data'
+} from '@trata/local-data'
 import { randomUUID } from 'expo-crypto'
 import { SyncContext, type SyncController } from '@/shared/lib/sync/sync-context'
 import { ConflictCenter } from '@/features/sync-conflicts'
 import { useEnsureCurrentHousehold } from '@/features/household-join'
 
 // Hermes has no WebCrypto: bind the shared id factory to expo-crypto before
-// any database work (ids are minted inside @expense-tracker/local-data).
+// any database work (ids are minted inside @trata/local-data).
 configureIdFactory(randomUUID)
 
 // Boot version line (spec: `app-version`): one console.info identifying the
@@ -165,7 +165,7 @@ function AppDataProviders({ children }: { children: React.ReactNode }) {
 /**
  * Sync engine + run-policy composition root (design D7): creates the engine
  * once over the local database and the shared API client, then hands the
- * opportunistic triggers to the shared run-policy (@expense-tracker/local-data
+ * opportunistic triggers to the shared run-policy (@trata/local-data
  * owns the debounce, the auth/household gate order, and the invalidation
  * rule). The household gate comes from `useEnsureCurrentHousehold` (the
  * absorbed HouseholdRebaseGuard: its Alert flow lives in the household-join

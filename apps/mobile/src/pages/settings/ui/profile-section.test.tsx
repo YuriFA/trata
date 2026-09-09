@@ -5,7 +5,7 @@
 import { describe, expect, it, beforeEach, jest } from '@jest/globals'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import { QueryClientProvider } from '@tanstack/react-query'
-import type { Household } from '@expense-tracker/api'
+import type { Household } from '@trata/api'
 import { createQueryClient } from '@/shared/lib/query/query-client'
 import { BottomSheetProvider } from '@/shared/ui/bottom-sheet/bottom-sheet-provider'
 import { ProfileSection } from './profile-section'

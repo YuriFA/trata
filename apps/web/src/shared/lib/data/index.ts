@@ -10,5 +10,5 @@ export {
   RateLimitedError,
   ConflictError,
   getRepositoryErrorMessage,
-} from '@expense-tracker/api'
+} from '@trata/api'
 export { getRepositoryErrorMessages } from './repository-i18n'

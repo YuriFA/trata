@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createApp, h } from 'vue'
-import { NotFoundError } from '@expense-tracker/api'
+import { NotFoundError } from '@trata/api'
 import { provideRepositories } from './repositories'
 import { ACCOUNT_REPOSITORY_KEY } from '@/entities/account'
 import { CATEGORY_REPOSITORY_KEY } from '@/entities/category'

@@ -1,6 +1,6 @@
 import { createI18n } from 'vue-i18n'
 
-import { messages, type MessageSchema, DEFAULT_LOCALE, type AppLocale } from '@expense-tracker/i18n'
+import { messages, type MessageSchema, DEFAULT_LOCALE, type AppLocale } from '@trata/i18n'
 
 // Slavic plural forms for pipe-pluralized messages («операция | операции |
 // операций»): vue-i18n's default rule is binary (1 vs other), which picks

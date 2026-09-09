@@ -59,7 +59,7 @@ Created reusable UI components:
 | **Badge** | default, primary, secondary, success, warning, destructive; sm, md | `badge/Badge.tsx` |
 | **Divider** | horizontal, vertical | `divider/Divider.tsx` |
 
-### Phase 4: Expense Tracker Specific Components ✅
+### Phase 4: Trata Specific Components ✅
 
 Created domain-specific components in `shared/components/`:
 
@@ -188,7 +188,7 @@ apps/mobile/
 
 ## Shared Design Tokens Package ✅
 
-Created `@expense-tracker/tokens` package as the **single source of truth** for design tokens:
+Created `@trata/tokens` package as the **single source of truth** for design tokens:
 
 ### Package Structure
 ```

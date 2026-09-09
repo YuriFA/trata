@@ -4,7 +4,7 @@
 // row ids that make re-imports idempotent. Amounts are major units converted
 // to int64 minor units exactly once, here at the row-mapper seam.
 
-import { toMinorUnits } from '@expense-tracker/money'
+import { toMinorUnits } from '@trata/money'
 import type { Account } from '@/entities/account'
 import { CSV_NO_ACCOUNT_LABEL } from '@/features/export-csv'
 

@@ -1,13 +1,13 @@
 # Mobile (`apps/mobile/`) — agent memory
 
 React Native + Expo (SDK 57 / RN 0.86 / React 19.2 / TS 6). Workspace member
-`@expense-tracker/mobile`, twin of `apps/web` — shares the domain model and the
-`@expense-tracker/{api,dates,local-data,money,tokens}` packages (i18n wiring
+`@trata/mobile`, twin of `apps/web` — shares the domain model and the
+`@trata/{api,dates,local-data,money,tokens}` packages (i18n wiring
 pending, see §i18n). Project-wide invariants and the canonical documentation map
 live in the root `AGENTS.md`. The offline-first data layer and sync protocol are
 specified in `openspec/specs/mobile-local-data` and `openspec/specs/sync-protocol`;
 the local-first engine/schema/repositories themselves live in
-`packages/local-data` (`@expense-tracker/local-data`).
+`packages/local-data` (`@trata/local-data`).
 
 ## Architecture: FSD + Expo Router
 
@@ -82,7 +82,7 @@ model and the fixed `screen-header-*` testID contract.
 
 Styling is Uniwind (Tailwind CSS v4, CSS-first) — no `tailwind.config.*`.
 `global.css` is a thin entry: framework imports (`tailwindcss`, `uniwind`) +
-`@import '@expense-tracker/tokens/mobile'`. The mobile tokens copy is the
+`@import '@trata/tokens/mobile'`. The mobile tokens copy is the
 canonical shared palette; web syncs to it, and drift fails the mobile
 `design-tokens-sync` test (same sRGB hex values, no oklch/conversion).
 
@@ -236,7 +236,7 @@ Hard rules:
 
 Code map:
 
-- `@expense-tracker/local-data` (`packages/local-data`) - the whole local-first
+- `@trata/local-data` (`packages/local-data`) - the whole local-first
   layer: drizzle schema, outbox, sync engine with conflicts, local
   repositories, recurrence math, migrations. **Also houses ownership gate
   policy** (`sync/ownership.ts`: decision table, `adoptUnowned`, `rebindOwner`)
@@ -260,7 +260,7 @@ real backend: `SYNC_INTEGRATION_API=<url> pnpm test backend-integration`
 
 ## i18n
 
-Will use the shared `@expense-tracker/i18n` bundle via react-i18next; mobile
+Will use the shared `@trata/i18n` bundle via react-i18next; mobile
 keeps its own native wiring, like web keeps vue-i18n. Until that wiring lands,
 RU strings may stay hardcoded with explicit `TODO(i18n)` markers (localized
 tab/screen titles included). Don't introduce a second ad-hoc translation
@@ -271,7 +271,7 @@ mechanism.
 `pnpm test` runs Jest (`jest-expo` + `@testing-library/react-native`). Test-only
 repository fixtures live in `shared/lib/testing/mock-*-repository.ts`; real
 local databases for tests come from `createTestDatabase()` in
-`@expense-tracker/local-data/testing` (never import test helpers from
+`@trata/local-data/testing` (never import test helpers from
 application code). Test observable behavior (e.g. `getByTestId('submit')` is
 enabled/disabled), not internal state, computed Uniwind styles, animation
 frames, or private function calls (unless mocking a genuine external

@@ -4,7 +4,7 @@
 // so every layer can import it downward (invariants #15/#16).
 
 import { createContext, useContext } from 'react'
-import type { SyncEngine, SyncEngineState } from '@expense-tracker/local-data'
+import type { SyncEngine, SyncEngineState } from '@trata/local-data'
 
 export interface SyncController {
   engine: SyncEngine

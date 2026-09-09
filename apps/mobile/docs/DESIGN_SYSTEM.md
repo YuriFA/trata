@@ -1,8 +1,8 @@
-# Expense Tracker Mobile - Design System
+# Trata Mobile - Design System
 
 ## Overview
 
-The Design System provides a unified visual language and component library for the Expense Tracker mobile app. It's built on React Native, Expo, Uniwind (Tailwind CSS v4), and TypeScript.
+The Design System provides a unified visual language and component library for the Trata mobile app. It's built on React Native, Expo, Uniwind (Tailwind CSS v4), and TypeScript.
 
 ### Key Principles
 
@@ -398,7 +398,7 @@ export function MyComponent(props: MyComponentProps) {
 The app uses Uniwind (Tailwind CSS v4, CSS-first config) for styling:
 
 1. **`global.css`** - thin entry: Tailwind/Uniwind imports +
-   `@import '@expense-tracker/tokens/mobile'` (all tokens); no
+   `@import '@trata/tokens/mobile'` (all tokens); no
    `tailwind.config.*` exists
 2. **`metro.config.js`** - `withUniwindConfig` (`cssEntryFile`, `polyfills.rem: 14`)
 3. **Import in `_layout.tsx`** - `global.css` imported at app root

@@ -1,5 +1,5 @@
 import { View } from 'react-native'
-import type { PlannedPaymentType } from '@expense-tracker/api'
+import type { PlannedPaymentType } from '@trata/api'
 import { Card } from '@/shared/ui/card'
 import { Icon } from '@/shared/ui/icon'
 import { Pressable } from '@/shared/ui/pressable'

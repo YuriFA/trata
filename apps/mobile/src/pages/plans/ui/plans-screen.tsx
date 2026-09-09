@@ -12,7 +12,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { ScrollView, View } from 'react-native'
-import type { PlannedPayment, PlannedPaymentType } from '@expense-tracker/api'
+import type { PlannedPayment, PlannedPaymentType } from '@trata/api'
 import { useCategories } from '@/entities/category'
 import { usePlannedPayments, reschedule } from '@/entities/planned-payment'
 import { useHousehold } from '@/entities/household'

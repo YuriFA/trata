@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals'
-import type { AccountWithBalance, Transaction } from '@expense-tracker/api'
+import type { AccountWithBalance, Transaction } from '@trata/api'
 import { monthlyBalance, totalBalance } from './selectors'
 
 const CURSOR = { year: 2026, month: 7 } // August 2026

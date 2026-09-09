@@ -4,7 +4,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest'
 import { eq } from 'drizzle-orm'
-import { InvalidPayloadError, NotFoundError, ReferentialIntegrityError } from '@expense-tracker/api'
+import { InvalidPayloadError, NotFoundError, ReferentialIntegrityError } from '@trata/api'
 import { createLocalTransactionRepository } from '../repositories/transaction'
 import { createLocalCategoryRepository } from '../repositories/category'
 import { createTestDatabase } from '../testing/test-database'

@@ -1,4 +1,4 @@
-import { isCurrencyCode, type CurrencyCode } from '@expense-tracker/money'
+import { isCurrencyCode, type CurrencyCode } from '@trata/money'
 import { asInteger, asNonEmptyString, asString, isRecord } from '../lib/normalize'
 
 export type Account = {

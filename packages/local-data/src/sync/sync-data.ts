@@ -7,7 +7,7 @@
 // (`tools/sync-catalog/manifest.json`, ADR-0004); this module is the seam
 // the engine and conflict bookkeeping call through.
 
-import type { SyncOperationData } from '@expense-tracker/api'
+import type { SyncOperationData } from '@trata/api'
 import type { LocalDatabase, LocalTransaction } from '../types'
 import type {
   AccountRow,

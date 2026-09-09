@@ -1,5 +1,5 @@
 {
-  "name": "@expense-tracker/local-data",
+  "name": "@trata/local-data",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -24,9 +24,9 @@
     "node": ">=22.5"
   },
   "dependencies": {
-    "@expense-tracker/api": "workspace:*",
-    "@expense-tracker/dates": "workspace:*",
-    "@expense-tracker/money": "workspace:*",
+    "@trata/api": "workspace:*",
+    "@trata/dates": "workspace:*",
+    "@trata/money": "workspace:*",
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {

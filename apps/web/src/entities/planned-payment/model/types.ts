@@ -1,1 +1,1 @@
-export type { PlannedPayment } from '@expense-tracker/api'
+export type { PlannedPayment } from '@trata/api'

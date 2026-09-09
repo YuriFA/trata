@@ -1,1 +1,1 @@
-export type { DebtDirection, DebtOperation } from '@expense-tracker/api'
+export type { DebtDirection, DebtOperation } from '@trata/api'

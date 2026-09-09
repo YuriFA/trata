@@ -3,7 +3,7 @@
 // units - conversion happens once in the values→payload mappers (forms.md §4).
 
 import { z } from 'zod'
-import { nowIso } from '@expense-tracker/dates'
+import { nowIso } from '@trata/dates'
 import { parseMajorUnitsToMinor } from '@/shared/lib/money/parse'
 
 const amountField = z

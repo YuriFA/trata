@@ -12,7 +12,7 @@ import {
 } from '@/shared/ui/alert-dialog'
 import { getHouseholdErrorMessage, useHouseholdActions } from '@/entities/household'
 import { notification } from '@/shared/services/notification'
-import type { HouseholdMember } from '@expense-tracker/api'
+import type { HouseholdMember } from '@trata/api'
 
 // Remove-member confirm (household-ux 3.2, owner only). One instance outside
 // the members loop; the page passes the member to act on (vue-patterns §4).

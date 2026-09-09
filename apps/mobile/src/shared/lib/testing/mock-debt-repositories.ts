@@ -16,7 +16,7 @@ import {
   type DebtorRepository,
   type UpdateDebtOperationPayload,
   type UpdateDebtorPayload,
-} from '@expense-tracker/api'
+} from '@trata/api'
 
 export interface MockDebtorRepository extends DebtorRepository {
   snapshot(): Debtor[]
