@@ -11,18 +11,22 @@ import {
 } from '@/__tests__/helpers/mock-repositories'
 import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'
 import { currentDay } from '@/shared/lib/date'
-import { fullDayLabel } from '@expense-tracker/dates'
+import { calendarDayKey, fullDayLabel } from '@trata/dates'
 
 const today = new Date()
 const todayKey = currentDay()
+
+function dayAfter(key: string): string {
+  const next = new Date(`${key}T00:00:00Z`)
+  next.setUTCDate(next.getUTCDate() + 1)
+  return next.toISOString().slice(0, 10)
+}
 
 // The advanced plan's next-due key, derived from the day key itself (UTC
 // calendar-day +1) rather than from the run instant: `today + 24h` sliced
 // in UTC drifts across timezones/time of day (a late-evening run can land
 // on the same day as the local `todayKey`, hanging the overdue waitFor).
-const nextDay = new Date(`${todayKey}T00:00:00Z`)
-nextDay.setUTCDate(nextDay.getUTCDate() + 1)
-const tomorrowKey = nextDay.toISOString().slice(0, 10)
+const tomorrowKey = dayAfter(todayKey)
 
 function plan(overrides: Partial<PlannedPayment>): PlannedPayment {
   return {
@@ -43,7 +47,7 @@ function plan(overrides: Partial<PlannedPayment>): PlannedPayment {
   }
 }
 
-import type { Category } from '@expense-tracker/api'
+import type { Category } from '@trata/api'
 
 const categories: Category[] = [
   {
@@ -114,7 +118,13 @@ describe('PlansPage', () => {
   })
 
   it('opens the type list dialog with rows sorted by next due, overdue badge, and manual confirm actions', async () => {
-    const future = new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    // Strictly beyond every "today" the dialog can compare against: the
+    // overdue predicate uses the LOCAL calendar day (facade currentDay),
+    // while seeds like p-due use the UTC day key - the two differ inside
+    // the local/UTC midnight window, so base the future date on the later
+    // of the two.
+    const localTodayKey = calendarDayKey(new Date())
+    const future = dayAfter(localTodayKey > todayKey ? localTodayKey : todayKey)
     const { wrapper } = mountPage([
       plan({ id: 'p-future', nextDue: future }),
       plan({ id: 'p-due', nextDue: todayKey }),
