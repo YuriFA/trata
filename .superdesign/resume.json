@@ -535,9 +535,7 @@
         "apps/web/src/app/layout/AppSidebarNav.vue",
         "apps/web/src/pages/accounts/ui/AccountsPage.vue",
         "apps/web/src/pages/accounts/ui/AccountCard.vue",
-        "apps/web/src/pages/accounts/features/add-account/ui/AddAccountDialog.vue",
         "apps/web/src/pages/accounts/features/add-account/ui/AddAccountForm.vue",
-        "apps/web/src/pages/accounts/features/edit-account/ui/EditAccountDialog.vue",
         "apps/web/src/pages/accounts/features/edit-account/ui/EditAccountForm.vue",
         "apps/web/src/pages/accounts/features/delete-account/ui/DeleteAccountDialog.vue",
         "apps/web/src/entities/account/ui/AccountCardSkeleton.vue",
@@ -550,20 +548,18 @@
         "apps/web/src/shared/ui/card/CardContent.vue"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "50c6b28f20d1889b17333fa5305129cd93cb84b79703ac5ed11b6ce2965e13ba",
-        "apps/web/src/app/layout/AppShell.vue": "c091dac8b61c357bfbed1d63e12dc2e3543384a21b5ec70e2ca4ef9a3c0f7b95",
-        "apps/web/src/app/layout/AppSidebar.vue": "7f8666c0cc8ed4f924948f38c2d8355297fefa76a56cf022d28a33ccc38775a9",
-        "apps/web/src/app/layout/AppSidebarNav.vue": "892aa840f12cf017e1451edf114f66097a53b0883d8a8a43178c1a1e5e80fb13",
-        "apps/web/src/pages/accounts/ui/AccountsPage.vue": "4f2ee4256166ff692228d5a867cd86d364dec197870547ab0710600393fcd720",
-        "apps/web/src/pages/accounts/ui/AccountCard.vue": "ed80e684e4a798b78782381a1f4715deb1312003703afaa393013e7d0a8d5114",
-        "apps/web/src/pages/accounts/features/add-account/ui/AddAccountDialog.vue": "cd60a29d3d3c42845558367cc2eea801b025596cb72686bdcb46a995012a1a44",
-        "apps/web/src/pages/accounts/features/add-account/ui/AddAccountForm.vue": "7a99829dc945dbe039972caed10750928789019fe00aa242518735bb74aad59e",
-        "apps/web/src/pages/accounts/features/edit-account/ui/EditAccountDialog.vue": "157c35ff9891fbc67ce0fb5c9fcaf2ba581e1514f1654688fda77ac140f2b711",
-        "apps/web/src/pages/accounts/features/edit-account/ui/EditAccountForm.vue": "bd0c947b1090432ef17ac0fe82761d51cd0a4cb2c63ca4fe86db1c9b5a4aa51c",
-        "apps/web/src/pages/accounts/features/delete-account/ui/DeleteAccountDialog.vue": "de51549656faac6cae74f01df7b6e01262d8136fb256f31c402f312f13f37dee",
-        "apps/web/src/entities/account/ui/AccountCardSkeleton.vue": "31ed50d7edfb8bff97115ca30663e45a477cc4e570ad36a4856b8e3d77c3ad74",
+        ".superdesign/design-system.md": "e7b59b82af4fbd4b6a8b6ee34d54608f903ad9b3d15702fefd35e6a6910daa22",
+        "apps/web/src/app/layout/AppShell.vue": "f711be4f1cb375d88593c3c63802903ad68f5461eae63ffe6e869f1e4ca797d5",
+        "apps/web/src/app/layout/AppSidebar.vue": "ff553178549812d20a02107d8c447c6b7e32a19fc7081ccdf6ce2ed0da91d4fd",
+        "apps/web/src/app/layout/AppSidebarNav.vue": "4e7f39f006c597900b6c2b37e899084dff8189df9988176d3736929fd41480b2",
+        "apps/web/src/pages/accounts/ui/AccountsPage.vue": "79834f67deec35062bcd0fddbd5c1e2e2077d1db02502135b41e8312bbe2dd8e",
+        "apps/web/src/pages/accounts/ui/AccountCard.vue": "d939b2ae9dfb7eccb4fb2b94d866f153df944eb55ef85ddea6f535aadb3ee9f0",
+        "apps/web/src/pages/accounts/features/add-account/ui/AddAccountForm.vue": "9fdedeee0997449c2bb078b3b97fe5bf5cd177cadd137b5d9c480ca182cd44f8",
+        "apps/web/src/pages/accounts/features/edit-account/ui/EditAccountForm.vue": "c3322f68208890f80ca05272052b73f411a878d05cf59f4452952a9a8d90dae1",
+        "apps/web/src/pages/accounts/features/delete-account/ui/DeleteAccountDialog.vue": "a6d84333d0262ac05640decea4d7aa408ecd5c6c83d4b40f47a94be15e1c82e0",
+        "apps/web/src/entities/account/ui/AccountCardSkeleton.vue": "dea86dd7d601d5db25c02d4db271d298267a1d491eef028c5625ba5e9b73b859",
         "apps/web/src/shared/ui/empty-state/EmptyState.vue": "b0e4a74fe8d41e9cc91d32d70548af9dc51ebcbc9a7b03045476345cd5789c47",
-        "apps/web/src/shared/ui/error-state/ErrorState.vue": "9b4a0a406a88611883dcb7221cdb25021a24a9ce79b63b4e21b82481530ebaff",
+        "apps/web/src/shared/ui/error-state/ErrorState.vue": "6160b5b2f77f9c1554b855ed5cbd27b11834856d115cd61e78e64f04c2f86654",
         "apps/web/src/shared/ui/button/Button.vue": "8c7afb939b83f8e7dcb33575013d0064674282b140380ef8841c2effeeee469c",
         "apps/web/src/shared/ui/card/Card.vue": "21b4e17480df5e7efb707a5f4d93805b4e5136a50de7ccc78e9241db879718ed",
         "apps/web/src/shared/ui/card/CardHeader.vue": "597d994c8348d902da10d336c79299c2c43401f0f6328fd0b57f2ddfe523daeb",
@@ -580,9 +576,9 @@
       "drafts": {
         "328d4ba0-f474-438f-8017-8670ef0374af": {
           "title": "Счета — Бумага (Direction D)",
-          "visualDirection": "v1 pixel-perfect reproduction (indigo, inline sidebar); v2 Бумага restyle (sd-component AppSidebar, teal, tint hero card, radius 14/12); v3 direct-edit centering fix (removed ml-[248px]); v4 direct-edit polish: uniform card hover (border darkens, no shadow), hero card border #bfe3dd, X close on add/edit dialogs, uniform teal focus rings, error icon 32px, skeleton kebab placeholder, new «Меню счёта (открыто)» specimen",
+          "visualDirection": "v1 pixel-perfect reproduction (indigo, inline sidebar); v2 Бумага restyle (sd-component AppSidebar, teal, tint hero card, radius 14/12); v3 direct-edit centering fix (removed ml-[248px]); v4 direct-edit polish: uniform card hover (border darkens, no shadow), hero card border #bfe3dd, X close on add/edit dialogs, uniform teal focus rings, error icon 32px, skeleton kebab placeholder, new «Меню счёта (открыто)» specimen; v6 direct-edit multi-currency: hero «≈ 375 110,65 ₽» + per-currency line + «Курс на 14.09.2026», currency chips on cards (RUB/USD/EUR, USD/EUR card balances), currency select in add dialog, static currency row in edit dialog, «Сверить баланс» in kebab menu",
           "parentDraftId": null,
-          "currentVersion": 5
+          "currentVersion": 6
         },
         "de5404d7-b27e-44be-93ef-23b6f8afcde4": {
           "title": "Счета — Мобильная версия (Direction D)",
@@ -592,7 +588,7 @@
           "currentVersion": 3
         }
       },
-      "updatedAt": "2026-08-29T16:05:25Z"
+      "updatedAt": "2026-09-14T00:00:00Z"
     },
     "design-system-buttons": {
       "targetKind": "new-ui",
@@ -738,5 +734,5 @@
       "updatedAt": "2026-09-02T17:29:13Z"
     }
   },
-  "updatedAt": "2026-09-06T09:22:34Z"
+  "updatedAt": "2026-09-14T00:00:00Z"
 }

@@ -84,6 +84,7 @@ const joinedHousehold: Household = {
   id: 'h9',
   createdAt: '2026-01-01T00:00:00Z',
   name: 'Семья',
+  currency: 'RUB',
   members: [
     {
       userId: 'u1',

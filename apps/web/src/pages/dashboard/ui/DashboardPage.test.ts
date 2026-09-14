@@ -204,6 +204,10 @@ describe('DashboardPage stat card links', () => {
   it('renders dashboard-scale figures compacted so they fit the tile', async () => {
     // The screenshot overflow case: a debt of 1 000 100,00 must abbreviate,
     // not paint over the neighbouring card at half mobile width.
+    const debtorsRepo = createMockDebtorRepository()
+    debtorsRepo.getAll.mockResolvedValue([
+      { id: 'd1', name: 'Анна', note: '', currency: 'RUB', version: 1 },
+    ])
     const debtOperationsRepo = createMockDebtOperationRepository()
     debtOperationsRepo.query.mockResolvedValue([
       {
@@ -222,7 +226,7 @@ describe('DashboardPage stat card links', () => {
         transactions: createMockTransactionRepository(),
         accounts: createMockAccountRepository(),
         categories: createMockCategoryRepository(),
-        debtors: createMockDebtorRepository(),
+        debtors: debtorsRepo,
         debtOperations: debtOperationsRepo,
       },
     })

@@ -57,12 +57,13 @@ describe('AddAccountForm', () => {
     expect(query('input#opening-balance')).not.toBeNull()
   })
 
-  // currency-rub-only: no currency picker - RUB is submitted implicitly.
-  it('renders no currency field', async () => {
+  // multi-currency: the 18-currency picker is back, preselected with the
+  // resolved creation default (household base; RUB without a provider).
+  it('renders the currency picker preselected with the default', async () => {
     await mountForm()
-    expect(query('label[for="currency"]')).toBeNull()
-    expect(document.querySelectorAll('[data-slot="select-trigger"]').length).toBe(0)
-    expect(document.body.textContent).not.toContain('Currency')
+    expect(query('label[for="currency"]')).not.toBeNull()
+    expect(document.querySelectorAll('[data-slot="select-trigger"]').length).toBe(1)
+    expect(query('[data-testid="new-account-currency"]') ?? query('#currency')).not.toBeNull()
   })
 
   it('renders submit button', async () => {

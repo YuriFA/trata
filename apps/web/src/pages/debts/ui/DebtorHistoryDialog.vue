@@ -15,7 +15,7 @@ import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
 import { Button } from '@/shared/ui/button'
 import { EmptyState } from '@/shared/ui/empty-state'
 import { Pencil } from '@lucide/vue'
-import { DEFAULT_CURRENCY, formatMoney } from '@/shared/lib/money'
+import { formatMoney } from '@/shared/lib/money'
 
 // Debtor history (debts capability): the debtor's operation history for one
 // direction as full-bleed day bands with kind-titled rows (note as the meta
@@ -33,9 +33,7 @@ const open = defineModel<boolean>('open', { default: false })
 
 const { t, locale } = useI18n()
 const authorLabel = useAuthorLabel()
-// Debts carry no currency of their own; the app display currency is fixed
-// (currency-rub-only).
-const displayCurrency = computed(() => DEFAULT_CURRENCY)
+const debtorCurrency = computed(() => props.debtor.currency)
 
 const directionLabel = computed(() =>
   props.direction === 'receivable' ? t('debts.receivable') : t('debts.payable'),
@@ -43,7 +41,9 @@ const directionLabel = computed(() =>
 const balance = computed(() =>
   balanceInDirection(props.operations, props.debtor.id, props.direction),
 )
-const balanceText = computed(() => formatMoney(balance.value, displayCurrency.value, locale.value))
+// Native-currency visibility (app-currency spec): the balance and every
+// history amount present in the debtor's own (immutable) currency.
+const balanceText = computed(() => formatMoney(balance.value, debtorCurrency.value, locale.value))
 const groups = computed(() =>
   debtorHistoryGroups(props.operations, props.debtor.id, props.direction, locale.value),
 )
@@ -52,7 +52,7 @@ const kindLabel = (operation: DebtOperation) =>
   operation.kind === 'debt' ? t('debts.debt') : t('debts.repayment')
 
 const operationText = (operation: DebtOperation) =>
-  `${operation.kind === 'debt' ? '+' : '−'}\u00A0${formatMoney(operation.amount, displayCurrency.value, locale.value)}`
+  `${operation.kind === 'debt' ? '+' : '−'}\u00A0${formatMoney(operation.amount, debtorCurrency.value, locale.value)}`
 
 // One dialog instance + active item refs (convention 4).
 const operationOpen = ref(false)

@@ -4,6 +4,29 @@
 
 import z from 'zod'
 import i18n from '@/shared/i18n'
+import { isCurrencyCode } from '@trata/money'
+import type { CurrencyCode } from '@/shared/lib/money'
+
+export interface OperationFormValues {
+  kind: 'debt' | 'repayment'
+  amount: number
+  occurredAt: string
+  note: string
+}
+
+export interface DebtorDebtFormValues {
+  name: string
+  /** The immutable ledger currency, sent with the debtor create payload. */
+  currency: CurrencyCode
+  amount: number
+  occurredAt: string
+  note: string
+}
+
+export interface DebtorFormValues {
+  name: string
+  note: string
+}
 
 export const createOperationSchema = () => {
   const { t } = i18n.global
@@ -16,7 +39,6 @@ export const createOperationSchema = () => {
     note: z.string(),
   })
 }
-export type OperationFormValues = z.infer<ReturnType<typeof createOperationSchema>>
 
 export const createDebtorDebtSchema = () => {
   const { t } = i18n.global
@@ -25,6 +47,12 @@ export const createDebtorDebtSchema = () => {
       .string()
       .trim()
       .min(1, t('validation.enter', { field: t('fields.name') })),
+    // The debtor's immutable ledger currency (debts capability): validated
+    // against the supported catalog, sent with the create payload.
+    currency: z.custom<CurrencyCode>(
+      isCurrencyCode,
+      t('validation.select', { field: t('fields.currency') }),
+    ),
     amount: z
       .number({ error: t('validation.enter', { field: t('fields.amount') }) })
       .positive(t('validation.mustBePositive', { field: t('fields.amount') })),
@@ -32,7 +60,6 @@ export const createDebtorDebtSchema = () => {
     note: z.string(),
   })
 }
-export type DebtorDebtFormValues = z.infer<ReturnType<typeof createDebtorDebtSchema>>
 
 export const createDebtorSchema = () => {
   const { t } = i18n.global
@@ -44,4 +71,3 @@ export const createDebtorSchema = () => {
     note: z.string(),
   })
 }
-export type DebtorFormValues = z.infer<ReturnType<typeof createDebtorSchema>>

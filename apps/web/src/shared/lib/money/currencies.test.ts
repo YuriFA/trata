@@ -8,11 +8,20 @@ import {
 } from './currencies'
 
 describe('currencies', () => {
-  it('exports available currency codes', () => {
-    expect(AVAILABLE_CURRENCIES).toEqual(['USD', 'EUR', 'RUB'])
+  it('exports the fixed two-decimal currency catalog', () => {
+    // The coordinated catalog (ADR-0008): every entry has two decimals so
+    // the single minor-unit divisor (100) holds at every boundary. Zero-
+    // and three-decimal currencies (JPY, KWD) are deliberately excluded.
+    expect(AVAILABLE_CURRENCIES).toHaveLength(18)
+    for (const code of ['USD', 'EUR', 'RUB', 'GBP', 'CNY', 'TRY', 'PLN', 'GEL']) {
+      expect(AVAILABLE_CURRENCIES).toContain(code)
+    }
+    for (const code of ['JPY', 'KRW', 'KWD', 'BHD']) {
+      expect(AVAILABLE_CURRENCIES).not.toContain(code)
+    }
   })
 
-  it('defaults to RUB (app display currency, currency-rub-only)', () => {
+  it('defaults to RUB (the household base and display fallback)', () => {
     expect(DEFAULT_CURRENCY).toBe('RUB')
   })
 
@@ -37,11 +46,13 @@ describe('isCurrencyCode', () => {
     expect(isCurrencyCode('USD')).toBe(true)
     expect(isCurrencyCode('EUR')).toBe(true)
     expect(isCurrencyCode('RUB')).toBe(true)
+    expect(isCurrencyCode('GBP')).toBe(true)
+    expect(isCurrencyCode('TRY')).toBe(true)
   })
 
-  it('returns false for unsupported codes', () => {
+  it('returns false for codes outside the two-decimal catalog', () => {
     expect(isCurrencyCode('JPY')).toBe(false)
-    expect(isCurrencyCode('GBP')).toBe(false)
+    expect(isCurrencyCode('KWD')).toBe(false)
   })
 
   it('returns false for non-string values', () => {

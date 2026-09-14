@@ -4,6 +4,7 @@
 
 import type { Debtor } from '@trata/api'
 import { balanceInDirection } from '@trata/local-data'
+import type { CurrencyBucket } from '@/shared/lib/money'
 import type { DebtDirection, DebtOperation } from './types'
 
 interface DebtorView {
@@ -78,4 +79,38 @@ export function debtorBalanceRows(
     (a, b) =>
       Math.abs(b.balance) - Math.abs(a.balance) || a.debtor.name.localeCompare(b.debtor.name),
   )
+}
+
+/**
+ * Native-currency buckets for one direction (multi-currency design D9):
+ * each debtor's derived balance stays in the debtor's own (immutable)
+ * currency. Feeds `aggregateByCurrency` for the per-currency + «≈»
+ * presentation of the direction totals - sums never cross currencies.
+ */
+export function directionBucketsByCurrency(
+  debtors: readonly Debtor[],
+  operations: readonly DebtOperation[],
+  direction: DebtDirection,
+): CurrencyBucket[] {
+  return debtorSection(debtors, operations, direction).visible.map(({ debtor, balance }) => ({
+    currency: debtor.currency,
+    amount: balance,
+  }))
+}
+
+/**
+ * Per-debtor net buckets (receivable − payable) in the debtor's currency -
+ * the dashboard tile's figure; within one currency the net is meaningful
+ * because a debtor's ledger is single-currency for life.
+ */
+export function netBucketsByCurrency(
+  debtors: readonly Debtor[],
+  operations: readonly DebtOperation[],
+): CurrencyBucket[] {
+  return debtors.flatMap((debtor) => {
+    const receivable = balanceInDirection(operations, debtor.id, 'receivable')
+    const payable = balanceInDirection(operations, debtor.id, 'payable')
+    if (receivable === 0 && payable === 0) return []
+    return [{ currency: debtor.currency, amount: receivable - payable }]
+  })
 }

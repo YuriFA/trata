@@ -13,9 +13,10 @@ import { APP_VERSION } from './shared/config/app-version'
 import { useAuthStore } from './entities/session'
 import './style.css'
 import { setupI18nLocaleWatcher } from './app/setup-i18n-locale-watcher'
-import { setupPushReminders } from './app/setup-push-reminders'
 import { setupOfflineRestoreRetry } from './app/setup-offline-restore-retry'
+import { setupRatesRefresh } from './app/setup-rates-refresh'
 import { registerServiceWorker } from './app/register-service-worker'
+import { setupPushReminders } from './app/setup-push-reminders'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -62,6 +63,7 @@ setUnauthorizedHandler(() => {
 })
 
 setupI18nLocaleWatcher()
+setupRatesRefresh()
 setupPushReminders()
 app.mount('#app')
 

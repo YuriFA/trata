@@ -33,7 +33,7 @@ import { Input } from '@/shared/ui/input'
 import { AmountField } from '@/shared/ui/amount-field'
 import { Trash2 } from '@lucide/vue'
 import { notification } from '@/shared/services/notification'
-import { DEFAULT_CURRENCY, formatMoney, toMajorUnits, toMinorUnits } from '@/shared/lib/money'
+import { formatMoney, toMajorUnits, toMinorUnits } from '@/shared/lib/money'
 
 // Create/edit a debt operation. Direction, kind, and debtor are immutable
 // (debts capability): create fixes them from the calling context; edit shows
@@ -59,9 +59,6 @@ const emit = defineEmits<{
 }>()
 
 const { t, locale } = useI18n()
-// Debts carry no currency of their own; the app display currency is fixed
-// (currency-rub-only).
-const displayCurrency = computed(() => DEFAULT_CURRENCY)
 
 const isEdit = computed(() => props.operation !== null)
 
@@ -102,12 +99,17 @@ const balance = computed(() =>
 // operation's immutable kind in edit mode.
 const effectiveKind = computed(() => (isEdit.value ? props.operation!.kind : kindValue.value))
 
+// Native-currency visibility (app-currency spec): the form's amount, its
+// field suffix, and the over-repayment warning present in the debtor's own
+// (immutable) currency.
+const debtorCurrency = computed(() => props.debtor.currency)
+
 // Warns only, never blocks (debts capability: over-repayment is recorded).
 const overRepayment = computed(() => {
   if (effectiveKind.value !== 'repayment' || amountValue.value === undefined) return null
   return toMinorUnits(amountValue.value) > balance.value
     ? t('debts.overRepayment', {
-        remaining: formatMoney(balance.value, displayCurrency.value, locale.value),
+        remaining: formatMoney(balance.value, debtorCurrency.value, locale.value),
       })
     : null
 })
@@ -211,7 +213,7 @@ const handleDelete = async () => {
           <AmountField
             id="debts-operation-amount"
             class="w-full"
-            :currency="displayCurrency"
+            :currency="debtorCurrency"
             :model-value="value"
             :errors="errors"
             @update:model-value="(v) => setValue(v as number)"

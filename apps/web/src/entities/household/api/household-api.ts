@@ -21,8 +21,9 @@ import {
   revokeHouseholdCode,
   revokeHouseholdInvitation,
   updateDisplayName,
-  updateHouseholdName,
+  updateHousehold,
 } from '@trata/api'
+import type { CurrencyCode } from '@trata/money'
 
 export const householdApi = {
   /** The signed-in user's household (name + members). */
@@ -30,9 +31,23 @@ export const householdApi = {
     return fetchHousehold(apiClient)
   },
 
-  /** Sets or clears the household display name (owner only). */
+  /**
+   * Sets or clears the household display name (owner only). The update body
+   * requires the name, so a pure rename patches the name alone.
+   */
   rename(name: string | null) {
-    return updateHouseholdName(apiClient, name)
+    return updateHousehold(apiClient, { name })
+  },
+
+  /**
+   * Changes the household's base currency (owner only). Never rewrites
+   * stored amounts - it changes the presentation conversion target only.
+   * The name is required in the update body, so the current household is
+   * read first and its name re-sent untouched.
+   */
+  async setBaseCurrency(currency: CurrencyCode) {
+    const current = await fetchHousehold(apiClient)
+    return updateHousehold(apiClient, { name: current.name, currency })
   },
 
   /** Sets the current user's display name (the authorship/member label). */

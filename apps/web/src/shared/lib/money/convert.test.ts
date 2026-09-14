@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { toMinorUnits, toMajorUnits } from './convert'
+import { toMinorUnits, toMajorUnits } from '@trata/money'
 
 describe('toMinorUnits', () => {
   it('converts whole units to kopeks', () => {

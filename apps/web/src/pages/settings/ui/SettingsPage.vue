@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { CurrencySelect } from '@/shared/ui/currency-select'
+import { isCurrencyCode, type CurrencyCode } from '@trata/money'
+import { useDisplayCurrency } from '@/shared/store/use-display-currency'
 import { capitalizeFirstLetter } from '@/shared/lib/capitalize'
 import { useSettingsStore } from '@/shared/store/use-settings-store'
 import type { Settings } from '@/shared/config/settings'
@@ -15,6 +18,7 @@ import { Skeleton } from '@/shared/ui/skeleton'
 import { ChevronRight, Database, Tags } from '@lucide/vue'
 import { useAuthStore, sessionApi } from '@/entities/session'
 import { householdDisplayName, memberLabel, useHousehold } from '@/entities/household'
+import { BaseCurrencyCard } from '../features/base-currency'
 import { AppInfoCard } from '../features/app-info'
 import { DissolveHouseholdDialog } from '../features/dissolve-household'
 import { DisplayNameEditor } from '../features/display-name'
@@ -38,6 +42,13 @@ const auth = useAuthStore()
 // so this page never imports the app layer.
 const onThemeChange = (value: unknown) => {
   settings.theme = value as Settings['theme']
+}
+
+// Same pattern for the display currency (multi-currency design D3): the
+// resolved value seeds the selector; a choice pins the per-device setting.
+const displayCurrency = useDisplayCurrency()
+const onDisplayCurrencyChange = (value: unknown) => {
+  if (isCurrencyCode(value)) settings.displayCurrency = value as CurrencyCode
 }
 
 const themes = computed(() => [
@@ -246,6 +257,22 @@ onMounted(() => {
       </RouterLink>
     </SettingsCard>
 
+    <!-- Display currency (multi-currency design D3): a per-device preference
+         that moves presentation only - the resolved value (explicit choice,
+         else the household base, else the catalog default) seeds it. -->
+    <SettingsCard :title="t('settings.defaultCurrency')">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-xs text-muted-foreground">
+          {{ t('settings.displayCurrencyDescription') }}
+        </p>
+        <CurrencySelect
+          id="display-currency"
+          :model-value="displayCurrency"
+          data-testid="settings-display-currency-select"
+          @update:model-value="onDisplayCurrencyChange"
+        />
+      </div>
+    </SettingsCard>
     <template v-if="auth.isAuthenticated">
       <Card v-if="!auth.user?.emailVerified">
         <CardHeader>
@@ -339,6 +366,10 @@ onMounted(() => {
             </div>
           </li>
         </ul>
+
+        <!-- The base-currency editor is owner-only (household capability):
+             hidden, not disabled, for members. -->
+        <BaseCurrencyCard v-if="isOwner && household" :currency="household.currency" />
 
         <div
           v-if="isOwner && household"

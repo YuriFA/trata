@@ -1,5 +1,6 @@
 export {
   periodTotal,
+  periodBuckets,
   categoryTotals,
   percentLabel,
   toChartEntries,

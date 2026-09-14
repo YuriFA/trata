@@ -4,10 +4,11 @@
 // money math only (minor units): totals are plain integer sums and
 // percentages are display strings derived from them - UI components never
 // filter, group, or compute shares themselves.
-
-import type { Category, Transaction } from '@trata/api'
+import type { CashflowTransaction, Category, Transaction } from '@trata/api'
 import { transactionsInPeriod, type PeriodCursor } from '@trata/dates'
 import { OTHER_ENTRY_COLOR, OTHER_ENTRY_ID } from './other-entry'
+import type { AccountRef } from '@trata/api'
+import type { CurrencyBucket, CurrencyCode } from '@/shared/lib/money'
 
 /** Which cashflow direction an analytics view aggregates. */
 export type AnalyticsDirection = 'income' | 'expense'
@@ -29,6 +30,34 @@ export function periodTotal(
   direction: AnalyticsDirection,
 ): number {
   return cashflowInPeriod(txs, cursor, direction).reduce((sum, t) => sum + t.amount, 0)
+}
+
+/**
+ * Native-currency buckets of one direction for the period (multi-currency
+ * design D9): each amount joins its account's currency bucket; account-less
+ * amounts join the display-currency bucket. Feeds `aggregateByCurrency` -
+ * no sums cross currencies here.
+ */
+export function periodBuckets(
+  txs: readonly Transaction[],
+  accounts: readonly AccountRef[],
+  cursor: PeriodCursor,
+  direction: AnalyticsDirection,
+  displayCurrency: CurrencyCode,
+): CurrencyBucket[] {
+  const currencyByAccount = new Map(accounts.map((account) => [account.id, account.currency]))
+  // The type test re-narrows the period filter to cashflow records (the
+  // only ones carrying `accountId`).
+  const cashflow = cashflowInPeriod(txs, cursor, direction).filter(
+    (transaction): transaction is CashflowTransaction =>
+      transaction.type === 'income' || transaction.type === 'expense',
+  )
+  return cashflow.map((transaction) => ({
+    currency:
+      (transaction.accountId ? currencyByAccount.get(transaction.accountId) : undefined) ??
+      displayCurrency,
+    amount: transaction.amount,
+  }))
 }
 
 export interface CategoryTotal {

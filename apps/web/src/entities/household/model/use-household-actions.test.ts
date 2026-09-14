@@ -39,6 +39,7 @@ function household(name: string | null): Household {
   return {
     id: 'hh-1',
     createdAt: '2026-08-01T00:00:00.000Z',
+    currency: 'RUB',
     name,
     members: [
       {

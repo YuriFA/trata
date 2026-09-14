@@ -25,16 +25,44 @@ describe('debts form schemas', () => {
     )
   })
 
-  it('requires a non-empty debtor name (trimmed) for the combined dialog', () => {
+  it('requires a non-empty debtor name and a catalog currency for the combined dialog', () => {
     const schema = createDebtorDebtSchema()
     expect(
-      schema.safeParse({ name: 'Анна', amount: 1, occurredAt: '2026-08-27', note: '' }).success,
+      schema.safeParse({
+        name: 'Анна',
+        currency: 'RUB',
+        amount: 1,
+        occurredAt: '2026-08-27',
+        note: '',
+      }).success,
     ).toBe(true)
     expect(
-      schema.safeParse({ name: '   ', amount: 1, occurredAt: '2026-08-27', note: '' }).success,
+      schema.safeParse({
+        name: '   ',
+        currency: 'RUB',
+        amount: 1,
+        occurredAt: '2026-08-27',
+        note: '',
+      }).success,
     ).toBe(false)
     expect(
-      schema.safeParse({ name: 'Анна', amount: 0, occurredAt: '2026-08-27', note: '' }).success,
+      schema.safeParse({
+        name: 'Анна',
+        currency: 'RUB',
+        amount: 0,
+        occurredAt: '2026-08-27',
+        note: '',
+      }).success,
+    ).toBe(false)
+    // The ledger currency must come from the supported catalog.
+    expect(
+      schema.safeParse({
+        name: 'Анна',
+        currency: 'XX',
+        amount: 1,
+        occurredAt: '2026-08-27',
+        note: '',
+      }).success,
     ).toBe(false)
   })
 

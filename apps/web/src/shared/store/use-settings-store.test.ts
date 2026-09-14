@@ -40,12 +40,45 @@ describe('useSettingsStore', () => {
     expect(store.locale).toBe('en')
   })
 
-  // currency-rub-only: the currency field left the store; a stale key left
-  // by an older install is ignored, not cleaned up.
-  it('ignores a stale currency key in localStorage without removing it', () => {
+  // currency-rub-only aftermath: the pre-cut store wrote a bare currency
+  // string under the legacy key; the versioned display-currency envelope
+  // ignores it, and the legacy key itself is left untouched.
+  it('ignores a legacy bare currency key without removing it', () => {
     localStorage.setItem('BudgetTracker:currency', 'EUR')
     const store = useSettingsStore()
-    expect(store.locale).toBe(DEFAULT_SETTINGS.locale)
+    expect(store.displayCurrency).toBeNull()
     expect(localStorage.getItem('BudgetTracker:currency')).toBe('EUR')
+  })
+
+  it('resolves the display currency from the versioned envelope', () => {
+    localStorage.setItem(
+      'BudgetTracker:display-currency',
+      JSON.stringify({ version: 1, currency: 'USD' }),
+    )
+    const store = useSettingsStore()
+    expect(store.displayCurrency).toBe('USD')
+  })
+
+  it('ignores an unknown schema version', () => {
+    localStorage.setItem(
+      'BudgetTracker:display-currency',
+      JSON.stringify({ version: 99, currency: 'USD' }),
+    )
+    const store = useSettingsStore()
+    expect(store.displayCurrency).toBeNull()
+  })
+
+  it('persists an explicit display currency and accepts null again', () => {
+    const store = useSettingsStore()
+    store.displayCurrency = 'EUR'
+    expect(JSON.parse(localStorage.getItem('BudgetTracker:display-currency')!)).toEqual({
+      version: 1,
+      currency: 'EUR',
+    })
+    store.displayCurrency = null
+    expect(JSON.parse(localStorage.getItem('BudgetTracker:display-currency')!)).toEqual({
+      version: 1,
+      currency: null,
+    })
   })
 })

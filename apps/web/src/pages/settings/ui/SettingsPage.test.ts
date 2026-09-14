@@ -4,7 +4,9 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import type { Household, HouseholdCode, HouseholdMember } from '@trata/api'
 import type { User } from '@/entities/session'
 import SettingsPage from './SettingsPage.vue'
+import { CurrencySelect } from '@/shared/ui/currency-select'
 import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'
+import { useSettingsStore } from '@/shared/store/use-settings-store'
 
 // The session entity is mocked down to what the page reads: the auth state
 // gating the auth-only cards and the sessions listing.
@@ -65,6 +67,7 @@ const household: Household = {
   id: 'h1',
   createdAt: '2024-01-01T00:00:00Z',
   name: null,
+  currency: 'RUB',
   members: [OWNER_MEMBER, MY_MEMBER],
 }
 
@@ -124,15 +127,63 @@ describe('SettingsPage', () => {
     expect(heading.text()).toBeTruthy()
   })
 
-  it('offers the locale and theme selectors but no currency option (currency-rub-only)', () => {
+  it('seeds the display-currency selector with the resolution chain default', () => {
     const wrapper = mountPage()
-    // The locale Select and the theme Select; the currency selector is gone
-    // and its locale key with it (a stale t('settings.currency') would render
-    // the raw key path into the page).
-    const selects = wrapper.findAllComponents({ name: 'Select' })
-    expect(selects.length).toBe(2)
-    expect(wrapper.text()).not.toContain('settings.currency')
-    expect(wrapper.text()).not.toContain('Currency')
+
+    // No explicit setting and no household on an anonymous device: the chain
+    // resolves to the catalog default and seeds the selector.
+    const select = wrapper.findComponent(CurrencySelect)
+    expect(select.exists()).toBe(true)
+    expect(select.props('modelValue')).toBe('RUB')
+  })
+
+  it('commits a display-currency choice to the settings store and localStorage', async () => {
+    const wrapper = mountPage()
+
+    wrapper.findComponent(CurrencySelect).vm.$emit('update:modelValue', 'EUR')
+    await flushPromises()
+
+    const settings = useSettingsStore()
+    expect(settings.displayCurrency).toBe('EUR')
+    expect(JSON.parse(localStorage.getItem('BudgetTracker:display-currency')!)).toEqual({
+      version: 1,
+      currency: 'EUR',
+    })
+  })
+
+  it('suggests the locale-derived base currency once for the owner', async () => {
+    localStorage.removeItem('BudgetTracker:base-currency-suggestion')
+    authenticateAs('owner')
+
+    const wrapper = mountPage()
+    await flushPromises()
+    await flushPromises()
+
+    // The en-US test locale maps to USD, so an RUB household gets one offer.
+    const suggestion = wrapper.find('[data-testid="settings-base-currency-suggestion"]')
+    expect(suggestion.exists()).toBe(true)
+    expect(suggestion.text()).toContain('USD')
+
+    await wrapper.find('[data-testid="settings-base-currency-suggest-dismiss"]').trigger('click')
+
+    // Once per device: the flag survives a remount.
+    expect(localStorage.getItem('BudgetTracker:base-currency-suggestion')).toBe('USD')
+    const remount = mountPage()
+    await flushPromises()
+    await flushPromises()
+    expect(remount.find('[data-testid="settings-base-currency-suggestion"]').exists()).toBe(false)
+  })
+
+  it('hides the base-currency editor and suggestion from a member', async () => {
+    localStorage.removeItem('BudgetTracker:base-currency-suggestion')
+    authenticateAs('member')
+
+    const wrapper = mountPage()
+    await flushPromises()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="settings-base-currency-select"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="settings-base-currency-suggestion"]').exists()).toBe(false)
   })
 
   it('shows the household card with the owner-prefix fallback label and members count', async () => {

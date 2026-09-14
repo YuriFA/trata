@@ -1,3 +1,7 @@
 export { formatMoney, formatMoneyCompact, currencySymbol } from '@trata/money'
 export { DEFAULT_CURRENCY, type CurrencyCode } from '@trata/money'
-export { toMinorUnits, toMajorUnits } from '@trata/money'
+export { toMinorUnits, toMajorUnits, convert } from '@trata/money'
+export { resolveDisplayCurrency, aggregateByCurrency } from './aggregate'
+export { getCurrencyOptions } from './currency-options'
+export type { CurrencyBucket, CurrencyAggregate } from './aggregate'
+export { useRates, ratesAsOf, refreshRates } from './rates'

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import DebtsCard from './DebtsCard.vue'
-import type { DebtOperation } from '@trata/api'
+import type { DebtOperation, Debtor } from '@trata/api'
 import {
   createMockDebtOperationRepository,
   createMockDebtorRepository,
@@ -22,9 +22,9 @@ function operation(overrides: Partial<DebtOperation>): DebtOperation {
   } as DebtOperation
 }
 
-const debtors = [
-  { id: 'd1', name: 'Анна Петровна', note: '', version: 1 },
-  { id: 'd2', name: 'Пётр', note: '', version: 1 },
+const debtors: Debtor[] = [
+  { id: 'd1', name: 'Анна Петровна', note: '', currency: 'RUB', version: 1 },
+  { id: 'd2', name: 'Пётр', note: '', currency: 'RUB', version: 1 },
 ]
 
 function mountCard(operations: DebtOperation[]) {

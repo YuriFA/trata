@@ -43,6 +43,14 @@ const format = (value: number) => formatMoney(value, account.currency, locale.va
           {{ account.name.at(0) }}
         </div>
         <span class="truncate text-[15px] font-semibold">{{ account.name }}</span>
+        <!-- Native-currency chip (the accounts-mc mockup): balances stay in
+             the account's own currency, so the code rides on every card. -->
+        <span
+          class="shrink-0 rounded-full border border-border bg-muted/50 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+          data-testid="account-currency-chip"
+        >
+          {{ account.currency }}
+        </span>
       </div>
 
       <DropdownMenu>

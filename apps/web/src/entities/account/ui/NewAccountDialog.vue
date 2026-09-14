@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useForm, Field as VeeField } from 'vee-validate'
+import { useForm, useFieldValue, Field as VeeField } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { PlusIcon } from '@lucide/vue'
 import type { Account } from '@trata/api'
-import { DEFAULT_CURRENCY, toMinorUnits } from '@/shared/lib/money'
+import { toMinorUnits } from '@/shared/lib/money'
 import { Button } from '@/shared/ui/button'
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
 import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { AmountField } from '@/shared/ui/amount-field'
+import { CurrencySelect } from '@/shared/ui/currency-select'
 import { notification } from '@/shared/services/notification'
+import { useDefaultCreationCurrency } from '@/shared/store/use-display-currency'
 import { useCreateAccount } from '../model/use-accounts'
 import { createAddAccountSchema, type AddAccountFormValues } from '../model/add-account-schema'
 
@@ -20,8 +22,7 @@ import { createAddAccountSchema, type AddAccountFormValues } from '../model/add-
 // account selector is mandatory for every kind - so each selector offers a
 // "+". The form shares its schema and mechanics with the accounts page
 // AddAccountForm (one source of validation rules); the host form owns the
-// created-account selection via the `created` event. The app is ruble-only,
-// so currency is submitted fixed (currency-rub-only).
+// created-account selection via the `created` event.
 
 const emit = defineEmits<{
   created: [account: Account]
@@ -31,6 +32,9 @@ const open = defineModel<boolean>('open', { default: false })
 
 const { t, locale } = useI18n()
 const { mutateAsync: createAccount, asyncStatus } = useCreateAccount()
+// The household base currency is preselected; the amount field follows.
+const defaultCurrency = useDefaultCreationCurrency()
+const selectedCurrency = useFieldValue<AddAccountFormValues['currency']>('currency')
 
 const openingBalancePlaceholder = computed(() =>
   locale.value.startsWith('ru') ? '1000,00' : '1000.00',
@@ -45,6 +49,7 @@ const {
   initialValues: {
     name: '',
     openingBalance: 0,
+    currency: defaultCurrency.value,
   },
 })
 
@@ -52,7 +57,7 @@ const handleSubmit = handleFormSubmit(async (data) => {
   try {
     const account = await createAccount({
       name: data.name,
-      currency: DEFAULT_CURRENCY,
+      currency: data.currency,
       openingBalance: toMinorUnits(data.openingBalance),
     })
     notification.success(t('addAccount.success'))
@@ -90,6 +95,20 @@ const handleSubmit = handleFormSubmit(async (data) => {
         </Field>
       </VeeField>
 
+      <VeeField v-slot="{ field, errors }" name="currency">
+        <Field :data-invalid="!!errors.length">
+          <FieldLabel for="new-account-currency">{{ t('fields.currency') }}</FieldLabel>
+          <CurrencySelect
+            id="new-account-currency"
+            data-testid="new-account-currency"
+            :model-value="field.value"
+            :errors="errors"
+            @update:model-value="field.onChange"
+          />
+          <FieldError v-if="errors.length" :errors="errors" />
+        </Field>
+      </VeeField>
+
       <VeeField v-slot="{ field, errors }" name="openingBalance">
         <Field :data-invalid="!!errors.length">
           <FieldLabel for="new-account-opening-balance">
@@ -99,7 +118,7 @@ const handleSubmit = handleFormSubmit(async (data) => {
             id="new-account-opening-balance"
             data-testid="new-account-opening-balance"
             :model-value="field.value"
-            :currency="DEFAULT_CURRENCY"
+            :currency="selectedCurrency"
             :errors="errors"
             :placeholder="openingBalancePlaceholder"
             @update:model-value="

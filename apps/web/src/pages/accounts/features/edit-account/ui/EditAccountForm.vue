@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { useForm } from 'vee-validate'
+import { useForm, Field as VeeField } from 'vee-validate'
 import { createEditAccountSchema, type EditAccountFormValues } from '../model/edit-account-schema'
 import { toTypedSchema } from '@vee-validate/zod'
 import { Button } from '@/shared/ui/button'
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
-import { Field as VeeField } from 'vee-validate'
 import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import type { Account } from '@/entities/account'
 import { useI18n } from 'vue-i18n'
 import { notification } from '@/shared/services/notification'
 import { useUpdateAccount } from '@/entities/account'
+import { currencySymbol } from '@/shared/lib/money'
 
 const emit = defineEmits<{
   success: []
@@ -61,6 +61,15 @@ const handleSubmit = handleFormSubmit(async (data) => {
     <template #title>{{ t('editAccount.title') }}</template>
 
     <form id="edit-account-form" class="flex flex-col gap-3" @submit="handleSubmit">
+      <!-- The account currency is immutable after creation (accounts
+           capability): presented as a static row, never editable. -->
+      <div class="flex items-center justify-between gap-3">
+        <FieldLabel>{{ t('fields.currency') }}</FieldLabel>
+        <span class="text-sm font-medium" data-testid="edit-account-currency">
+          {{ account.currency }} · {{ currencySymbol(account.currency) }}
+        </span>
+      </div>
+
       <VeeField v-slot="{ field, errors }" name="name">
         <Field class="w-full md:min-w-56 md:flex-1" :data-invalid="!!errors.length">
           <FieldLabel for="name">{{ t('editAccount.nameLabel') }}</FieldLabel>

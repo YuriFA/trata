@@ -8,7 +8,7 @@ import {
 } from '@/__tests__/helpers/mock-repositories'
 import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'
 
-const debtor: Debtor = { id: 'd1', name: 'Анна', note: '', version: 1 }
+const debtor: Debtor = { id: 'd1', name: 'Анна', note: '', currency: 'RUB', version: 1 }
 
 const debtOperation: DebtOperation = {
   id: 'o1',

@@ -4,16 +4,14 @@ import { nextTick } from 'vue'
 import TransferForm from './TransferForm.vue'
 import { AccountSelect } from '@/entities/account'
 import { AmountField } from '@/shared/ui/amount-field'
-import { Calendar } from '@/shared/ui/calendar'
-import { toDateValue } from '@/shared/lib/date'
 import type { AccountWithBalance } from '@/entities/account'
 import type { Category } from '@/entities/category'
 import type { TransferTransaction } from '@/entities/transaction'
 import { createMockAccountRepository } from '@/__tests__/helpers/mock-repositories'
 import { createMockCategoryRepository } from '@/__tests__/helpers/mock-repositories'
 import { createMockTransactionRepository } from '@/__tests__/helpers/mock-repositories'
+import { refreshRates } from '@/shared/lib/money'
 import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'
-
 // Pin the form-open instant: the date field defaults to it and a day-level
 // pick keeps its clock time (asserted below).
 const { openMoment } = vi.hoisted(() => ({ openMoment: '2026-08-29T10:20:30.400Z' }))
@@ -184,23 +182,117 @@ describe('TransferForm', () => {
     )
   })
 
-  it('replaces the picked day while preserving the form-open clock time', async () => {
+  it('carries the destination amount for a cross-currency pair', async () => {
+    const { wrapper, transactionsRepo } = mountForm({}, crossCurrencyAccounts)
+    await flushPromises()
+
+    // Picking the USD → EUR pair surfaces the destination-amount field.
+    pickAccounts(wrapper, 'a1', 'a2')
+    await nextTick()
+    expect(wrapper.find('#transfer-destination-amount').exists()).toBe(true)
+
+    wrapper.findComponent(AmountField).vm.$emit('update:modelValue', 100)
+    // The second AmountField is the destination credit (€92.00 for $100.00).
+    wrapper.findAllComponents(AmountField)[1]!.vm.$emit('update:modelValue', 92)
+    await nextTick()
+    await wrapper.find('form').trigger('submit')
+    await vi.waitFor(() => expect(transactionsRepo.create).toHaveBeenCalledTimes(1))
+
+    expect(transactionsRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fromAccountId: 'a1',
+        toAccountId: 'a2',
+        amount: 10000,
+        destinationAmount: 9200,
+      }),
+    )
+  })
+
+  it('hints the suggested rate from the cached rates', async () => {
+    // The rates seam: a successful refresh publishes the snapshot the hint
+    // reads (1 USD ≈ 0.92 EUR from the stubbed provider).
+    const fetchSpy = vi.fn<() => Promise<RateFetchResponse>>(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        result: 'success',
+        base_code: 'USD',
+        rates: { USD: 1, EUR: 0.92 },
+        time_last_update_unix: 1_786_000_000,
+      }),
+    }))
+    vi.stubGlobal('fetch', fetchSpy)
+    await refreshRates()
+
+    const { wrapper } = mountForm({}, crossCurrencyAccounts)
+    await flushPromises()
+
+    pickAccounts(wrapper, 'a1', 'a2')
+    await nextTick()
+    expect(wrapper.find('#transfer-destination-amount').exists()).toBe(true)
+    expect(wrapper.text()).toContain('1 USD ≈ 0.92 EUR')
+    vi.unstubAllGlobals()
+  })
+
+  it('blocks the submit of a cross-currency transfer without a destination amount', async () => {
+    const { wrapper, transactionsRepo } = mountForm({}, crossCurrencyAccounts)
+    await flushPromises()
+
+    pickAccounts(wrapper, 'a1', 'a2')
+    wrapper.findComponent(AmountField).vm.$emit('update:modelValue', 100)
+    await nextTick()
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    await nextTick()
+
+    // The iff-rule's required leg (createTransferSchema's superRefine):
+    // a cross-currency transfer without the destination credit never
+    // reaches the repository. The message itself is covered at the schema
+    // level (transfer-schema.test.ts).
+    expect(transactionsRepo.create).not.toHaveBeenCalled()
+  })
+
+  it('never carries a destination amount for a same-currency pair', async () => {
     const { wrapper, transactionsRepo } = mountForm()
     await flushPromises()
 
-    // The calendar mounts with its popover; picking a day closes it again.
-    await wrapper.find('#transfer-occurred-at').trigger('click')
-    await nextTick()
-    wrapper.findComponent(Calendar).vm.$emit('update:modelValue', toDateValue('2024-05-10'))
+    // Same-currency accounts: the destination field stays hidden even when a
+    // stale value lingers in the form state.
+    expect(wrapper.find('#transfer-destination-amount').exists()).toBe(false)
 
     await fillAndSubmit(wrapper)
     await vi.waitFor(() => expect(transactionsRepo.create).toHaveBeenCalledTimes(1))
 
-    expect(transactionsRepo.create).toHaveBeenCalledWith(
-      expect.objectContaining({ occurredAt: '2024-05-10T10:20:30.400Z' }),
-    )
+    const payload = transactionsRepo.create.mock.calls[0]![0]! as Record<string, unknown>
+    expect(payload).not.toHaveProperty('destinationAmount')
   })
 })
+
+// The slice of the fetch Response the rates provider consumes.
+type RateFetchResponse = {
+  ok: boolean
+  status: number
+  json: () => Promise<{
+    result: string
+    base_code: string
+    rates: Record<string, number>
+    time_last_update_unix: number
+  }>
+}
+
+const crossCurrencyAccounts: AccountWithBalance[] = [
+  accounts[0]!,
+  { id: 'a2', name: 'Savings', currency: 'EUR', openingBalance: 500, balance: 500, version: 1 },
+]
+
+// Picks the two accounts without submitting (unlike fillAndSubmit).
+function pickAccounts(wrapper: VueWrapper, fromId: string, toId: string) {
+  const selects = wrapper.findAllComponents(AccountSelect)
+  selects
+    .find((s) => s.props('inputId') === 'from-account-id')
+    ?.vm.$emit('update:modelValue', fromId)
+  selects.find((s) => s.props('inputId') === 'to-account-id')?.vm.$emit('update:modelValue', toId)
+}
 
 async function fillAndSubmit(wrapper: VueWrapper) {
   const selects = wrapper.findAllComponents(AccountSelect)

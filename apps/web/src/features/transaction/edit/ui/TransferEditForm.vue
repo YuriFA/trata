@@ -14,7 +14,14 @@ import { AccountSelect, NewAccountDialog, useAccounts } from '@/entities/account
 import { useUpdateTransaction } from '@/entities/transaction'
 import { notification } from '@/shared/services/notification'
 import { createTransferEditSchema, type TransferEditValues } from '../model/transfer-schema'
-import { DEFAULT_CURRENCY, toMajorUnits, toMinorUnits, type CurrencyCode } from '@/shared/lib/money'
+import {
+  convert,
+  DEFAULT_CURRENCY,
+  toMajorUnits,
+  toMinorUnits,
+  type CurrencyCode,
+} from '@/shared/lib/money'
+import { useRates } from '@/shared/lib/money'
 import { computed, ref } from 'vue'
 
 const emit = defineEmits<{
@@ -25,6 +32,7 @@ const {
   id,
   version,
   amount,
+  destinationAmount: initialDestinationAmount = undefined,
   description,
   fromAccountId: initialFrom,
   toAccountId: initialTo,
@@ -32,6 +40,8 @@ const {
   id: string
   version: number
   amount: number
+  /** The stored credit in minor units, present on cross-currency transfers. */
+  destinationAmount?: number
   description: string
   fromAccountId: string
   toAccountId: string
@@ -41,15 +51,19 @@ const { mutateAsync: updateTransaction } = useUpdateTransaction<TransferTransact
 const { t } = useI18n()
 const { data: accounts } = useAccounts()
 
-const {
-  handleSubmit: handleFormSubmit,
-  isSubmitting,
-  setFieldError,
-} = useForm<TransferEditValues>({
-  validationSchema: toTypedSchema(createTransferEditSchema()),
+const { handleSubmit: handleFormSubmit, isSubmitting } = useForm<TransferEditValues>({
+  validationSchema: toTypedSchema(
+    createTransferEditSchema({
+      // Read at validate time, after setup - the iff-rule judges the live
+      // account pair (the computeds below are initialized by then).
+      isCrossCurrency: () => crossCurrency.value,
+    }),
+  ),
   initialValues: {
     type: 'transfer',
     amount: toMajorUnits(amount),
+    destinationAmount:
+      initialDestinationAmount !== undefined ? toMajorUnits(initialDestinationAmount) : undefined,
     description,
     fromAccountId: initialFrom,
     toAccountId: initialTo,
@@ -63,6 +77,28 @@ const fromCurrency = computed<CurrencyCode>(() => {
   const account = accounts.value?.find((a) => a.id === fromAccountId.value)
   return account?.currency ?? DEFAULT_CURRENCY
 })
+const toCurrency = computed<CurrencyCode>(() => {
+  const account = accounts.value?.find((a) => a.id === toAccountId.value)
+  return account?.currency ?? DEFAULT_CURRENCY
+})
+// Cross-currency pair: the destination-amount field appears and the payload
+// carries the credit (the iff-rule - multi-currency, transactions spec).
+const crossCurrency = computed(() => fromCurrency.value !== toCurrency.value)
+const rates = useRates()
+// The suggested rate for the hint: 1 source-currency unit in destination
+// units, from the cached published rates; hidden while rates are missing
+// (the degradation rule - the field stays editable regardless).
+const conversionHint = computed(() => {
+  if (!crossCurrency.value || !rates.value) return null
+  const minor = convert(toMinorUnits(1), fromCurrency.value, toCurrency.value, rates.value)
+  if (minor === null) return null
+  const rate = Math.round(toMajorUnits(minor) * 10_000) / 10_000
+  return t('addTransfer.conversionHint', {
+    from: fromCurrency.value,
+    to: toCurrency.value,
+    rate,
+  })
+})
 
 // Inline account creation for each selector (the TransferForm contract):
 // the created account flows only into the triggering selector.
@@ -74,11 +110,7 @@ const setToAccountId = useSetFieldValue<TransferEditValues['toAccountId']>('toAc
 const handleSubmit = handleFormSubmit(async (data) => {
   const fromAccount = accounts.value?.find((a) => a.id === data.fromAccountId)
   const toAccount = accounts.value?.find((a) => a.id === data.toAccountId)
-
-  if (fromAccount && toAccount && fromAccount.currency !== toAccount.currency) {
-    setFieldError('toAccountId', t('validation.transferAccountsMustMatchCurrency'))
-    return
-  }
+  const crossCurrency = !!fromAccount && !!toAccount && fromAccount.currency !== toAccount.currency
 
   try {
     await updateTransaction({
@@ -90,6 +122,9 @@ const handleSubmit = handleFormSubmit(async (data) => {
         toAccountId: data.toAccountId,
         amount: toMinorUnits(data.amount),
         description: data.description,
+        // Same-currency transfers never carry a destination amount; the
+        // schema already required the credit for a cross-currency pair.
+        ...(crossCurrency ? { destinationAmount: toMinorUnits(data.destinationAmount!) } : {}),
       },
     })
     notification.success(t('editTransaction.success'))
@@ -173,6 +208,23 @@ const handleSubmit = handleFormSubmit(async (data) => {
             <PlusIcon class="size-4" />
           </Button>
         </div>
+      </VeeField>
+
+      <VeeField v-if="crossCurrency" v-slot="{ value, setValue, errors }" name="destinationAmount">
+        <Field :data-invalid="!!errors.length">
+          <FieldLabel for="transfer-edit-destination-amount">
+            {{ t('addTransfer.destinationAmountLabel') }}
+          </FieldLabel>
+          <AmountField
+            id="transfer-edit-destination-amount"
+            :currency="toCurrency"
+            :model-value="value"
+            :errors="errors"
+            @update:model-value="(v) => setValue(v as number)"
+          />
+          <p v-if="conversionHint" class="text-xs text-muted-foreground">{{ conversionHint }}</p>
+          <FieldError v-if="errors.length" :errors="errors" />
+        </Field>
       </VeeField>
 
       <VeeField v-slot="{ field, errors }" name="description">

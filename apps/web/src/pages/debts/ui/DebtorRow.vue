@@ -6,7 +6,7 @@ import { shortDayLabel } from '@trata/dates'
 import type { Debtor } from '@trata/api'
 import type { DebtDirection, DebtOperation } from '@/entities/debt-operation'
 import { initialsOf, lastOperationAt } from '../model/selectors'
-import { DEFAULT_CURRENCY, formatMoney } from '@/shared/lib/money'
+import { formatMoney } from '@/shared/lib/money'
 
 // One debtor row (warm-minimal list row): direction-tinted letter avatar,
 // name with the dotted last-operation meta, bold colored balance and a
@@ -22,11 +22,10 @@ const props = defineProps<{
 }>()
 
 const { locale, t } = useI18n()
-// Debts carry no currency of their own; the app display currency is fixed
-// (currency-rub-only).
-const displayCurrency = computed(() => DEFAULT_CURRENCY)
 
-const balanceText = computed(() => formatMoney(props.balance, displayCurrency.value, locale.value))
+// Native-currency visibility (app-currency spec): a debtor's balance always
+// presents in the debtor's own (immutable) currency.
+const balanceText = computed(() => formatMoney(props.balance, props.debtor.currency, locale.value))
 
 const balanceClass = computed(() => {
   if (props.balance < 0) return 'text-destructive'

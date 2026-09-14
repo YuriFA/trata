@@ -75,6 +75,7 @@ const handleSuccess = () => {
       :id="transfer.id"
       :version="transfer.version"
       :amount="transfer.amount"
+      :destination-amount="transfer.destinationAmount"
       :description="transfer.description ?? ''"
       :from-account-id="transfer.fromAccountId"
       :to-account-id="transfer.toAccountId"

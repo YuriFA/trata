@@ -1,4 +1,5 @@
 import { useMutation, useQueryCache } from '@pinia/colada'
+import type { CurrencyCode } from '@trata/money'
 import { householdApi } from '../api/household-api'
 
 /**
@@ -17,6 +18,11 @@ export function useHouseholdActions() {
 
   const rename = useMutation({
     mutation: (name: string | null) => householdApi.rename(name),
+    onSettled: invalidate,
+  })
+
+  const setBaseCurrency = useMutation({
+    mutation: (currency: CurrencyCode) => householdApi.setBaseCurrency(currency),
     onSettled: invalidate,
   })
 
@@ -57,6 +63,7 @@ export function useHouseholdActions() {
 
   return {
     rename,
+    setBaseCurrency,
     updateDisplayName,
     invite,
     revokeInvitation,

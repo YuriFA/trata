@@ -12,11 +12,19 @@ import {
   shiftPeriod,
   type PeriodCursor,
 } from '@trata/dates'
-import { periodTotal, type AnalyticsDirection } from '@/entities/analytics'
+import { periodBuckets, type AnalyticsDirection } from '@/entities/analytics'
 import { useAccounts } from '@/entities/account'
 import { useTransactions } from '@/entities/transaction'
-import { useDebtOperations, totalsByDirection } from '@/entities/debt-operation'
-import { formatMoneyCompact, DEFAULT_CURRENCY } from '@/shared/lib/money'
+import { useDebtors } from '@/entities/debtor'
+import { netBucketsByCurrency, useDebtOperations } from '@/entities/debt-operation'
+import {
+  aggregateByCurrency,
+  formatMoneyCompact,
+  type CurrencyAggregate,
+  type CurrencyCode,
+} from '@/shared/lib/money'
+import { useRates } from '@/shared/lib/money'
+import { useDisplayCurrency } from '@/shared/store/use-display-currency'
 import { PageHeader } from '@/shared/ui/page-header'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { ErrorState } from '@/shared/ui/error-state'
@@ -54,7 +62,6 @@ const {
   refetch: refetchAccounts,
 } = useAccounts()
 const {
-  data: expenses,
   isPending: expensesPending,
   error: expensesError,
   refetch: refetchExpenses,
@@ -71,6 +78,7 @@ const {
   error: debtsError,
   refetch: refetchDebts,
 } = useDebtOperations()
+const { data: debtors } = useDebtors()
 
 // Skeletons only while NO data exists yet: background refetches
 // (invalidation, sync cycle) keep the rendered stat cards in place.
@@ -86,19 +94,52 @@ const refetch = () =>
 
 // Dashboard tiles show compact figures (whole units below one million, an
 // abbreviated magnitude above) so long amounts fit the half-width mobile
-// cards; exact values live one tap away on the linked screens.
-const formatStat = (value: number) => formatMoneyCompact(value, DEFAULT_CURRENCY, locale.value)
+// cards; exact values live one tap away on the linked screens. Figures are
+// per-currency exact plus, for a mixed aggregate, one «≈» conversion into
+// the display currency (multi-currency design D9); missing rates degrade to
+// the per-currency figures.
+const displayCurrency = useDisplayCurrency()
+const rates = useRates()
 
-const balanceMinor = computed(() =>
-  (accounts.value ?? []).reduce((sum, account) => sum + (account.balance ?? 0), 0),
+const formatStat = (value: number, currency: CurrencyCode) =>
+  formatMoneyCompact(value, currency, locale.value)
+
+const statFor = (buckets: Parameters<typeof aggregateByCurrency>[0]) =>
+  aggregateByCurrency(buckets, displayCurrency.value, rates.value)
+
+const aggregateLabel = (aggregate: CurrencyAggregate): string => {
+  const converted = aggregate.converted
+  if (converted) return `≈ ${formatStat(converted.amount, converted.currency)}`
+  if (aggregate.totals.length === 1) {
+    const total = aggregate.totals[0]!
+    return formatStat(total.amount, total.currency)
+  }
+  if (aggregate.totals.length === 0) return formatStat(0, displayCurrency.value)
+  return aggregate.totals.map((total) => formatStat(total.amount, total.currency)).join(' · ')
+}
+
+const accountBuckets = computed(() =>
+  (accounts.value ?? []).map((account) => ({
+    currency: account.currency,
+    amount: account.balance ?? 0,
+  })),
 )
-const periodTotalFor = (direction: AnalyticsDirection) =>
-  periodTotal(
-    direction === 'expense' ? (expenses.value ?? []) : (incomes.value ?? []),
-    cursor.value,
-    direction,
+const directionLabel = (direction: AnalyticsDirection) =>
+  aggregateLabel(
+    statFor(
+      periodBuckets(
+        incomes.value ?? [],
+        accounts.value ?? [],
+        cursor.value,
+        direction,
+        displayCurrency.value,
+      ),
+    ),
   )
-const debtTotals = computed(() => totalsByDirection(debtOperations.value ?? []))
+
+const debtBuckets = computed(() =>
+  netBucketsByCurrency(debtors.value ?? [], debtOperations.value ?? []),
+)
 
 // The income/expense stat cards deep-link the transactions screen's URL
 // filter: local calendar-day bounds of the selected month (the format
@@ -112,14 +153,14 @@ const monthRange = computed(() => {
 const stats = computed(() => [
   {
     label: t('pages.accounts'),
-    amount: formatStat(balanceMinor.value),
+    amount: aggregateLabel(statFor(accountBuckets.value)),
     icon: Wallet,
     tone: 'primary' as const,
     to: { path: '/accounts' },
   },
   {
     label: t('analytics.income'),
-    amount: formatStat(periodTotalFor('income')),
+    amount: directionLabel('income'),
     icon: TrendingUp,
     tone: 'success' as const,
     to: {
@@ -129,7 +170,7 @@ const stats = computed(() => [
   },
   {
     label: t('analytics.expenses'),
-    amount: formatStat(periodTotalFor('expense')),
+    amount: directionLabel('expense'),
     icon: TrendingDown,
     tone: 'warning' as const,
     to: {
@@ -139,7 +180,7 @@ const stats = computed(() => [
   },
   {
     label: t('pages.debts'),
-    amount: formatStat(debtTotals.value.receivable - debtTotals.value.payable),
+    amount: aggregateLabel(statFor(debtBuckets.value)),
     icon: HandCoins,
     tone: 'neutral' as const,
     to: { path: '/debts' },

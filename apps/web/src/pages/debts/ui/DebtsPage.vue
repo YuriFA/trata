@@ -3,7 +3,11 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Debtor } from '@/entities/debtor'
 import { useDebtors } from '@/entities/debtor'
-import { totalsByDirection, useDebtOperations, type DebtDirection } from '@/entities/debt-operation'
+import {
+  directionBucketsByCurrency,
+  useDebtOperations,
+  type DebtDirection,
+} from '@/entities/debt-operation'
 import DebtsSummaryCard from './DebtsSummaryCard.vue'
 import DebtorSection from './DebtorSection.vue'
 import DebtorHistoryDialog from './DebtorHistoryDialog.vue'
@@ -37,7 +41,14 @@ const isPending = computed(() => debtorsPending.value || operationsPending.value
 const error = computed(() => debtorsError.value || operationsError.value)
 const refetch = () => Promise.all([refetchDebtors(), refetchOperations()])
 
-const totals = computed(() => totalsByDirection(operations.value ?? []))
+// Direction totals derive from native-currency per-debtor buckets; the
+// summary card aggregates them into the display currency (multi-currency).
+const receivableBuckets = computed(() =>
+  directionBucketsByCurrency(debtors.value ?? [], operations.value ?? [], 'receivable'),
+)
+const payableBuckets = computed(() =>
+  directionBucketsByCurrency(debtors.value ?? [], operations.value ?? [], 'payable'),
+)
 
 // One dialog instance + active item refs (convention 4).
 const historyOpen = ref(false)
@@ -72,7 +83,7 @@ const openNewDebtor = (direction: DebtDirection) => {
     </div>
     <template v-else>
       <div class="mt-6">
-        <DebtsSummaryCard :totals="totals" />
+        <DebtsSummaryCard :receivable="receivableBuckets" :payable="payableBuckets" />
       </div>
 
       <!-- Composite list card: full-bleed sections, paper band between them

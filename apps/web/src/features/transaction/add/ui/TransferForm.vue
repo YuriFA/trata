@@ -13,7 +13,14 @@ import { AccountSelect, NewAccountDialog, useAccounts } from '@/entities/account
 import { formatCalendarDay, nowIsoString } from '@/shared/lib/date'
 import { useCreateTransaction } from '@/entities/transaction'
 import { notification } from '@/shared/services/notification'
-import { DEFAULT_CURRENCY, toMinorUnits, type CurrencyCode } from '@/shared/lib/money'
+import {
+  convert,
+  DEFAULT_CURRENCY,
+  toMajorUnits,
+  toMinorUnits,
+  type CurrencyCode,
+} from '@/shared/lib/money'
+import { useRates } from '@/shared/lib/money'
 import { DialogClose, DialogFooter } from '@/shared/ui/dialog'
 import { DIALOG_FORM_FOOTER_CLASS } from '@/shared/ui/responsive-dialog'
 import { DateField } from '@/shared/ui/date-field'
@@ -32,16 +39,19 @@ const { data: accounts } = useAccounts()
 
 const initial = lastAccountIds.getTransferAccountIds()
 
-const {
-  handleSubmit: handleFormSubmit,
-  isSubmitting,
-  setFieldError,
-} = useForm<TransferFormValues>({
-  validationSchema: toTypedSchema(createTransferSchema()),
+const { handleSubmit: handleFormSubmit, isSubmitting } = useForm<TransferFormValues>({
+  validationSchema: toTypedSchema(
+    createTransferSchema({
+      // Read at validate time, after setup - the iff-rule judges the live
+      // account pair (the computeds below are initialized by then).
+      isCrossCurrency: () => crossCurrency.value,
+    }),
+  ),
   initialValues: {
     type: 'transfer',
     fromAccountId: initial.fromAccountId ?? '',
     toAccountId: initial.toAccountId ?? '',
+    destinationAmount: undefined,
     occurredAt: initialOccurredAt,
   },
 })
@@ -52,6 +62,28 @@ const toAccountId = useFieldValue<TransferFormValues['toAccountId']>('toAccountI
 const fromCurrency = computed<CurrencyCode>(() => {
   const account = accounts.value?.find((a) => a.id === fromAccountId.value)
   return account?.currency ?? DEFAULT_CURRENCY
+})
+const toCurrency = computed<CurrencyCode>(() => {
+  const account = accounts.value?.find((a) => a.id === toAccountId.value)
+  return account?.currency ?? DEFAULT_CURRENCY
+})
+// Cross-currency pair: the destination-amount field appears and the payload
+// carries the credit (the iff-rule - multi-currency, transactions spec).
+const crossCurrency = computed(() => fromCurrency.value !== toCurrency.value)
+const rates = useRates()
+// The suggested rate for the hint: 1 source-currency unit in destination
+// units, from the cached published rates; hidden while rates are missing
+// (the degradation rule - the field stays editable regardless).
+const conversionHint = computed(() => {
+  if (!crossCurrency.value || !rates.value) return null
+  const minor = convert(toMinorUnits(1), fromCurrency.value, toCurrency.value, rates.value)
+  if (minor === null) return null
+  const rate = Math.round(toMajorUnits(minor) * 10_000) / 10_000
+  return t('addTransfer.conversionHint', {
+    from: fromCurrency.value,
+    to: toCurrency.value,
+    rate,
+  })
 })
 
 // Day-level choice, the initial clock time is preserved (see CashflowForm).
@@ -77,11 +109,7 @@ const setToAccountId = useSetFieldValue<TransferFormValues['toAccountId']>('toAc
 const handleSubmit = handleFormSubmit(async (data) => {
   const fromAccount = accounts.value?.find((a) => a.id === data.fromAccountId)
   const toAccount = accounts.value?.find((a) => a.id === data.toAccountId)
-
-  if (fromAccount && toAccount && fromAccount.currency !== toAccount.currency) {
-    setFieldError('toAccountId', t('validation.transferAccountsMustMatchCurrency'))
-    return
-  }
+  const crossCurrency = !!fromAccount && !!toAccount && fromAccount.currency !== toAccount.currency
 
   try {
     await createTransaction({
@@ -90,6 +118,9 @@ const handleSubmit = handleFormSubmit(async (data) => {
       toAccountId: data.toAccountId,
       amount: toMinorUnits(data.amount),
       description: data.description,
+      // Same-currency transfers never carry a destination amount; the
+      // schema already required the credit for a cross-currency pair.
+      ...(crossCurrency ? { destinationAmount: toMinorUnits(data.destinationAmount!) } : {}),
       occurredAt: data.occurredAt,
     })
     lastAccountIds.setTransferAccountIds(data.fromAccountId, data.toAccountId)
@@ -118,6 +149,23 @@ const handleSubmit = handleFormSubmit(async (data) => {
           :placeholder="t('addTransfer.amountPlaceholder')"
           @update:model-value="(v) => setValue(v as number)"
         />
+      </Field>
+    </VeeField>
+
+    <VeeField v-if="crossCurrency" v-slot="{ value, setValue, errors }" name="destinationAmount">
+      <Field :data-invalid="!!errors.length">
+        <FieldLabel for="transfer-destination-amount">
+          {{ t('addTransfer.destinationAmountLabel') }}
+        </FieldLabel>
+        <AmountField
+          id="transfer-destination-amount"
+          :currency="toCurrency"
+          :model-value="value"
+          :errors="errors"
+          @update:model-value="(v) => setValue(v as number)"
+        />
+        <p v-if="conversionHint" class="text-xs text-muted-foreground">{{ conversionHint }}</p>
+        <FieldError v-if="errors.length" :errors="errors" />
       </Field>
     </VeeField>
 

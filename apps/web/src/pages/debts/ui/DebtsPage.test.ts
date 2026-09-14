@@ -8,11 +8,11 @@ import {
   createMockDebtOperationRepository,
 } from '@/__tests__/helpers/mock-repositories'
 import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'
-import type { DebtOperation } from '@trata/api'
+import type { DebtOperation, Debtor } from '@trata/api'
 
-const debtors = [
-  { id: 'd1', name: 'Анна', note: '', version: 1 },
-  { id: 'd2', name: 'Борис', note: '', version: 1 },
+const debtors: Debtor[] = [
+  { id: 'd1', name: 'Анна', note: '', currency: 'RUB', version: 1 },
+  { id: 'd2', name: 'Борис', note: '', currency: 'RUB', version: 1 },
 ]
 
 const operations: DebtOperation[] = [

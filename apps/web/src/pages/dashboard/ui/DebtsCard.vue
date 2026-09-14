@@ -12,7 +12,7 @@ import {
 import { useDebtors } from '@/entities/debtor'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { ErrorState } from '@/shared/ui/error-state'
-import { DEFAULT_CURRENCY, formatMoney } from '@/shared/lib/money'
+import { formatMoney } from '@/shared/lib/money'
 
 // Per-debtor balances (canvas): one row per debtor+direction with a nonzero
 // balance - directions are never netted (debts capability). The «Все» link
@@ -39,11 +39,17 @@ const refetch = () => Promise.all([refetchDebtors(), refetchOperations()])
 
 const rows = computed(() => debtorBalanceRows(debtors.value ?? [], operations.value ?? []))
 
-const format = (value: number) => formatMoney(value, DEFAULT_CURRENCY, locale.value)
+// Native-currency visibility (app-currency spec): every row presents in the
+// debtor's own (immutable) currency.
+const format = (value: number, currency: Parameters<typeof formatMoney>[1]) =>
+  formatMoney(value, currency, locale.value)
 
 // Signs are formatting, not copy - composed in script (i18n lint).
-const amountText = (direction: DebtDirection, balance: number) =>
-  `${direction === 'receivable' ? '+' : '−'}${format(Math.abs(balance))}`
+const amountText = (
+  direction: DebtDirection,
+  balance: number,
+  currency: Parameters<typeof formatMoney>[1],
+) => `${direction === 'receivable' ? '+' : '−'}${format(Math.abs(balance), currency)}`
 
 const directionLabel = (direction: DebtDirection) =>
   direction === 'receivable' ? t('dashboard.owedToMe') : t('dashboard.owedByMe')
@@ -93,7 +99,7 @@ const directionLabel = (direction: DebtDirection) =>
           class="text-sm font-semibold tabular-nums"
           :class="row.direction === 'receivable' ? 'text-success' : 'text-warning'"
         >
-          {{ amountText(row.direction, row.balance) }}
+          {{ amountText(row.direction, row.balance, row.debtor.currency) }}
         </p>
       </div>
     </div>

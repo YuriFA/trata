@@ -13,7 +13,6 @@ import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'
 import { currentDay } from '@/shared/lib/date'
 import { calendarDayKey, fullDayLabel } from '@trata/dates'
 
-const today = new Date()
 const todayKey = currentDay()
 
 function dayAfter(key: string): string {

@@ -8,9 +8,11 @@ import { BottomNavLayout, BottomTabBar, MobileTopBar, SpeedDialFab } from '@/wid
 import { CommandPalette } from '@/widgets/command-palette'
 import { AddTransactionDialogHost } from '@/features/transaction/add'
 import { OwnershipGateDialog, useAuthStore } from '@/entities/session'
+import { useHousehold } from '@/entities/household'
 import { ConflictCenter } from '@/features/sync-conflicts'
 import { HouseholdChoiceDialog, useHouseholdJoinStore } from '@/features/household-join'
 import { provideSyncController } from '@/shared/lib/local-db'
+import { provideDisplayCurrency } from '@/shared/store/use-display-currency'
 import { DESKTOP_MEDIA_QUERY, DESKTOP_PRESENTATION_KEY } from '@/shared/lib/presentation'
 import { SyncStatusBadge } from '@/widgets/sync-status'
 
@@ -37,6 +39,13 @@ provideSyncController({
   isAuthenticated: () => auth.isAuthenticated,
   ensureHouseholdCurrent: () => householdJoin.ensureCurrentHousehold(),
 })
+
+// The display-currency chain (multi-currency design D3) is composed at the
+// same root: the explicit per-device setting resolves against the
+// auth-gated household read (the same ['household'] cache the settings
+// page consumes).
+const householdQuery = useHousehold({ enabled: () => auth.isAuthenticated })
+provideDisplayCurrency(() => householdQuery.data.value?.currency)
 </script>
 
 <template>

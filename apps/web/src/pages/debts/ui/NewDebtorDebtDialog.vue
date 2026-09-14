@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useForm, Field as VeeField } from 'vee-validate'
+import { useForm, Field as VeeField, useFieldValue } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { calendarDayKey } from '@trata/dates'
 import type { Debtor } from '@/entities/debtor'
@@ -14,8 +14,10 @@ import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { DateField } from '@/shared/ui/date-field'
 import { Input } from '@/shared/ui/input'
 import { AmountField } from '@/shared/ui/amount-field'
+import { CurrencySelect } from '@/shared/ui/currency-select'
 import { notification } from '@/shared/services/notification'
-import { DEFAULT_CURRENCY, toMinorUnits } from '@/shared/lib/money'
+import { toMinorUnits } from '@/shared/lib/money'
+import { useDefaultCreationCurrency } from '@/shared/store/use-display-currency'
 
 // New debtor with the first debt (mobile design D9): the direction is a prop
 // from the tapped section (never a form value); submitting creates the
@@ -30,9 +32,10 @@ const props = defineProps<{
 const open = defineModel<boolean>('open', { default: false })
 
 const { t } = useI18n()
-// Debts carry no currency of their own; the app display currency is fixed
-// (currency-rub-only).
-const displayCurrency = computed(() => DEFAULT_CURRENCY)
+// The debtor's immutable ledger currency (debts capability): preselected to
+// the household base currency (or the catalog default), sent on create and
+// never changeable afterwards.
+const defaultCurrency = useDefaultCreationCurrency()
 
 const { mutateAsync: createDebtor } = useCreateDebtor()
 const { mutateAsync: createOperation } = useCreateDebtOperation()
@@ -45,11 +48,14 @@ const {
   validationSchema: toTypedSchema(createDebtorDebtSchema()),
   initialValues: {
     name: '',
+    currency: defaultCurrency.value,
     amount: undefined,
     occurredAt: calendarDayKey(new Date()),
     note: '',
   },
 })
+
+const selectedCurrency = useFieldValue<DebtorDebtFormValues['currency']>('currency')
 
 // Set when the contact exists but the operation failed: a retry reuses it.
 const createdDebtorId = ref<string | null>(null)
@@ -66,7 +72,7 @@ const handleSubmit = handleFormSubmit(async (data) => {
   try {
     const debtor: Debtor = createdDebtorId.value
       ? ({ id: createdDebtorId.value } as Debtor)
-      : await createDebtor({ name: data.name.trim() })
+      : await createDebtor({ name: data.name.trim(), currency: data.currency })
     createdDebtorId.value = debtor.id
     await createOperation({
       debtorId: debtor.id,
@@ -111,13 +117,26 @@ const handleSubmit = handleFormSubmit(async (data) => {
         </Field>
       </VeeField>
 
+      <VeeField v-slot="{ value, setValue, errors }" name="currency">
+        <Field :data-invalid="!!errors.length">
+          <FieldLabel for="debts-new-debt-currency">{{ t('debts.currencyLabel') }}</FieldLabel>
+          <CurrencySelect
+            id="debts-new-debt-currency"
+            :model-value="value"
+            @update:model-value="(v) => setValue(v as DebtorDebtFormValues['currency'])"
+          />
+          <p class="text-xs text-muted-foreground">{{ t('debts.currencyImmutableHint') }}</p>
+          <FieldError v-if="errors.length" :errors="errors" />
+        </Field>
+      </VeeField>
+
       <VeeField v-slot="{ value, setValue, errors }" name="amount">
         <Field :data-invalid="!!errors.length">
           <FieldLabel for="debts-new-debt-amount">{{ t('fields.amount') }}</FieldLabel>
           <AmountField
             id="debts-new-debt-amount"
             class="w-full"
-            :currency="displayCurrency"
+            :currency="selectedCurrency"
             :model-value="value"
             :errors="errors"
             @update:model-value="(v) => setValue(v as number)"

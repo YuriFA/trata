@@ -4,9 +4,9 @@ import type { DebtOperation } from '@/entities/debt-operation'
 import { debtorHistoryGroups, debtorSection, initialsOf, lastOperationAt } from './selectors'
 
 const debtors: Debtor[] = [
-  { id: 'd1', name: 'Анна', note: '', version: 1 },
-  { id: 'd2', name: 'Борис', note: '', version: 1 },
-  { id: 'd3', name: 'Вера', note: '', version: 1 },
+  { id: 'd1', name: 'Анна', note: '', currency: 'RUB', version: 1 },
+  { id: 'd2', name: 'Борис', note: '', currency: 'RUB', version: 1 },
+  { id: 'd3', name: 'Вера', note: '', currency: 'RUB', version: 1 },
 ]
 
 function op(overrides: Partial<DebtOperation>): DebtOperation {
