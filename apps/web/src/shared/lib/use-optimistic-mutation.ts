@@ -54,6 +54,14 @@ export function useOptimisticMutation<TPayload, TResult>(
         } else {
           queryCache.cancelQueries({ key: patch.key })
           const previous = queryCache.getQueryData<unknown>(patch.key)
+          // No cached entry (e.g. a detail key nothing has fetched yet):
+          // nothing to patch optimistically - writing data into a fresh
+          // entry would only create a phantom cache record whose lifecycle
+          // trips the query plugins. Invalidation alone refreshes it.
+          if (previous === undefined) {
+            invalidateKeys.push(patch.key)
+            continue
+          }
           snapshots.push({ key: patch.key, previous })
           queryCache.setQueryData(patch.key, patch.updater(previous))
           invalidateKeys.push(patch.key)
