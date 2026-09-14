@@ -14,9 +14,12 @@ import (
 
 const createDebtor = `-- name: CreateDebtor :one
 
-INSERT INTO debtors (id, household_id, user_id, name, note)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, user_id, name, note, created_at, updated_at, version
+INSERT INTO debtors (id, household_id, user_id, name, note, currency)
+VALUES (
+    $1, $2, $3, $4, $5,
+    COALESCE($6::text, (SELECT currency FROM households WHERE id = $2))
+)
+RETURNING id, user_id, name, note, currency, created_at, updated_at, version
 `
 
 type CreateDebtorParams struct {
@@ -25,6 +28,7 @@ type CreateDebtorParams struct {
 	UserID      uuid.UUID
 	Name        string
 	Note        string
+	Currency    *string
 }
 
 type CreateDebtorRow struct {
@@ -32,6 +36,7 @@ type CreateDebtorRow struct {
 	UserID    uuid.UUID
 	Name      string
 	Note      string
+	Currency  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Version   int32
@@ -41,7 +46,8 @@ type CreateDebtorRow struct {
 // unique index ignores tombstones so a deleted name can be recreated). Scoped
 // by household_id everywhere; user_id stays on rows as authorship; deletes
 // are soft (deleted_at tombstone).
-// id is the optional client-generated id (offline-first clients).
+// id is the optional client-generated id (offline-first clients). currency
+// falls back to the household's base currency when the client omits it.
 func (q *Queries) CreateDebtor(ctx context.Context, arg CreateDebtorParams) (CreateDebtorRow, error) {
 	row := q.db.QueryRow(ctx, createDebtor,
 		arg.ID,
@@ -49,6 +55,7 @@ func (q *Queries) CreateDebtor(ctx context.Context, arg CreateDebtorParams) (Cre
 		arg.UserID,
 		arg.Name,
 		arg.Note,
+		arg.Currency,
 	)
 	var i CreateDebtorRow
 	err := row.Scan(
@@ -56,6 +63,7 @@ func (q *Queries) CreateDebtor(ctx context.Context, arg CreateDebtorParams) (Cre
 		&i.UserID,
 		&i.Name,
 		&i.Note,
+		&i.Currency,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Version,
@@ -88,7 +96,7 @@ func (q *Queries) DebtorNameTaken(ctx context.Context, arg DebtorNameTakenParams
 }
 
 const getDebtor = `-- name: GetDebtor :one
-SELECT id, user_id, name, note, created_at, updated_at, version
+SELECT id, user_id, name, note, currency, created_at, updated_at, version
 FROM debtors
 WHERE id = $1 AND household_id = $2 AND deleted_at IS NULL
 `
@@ -103,6 +111,7 @@ type GetDebtorRow struct {
 	UserID    uuid.UUID
 	Name      string
 	Note      string
+	Currency  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Version   int32
@@ -116,6 +125,7 @@ func (q *Queries) GetDebtor(ctx context.Context, arg GetDebtorParams) (GetDebtor
 		&i.UserID,
 		&i.Name,
 		&i.Note,
+		&i.Currency,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Version,
@@ -124,7 +134,7 @@ func (q *Queries) GetDebtor(ctx context.Context, arg GetDebtorParams) (GetDebtor
 }
 
 const getDebtorAny = `-- name: GetDebtorAny :one
-SELECT id, user_id, name, note, created_at, updated_at, version, deleted_at
+SELECT id, user_id, name, note, currency, created_at, updated_at, version, deleted_at
 FROM debtors
 WHERE id = $1 AND household_id = $2
 `
@@ -139,6 +149,7 @@ type GetDebtorAnyRow struct {
 	UserID    uuid.UUID
 	Name      string
 	Note      string
+	Currency  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Version   int32
@@ -154,6 +165,7 @@ func (q *Queries) GetDebtorAny(ctx context.Context, arg GetDebtorAnyParams) (Get
 		&i.UserID,
 		&i.Name,
 		&i.Note,
+		&i.Currency,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Version,
@@ -163,7 +175,7 @@ func (q *Queries) GetDebtorAny(ctx context.Context, arg GetDebtorAnyParams) (Get
 }
 
 const getDebtors = `-- name: GetDebtors :many
-SELECT id, user_id, name, note, created_at, updated_at, version
+SELECT id, user_id, name, note, currency, created_at, updated_at, version
 FROM debtors
 WHERE household_id = $1 AND deleted_at IS NULL
 ORDER BY created_at, id
@@ -174,6 +186,7 @@ type GetDebtorsRow struct {
 	UserID    uuid.UUID
 	Name      string
 	Note      string
+	Currency  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Version   int32
@@ -193,6 +206,7 @@ func (q *Queries) GetDebtors(ctx context.Context, householdID uuid.UUID) ([]GetD
 			&i.UserID,
 			&i.Name,
 			&i.Note,
+			&i.Currency,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Version,
@@ -249,7 +263,7 @@ func (q *Queries) SoftDeleteDebtor(ctx context.Context, arg SoftDeleteDebtorPara
 }
 
 const syncDebtorsByIDs = `-- name: SyncDebtorsByIDs :many
-SELECT id, user_id, name, note, version, deleted_at
+SELECT id, user_id, name, note, currency, version, deleted_at
 FROM debtors
 WHERE household_id = $1 AND id = ANY($2::uuid[])
 `
@@ -264,6 +278,7 @@ type SyncDebtorsByIDsRow struct {
 	UserID    uuid.UUID
 	Name      string
 	Note      string
+	Currency  string
 	Version   int32
 	DeletedAt *time.Time
 }
@@ -282,6 +297,7 @@ func (q *Queries) SyncDebtorsByIDs(ctx context.Context, arg SyncDebtorsByIDsPara
 			&i.UserID,
 			&i.Name,
 			&i.Note,
+			&i.Currency,
 			&i.Version,
 			&i.DeletedAt,
 		); err != nil {
@@ -303,7 +319,7 @@ SET
     version    = version + 1,
     updated_at = now()
 WHERE id = $3 AND household_id = $4 AND deleted_at IS NULL AND version = $5
-RETURNING id, user_id, name, note, created_at, updated_at, version
+RETURNING id, user_id, name, note, currency, created_at, updated_at, version
 `
 
 type SyncReplaceDebtorParams struct {
@@ -319,6 +335,7 @@ type SyncReplaceDebtorRow struct {
 	UserID    uuid.UUID
 	Name      string
 	Note      string
+	Currency  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Version   int32
@@ -339,6 +356,7 @@ func (q *Queries) SyncReplaceDebtor(ctx context.Context, arg SyncReplaceDebtorPa
 		&i.UserID,
 		&i.Name,
 		&i.Note,
+		&i.Currency,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Version,
@@ -354,7 +372,7 @@ SET
     version    = version + 1,
     updated_at = now()
 WHERE id = $3 AND household_id = $4 AND deleted_at IS NULL AND version = $5
-RETURNING id, user_id, name, note, created_at, updated_at, version
+RETURNING id, user_id, name, note, currency, created_at, updated_at, version
 `
 
 type UpdateDebtorParams struct {
@@ -370,6 +388,7 @@ type UpdateDebtorRow struct {
 	UserID    uuid.UUID
 	Name      string
 	Note      string
+	Currency  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Version   int32
@@ -392,6 +411,7 @@ func (q *Queries) UpdateDebtor(ctx context.Context, arg UpdateDebtorParams) (Upd
 		&i.UserID,
 		&i.Name,
 		&i.Note,
+		&i.Currency,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Version,

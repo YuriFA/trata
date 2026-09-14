@@ -55,6 +55,16 @@ func endOfDay(d openapi_types.Date) time.Time {
 	return time.Date(d.Year(), d.Month(), d.Day(), 23, 59, 59, 999999999, time.UTC)
 }
 
+// currencyPtr widens the generated enum pointer to its string form for the
+// domain params (mirrors fromUUIDPtr).
+func currencyPtr(c *api.Currency) *string {
+	if c == nil {
+		return nil
+	}
+	v := string(*c)
+	return &v
+}
+
 func toAPIUser(u domain.User) api.User {
 	return api.User{
 		Id:            toUUID(u.ID),
@@ -81,6 +91,7 @@ func toAPIHousehold(h domain.Household) api.Household {
 		Id:        toUUID(h.ID),
 		CreatedAt: h.CreatedAt,
 		Name:      h.Name,
+		Currency:  api.Currency(h.Currency),
 		Members:   members,
 	}
 }
@@ -90,7 +101,7 @@ func toAPIAccount(a domain.Account) api.Account {
 		Id:             toUUID(a.ID),
 		UserId:         toUUID(a.UserID),
 		Name:           a.Name,
-		Currency:       api.AccountCurrency(a.Currency),
+		Currency:       api.Currency(a.Currency),
 		OpeningBalance: a.OpeningBalance,
 		Balance:        a.Balance,
 		CreatedAt:      a.CreatedAt,
@@ -116,19 +127,20 @@ func toAPICategory(c domain.Category) api.Category {
 
 func toAPITransaction(t domain.Transaction) api.Transaction {
 	return api.Transaction{
-		Id:            toUUID(t.ID),
-		UserId:        toUUID(t.UserID),
-		Type:          api.TransactionType(t.Type),
-		Amount:        t.Amount,
-		Description:   t.Description,
-		OccurredAt:    t.OccurredAt,
-		CreatedAt:     t.CreatedAt,
-		UpdatedAt:     t.UpdatedAt,
-		Version:       t.Version,
-		AccountId:     toUUIDPtr(t.AccountID),
-		CategoryId:    toUUIDPtr(t.CategoryID),
-		FromAccountId: toUUIDPtr(t.FromAccountID),
-		ToAccountId:   toUUIDPtr(t.ToAccountID),
+		Id:                toUUID(t.ID),
+		UserId:            toUUID(t.UserID),
+		Type:              api.TransactionType(t.Type),
+		Amount:            t.Amount,
+		Description:       t.Description,
+		OccurredAt:        t.OccurredAt,
+		CreatedAt:         t.CreatedAt,
+		UpdatedAt:         t.UpdatedAt,
+		Version:           t.Version,
+		AccountId:         toUUIDPtr(t.AccountID),
+		CategoryId:        toUUIDPtr(t.CategoryID),
+		FromAccountId:     toUUIDPtr(t.FromAccountID),
+		ToAccountId:       toUUIDPtr(t.ToAccountID),
+		DestinationAmount: t.DestinationAmount,
 	}
 }
 
@@ -138,6 +150,7 @@ func toAPIDebtor(d domain.Debtor) api.Debtor {
 		UserId:    toUUID(d.UserID),
 		Name:      d.Name,
 		Note:      d.Note,
+		Currency:  api.Currency(d.Currency),
 		CreatedAt: d.CreatedAt,
 		UpdatedAt: d.UpdatedAt,
 		Version:   d.Version,

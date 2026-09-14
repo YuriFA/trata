@@ -39,11 +39,23 @@ func scanInvitation(row invitationScanner) (*domain.HouseholdInvitation, error) 
 	return &inv, nil
 }
 
-// UpdateHouseholdName sets or clears (name = nil) the household display name.
-func (r *Repository) UpdateHouseholdName(ctx context.Context, scope domain.Scope, name *string) error {
+// UpdateHousehold sets or clears (name = nil) the household display name and
+// optionally changes the base currency (nil = keep). A currency change only
+// moves the presentation conversion target - no stored amount is rewritten.
+func (r *Repository) UpdateHousehold(
+	ctx context.Context,
+	scope domain.Scope,
+	name, currency *string,
+) error {
 	householdID := scope.HouseholdID
-	const op = "repository.postgres.UpdateHouseholdName"
-	_, err := r.pool.Exec(ctx, `UPDATE households SET name = $2 WHERE id = $1`, householdID, name)
+	const op = "repository.postgres.UpdateHousehold"
+	_, err := r.pool.Exec(
+		ctx,
+		`UPDATE households SET name = $2, currency = COALESCE($3, currency) WHERE id = $1`,
+		householdID,
+		name,
+		currency,
+	)
 	if err != nil {
 		return opWrap(op, err)
 	}
@@ -53,7 +65,10 @@ func (r *Repository) UpdateHouseholdName(ctx context.Context, scope domain.Scope
 // CountHouseholdInvitationSends counts invitation sends (creates + refreshes,
 // both bump created_at) within the last 24h - the per-household/day send
 // budget enforced by the service.
-func (r *Repository) CountHouseholdInvitationSends(ctx context.Context, scope domain.Scope) (int, error) {
+func (r *Repository) CountHouseholdInvitationSends(
+	ctx context.Context,
+	scope domain.Scope,
+) (int, error) {
 	householdID := scope.HouseholdID
 	const op = "repository.postgres.CountHouseholdInvitationSends"
 	var count int
@@ -336,7 +351,10 @@ func generateHouseholdCode() (string, error) {
 // one row per household - rotate overwrites code/created_at in place, a
 // previously revoked row is reactivated. Collisions with another household's
 // active code retry with a fresh draw.
-func (r *Repository) GenerateHouseholdCode(ctx context.Context, scope domain.Scope) (*domain.HouseholdCode, error) {
+func (r *Repository) GenerateHouseholdCode(
+	ctx context.Context,
+	scope domain.Scope,
+) (*domain.HouseholdCode, error) {
 	householdID := scope.HouseholdID
 	const op = "repository.postgres.GenerateHouseholdCode"
 	for range 5 {
@@ -382,7 +400,10 @@ func (r *Repository) RevokeHouseholdCode(ctx context.Context, scope domain.Scope
 
 // FindHouseholdByActiveCode resolves an active code to its household id
 // (uuid.Nil when the code is unknown, revoked, or rotated out).
-func (r *Repository) FindHouseholdByActiveCode(ctx context.Context, code string) (uuid.UUID, error) {
+func (r *Repository) FindHouseholdByActiveCode(
+	ctx context.Context,
+	code string,
+) (uuid.UUID, error) {
 	const op = "repository.postgres.FindHouseholdByActiveCode"
 	var householdID uuid.UUID
 	err := r.pool.QueryRow(ctx, `
@@ -403,7 +424,11 @@ func (r *Repository) FindHouseholdByActiveCode(ctx context.Context, code string)
 // user as owner. No starter categories: a device that carries its local data
 // across a leave/join pushes its own categories, and the per-household unique
 // live-name index would collide with seeds.
-func createPersonalHouseholdTx(ctx context.Context, tx pgx.Tx, userID uuid.UUID) (uuid.UUID, error) {
+func createPersonalHouseholdTx(
+	ctx context.Context,
+	tx pgx.Tx,
+	userID uuid.UUID,
+) (uuid.UUID, error) {
 	householdID := uuid.New()
 	if _, err := tx.Exec(ctx, `INSERT INTO households (id) VALUES ($1)`, householdID); err != nil {
 		return uuid.Nil, err
@@ -422,7 +447,10 @@ func createPersonalHouseholdTx(ctx context.Context, tx pgx.Tx, userID uuid.UUID)
 // personal household (the exactly-one-membership invariant). The old
 // household and its data stay, untouched and inaccessible to the leaver.
 // Caller validates the owner-with-members guard first.
-func (r *Repository) LeaveHousehold(ctx context.Context, userID uuid.UUID) (*domain.Household, error) {
+func (r *Repository) LeaveHousehold(
+	ctx context.Context,
+	userID uuid.UUID,
+) (*domain.Household, error) {
 	const op = "repository.postgres.LeaveHousehold"
 
 	tx, err := r.pool.Begin(ctx)
@@ -450,7 +478,10 @@ func (r *Repository) LeaveHousehold(ctx context.Context, userID uuid.UUID) (*dom
 // RemoveHouseholdMember deletes the target's membership and hands them a
 // fresh personal household in one transaction. The household's data is not
 // touched. The owner cannot be removed (dissolve instead).
-func (r *Repository) RemoveHouseholdMember(ctx context.Context, householdID, targetUserID uuid.UUID) error {
+func (r *Repository) RemoveHouseholdMember(
+	ctx context.Context,
+	householdID, targetUserID uuid.UUID,
+) error {
 	const op = "repository.postgres.RemoveHouseholdMember"
 
 	tx, err := r.pool.Begin(ctx)
@@ -512,7 +543,11 @@ func (r *Repository) DissolveHousehold(ctx context.Context, scope domain.Scope) 
 		return opWrap(op, err)
 	}
 
-	rows, err := tx.Query(ctx, `SELECT user_id FROM household_members WHERE household_id = $1`, householdID)
+	rows, err := tx.Query(
+		ctx,
+		`SELECT user_id FROM household_members WHERE household_id = $1`,
+		householdID,
+	)
 	if err != nil {
 		return opWrap(op, err)
 	}

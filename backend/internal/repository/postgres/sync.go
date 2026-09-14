@@ -144,7 +144,10 @@ func (t *syncTx) GetAppliedOperation(
 	householdID := scope.HouseholdID
 	const op = "repository.postgres.syncTx.GetAppliedOperation"
 
-	row, err := t.q.GetAppliedOperation(ctx, db.GetAppliedOperationParams{HouseholdID: householdID, OpID: opID})
+	row, err := t.q.GetAppliedOperation(
+		ctx,
+		db.GetAppliedOperationParams{HouseholdID: householdID, OpID: opID},
+	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil //nolint:nilnil // (nil, nil) is the documented "never created" signal
@@ -188,7 +191,11 @@ func (t *syncTx) InsertAppliedOperation(ctx context.Context, rec domain.AppliedO
 
 // --- reads (incl. tombstones) -------------------------------------------------
 
-func (t *syncTx) GetAccountAny(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Account, error) {
+func (t *syncTx) GetAccountAny(
+	ctx context.Context,
+	scope domain.Scope,
+	id uuid.UUID,
+) (*domain.Account, error) {
 	householdID := scope.HouseholdID
 	const op = "repository.postgres.syncTx.GetAccountAny"
 
@@ -213,7 +220,11 @@ func (t *syncTx) GetAccountAny(ctx context.Context, scope domain.Scope, id uuid.
 	}, nil
 }
 
-func (t *syncTx) GetCategoryAny(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Category, error) {
+func (t *syncTx) GetCategoryAny(
+	ctx context.Context,
+	scope domain.Scope,
+	id uuid.UUID,
+) (*domain.Category, error) {
 	householdID := scope.HouseholdID
 	const op = "repository.postgres.syncTx.GetCategoryAny"
 
@@ -239,11 +250,18 @@ func (t *syncTx) GetCategoryAny(ctx context.Context, scope domain.Scope, id uuid
 	}, nil
 }
 
-func (t *syncTx) GetTransactionAny(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Transaction, error) {
+func (t *syncTx) GetTransactionAny(
+	ctx context.Context,
+	scope domain.Scope,
+	id uuid.UUID,
+) (*domain.Transaction, error) {
 	householdID := scope.HouseholdID
 	const op = "repository.postgres.syncTx.GetTransactionAny"
 
-	row, err := t.q.GetTransactionAny(ctx, db.GetTransactionAnyParams{ID: id, HouseholdID: householdID})
+	row, err := t.q.GetTransactionAny(
+		ctx,
+		db.GetTransactionAnyParams{ID: id, HouseholdID: householdID},
+	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil //nolint:nilnil // (nil, nil) is the documented "never created" signal
@@ -257,7 +275,11 @@ func (t *syncTx) GetTransactionAny(ctx context.Context, scope domain.Scope, id u
 	), nil
 }
 
-func (t *syncTx) GetDebtorAny(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Debtor, error) {
+func (t *syncTx) GetDebtorAny(
+	ctx context.Context,
+	scope domain.Scope,
+	id uuid.UUID,
+) (*domain.Debtor, error) {
 	householdID := scope.HouseholdID
 	const op = "repository.postgres.syncTx.GetDebtorAny"
 
@@ -268,7 +290,16 @@ func (t *syncTx) GetDebtorAny(ctx context.Context, scope domain.Scope, id uuid.U
 		}
 		return nil, opWrap(op, err)
 	}
-	d := debtorFromFields(row.ID, row.UserID, row.Name, row.Note, row.CreatedAt, row.UpdatedAt, int(row.Version))
+	d := debtorFromFields(
+		row.ID,
+		row.UserID,
+		row.Name,
+		row.Note,
+		row.Currency,
+		row.CreatedAt,
+		row.UpdatedAt,
+		int(row.Version),
+	)
 	d.DeletedAt = row.DeletedAt
 	return d, nil
 }
@@ -281,7 +312,10 @@ func (t *syncTx) GetDebtOperationAny(
 	householdID := scope.HouseholdID
 	const op = "repository.postgres.syncTx.GetDebtOperationAny"
 
-	row, err := t.q.GetDebtOperationAny(ctx, db.GetDebtOperationAnyParams{ID: id, HouseholdID: householdID})
+	row, err := t.q.GetDebtOperationAny(
+		ctx,
+		db.GetDebtOperationAnyParams{ID: id, HouseholdID: householdID},
+	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil //nolint:nilnil // (nil, nil) is the documented "never created" signal
@@ -304,7 +338,10 @@ func (t *syncTx) GetPlannedPaymentAny(
 	householdID := scope.HouseholdID
 	const op = "repository.postgres.syncTx.GetPlannedPaymentAny"
 
-	row, err := t.q.GetPlannedPaymentAny(ctx, db.GetPlannedPaymentAnyParams{ID: id, HouseholdID: householdID})
+	row, err := t.q.GetPlannedPaymentAny(
+		ctx,
+		db.GetPlannedPaymentAnyParams{ID: id, HouseholdID: householdID},
+	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil //nolint:nilnil // (nil, nil) is the documented "never created" signal
@@ -322,7 +359,11 @@ func (t *syncTx) GetPlannedPaymentAny(
 
 // --- live reads ----------------------------------------------------------------
 
-func (t *syncTx) LiveAccountExists(ctx context.Context, scope domain.Scope, id uuid.UUID) (bool, error) {
+func (t *syncTx) LiveAccountExists(
+	ctx context.Context,
+	scope domain.Scope,
+	id uuid.UUID,
+) (bool, error) {
 	const op = "repository.postgres.syncTx.LiveAccountExists"
 
 	a, err := t.GetAccountAny(ctx, scope, id)
@@ -332,7 +373,31 @@ func (t *syncTx) LiveAccountExists(ctx context.Context, scope domain.Scope, id u
 	return a != nil && !a.Deleted(), nil
 }
 
-func (t *syncTx) LiveCategory(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Category, error) {
+// LiveAccountCurrency returns the live account's currency (the cross-currency
+// transfer rule reads it); a tombstoned or missing account reads as
+// ErrTransactionAccountNotFound.
+func (t *syncTx) LiveAccountCurrency(
+	ctx context.Context,
+	scope domain.Scope,
+	id uuid.UUID,
+) (string, error) {
+	const op = "repository.postgres.syncTx.LiveAccountCurrency"
+
+	a, err := t.GetAccountAny(ctx, scope, id)
+	if err != nil {
+		return "", opWrap(op, err)
+	}
+	if a == nil || a.Deleted() {
+		return "", domain.ErrTransactionAccountNotFound
+	}
+	return a.Currency, nil
+}
+
+func (t *syncTx) LiveCategory(
+	ctx context.Context,
+	scope domain.Scope,
+	id uuid.UUID,
+) (*domain.Category, error) {
 	const op = "repository.postgres.syncTx.LiveCategory"
 
 	c, err := t.GetCategoryAny(ctx, scope, id)
@@ -401,7 +466,11 @@ func (t *syncTx) HasLiveTransactionsForCategory(
 	return inUse, nil
 }
 
-func (t *syncTx) LiveDebtorExists(ctx context.Context, scope domain.Scope, id uuid.UUID) (bool, error) {
+func (t *syncTx) LiveDebtorExists(
+	ctx context.Context,
+	scope domain.Scope,
+	id uuid.UUID,
+) (bool, error) {
 	const op = "repository.postgres.syncTx.LiveDebtorExists"
 
 	d, err := t.GetDebtorAny(ctx, scope, id)
@@ -457,10 +526,13 @@ func (t *syncTx) HasLivePlannedPaymentsForAccount(
 	householdID := scope.HouseholdID
 	const op = "repository.postgres.syncTx.HasLivePlannedPaymentsForAccount"
 
-	inUse, err := t.q.HasLivePlannedPaymentsForAccount(ctx, db.HasLivePlannedPaymentsForAccountParams{
-		HouseholdID: householdID,
-		AccountID:   accountID,
-	})
+	inUse, err := t.q.HasLivePlannedPaymentsForAccount(
+		ctx,
+		db.HasLivePlannedPaymentsForAccountParams{
+			HouseholdID: householdID,
+			AccountID:   accountID,
+		},
+	)
 	if err != nil {
 		return false, opWrap(op, err)
 	}
@@ -474,10 +546,13 @@ func (t *syncTx) HasLivePlannedPaymentsForCategory(
 	householdID := scope.HouseholdID
 	const op = "repository.postgres.syncTx.HasLivePlannedPaymentsForCategory"
 
-	inUse, err := t.q.HasLivePlannedPaymentsForCategory(ctx, db.HasLivePlannedPaymentsForCategoryParams{
-		HouseholdID: householdID,
-		CategoryID:  categoryID,
-	})
+	inUse, err := t.q.HasLivePlannedPaymentsForCategory(
+		ctx,
+		db.HasLivePlannedPaymentsForCategoryParams{
+			HouseholdID: householdID,
+			CategoryID:  categoryID,
+		},
+	)
 	if err != nil {
 		return false, opWrap(op, err)
 	}
@@ -514,7 +589,10 @@ func (t *syncTx) DueAutoPlannedPayments(
 
 // --- writes (each appends change_log on the same tx) -----------------------------
 
-func (t *syncTx) CreateAccount(ctx context.Context, params domain.CreateAccountParams) (*domain.Account, error) {
+func (t *syncTx) CreateAccount(
+	ctx context.Context,
+	params domain.CreateAccountParams,
+) (*domain.Account, error) {
 	const op = "repository.postgres.syncTx.CreateAccount"
 
 	row, err := t.q.CreateAccount(ctx, db.CreateAccountParams{
@@ -559,7 +637,10 @@ func (t *syncTx) ReplaceAccount(
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			current, cerr := t.q.GetAccountAny(ctx, db.GetAccountAnyParams{ID: id, HouseholdID: householdID})
+			current, cerr := t.q.GetAccountAny(
+				ctx,
+				db.GetAccountAnyParams{ID: id, HouseholdID: householdID},
+			)
 			return nil, classifySyncWrite(
 				cerr,
 				current.DeletedAt != nil,
@@ -631,19 +712,30 @@ func (t *syncTx) TombstoneAccount(
 	return tombstoneEntity(ctx, t.q, scope, id,
 		"repository.postgres.syncTx.TombstoneAccount",
 		func() (int32, error) {
-			return t.q.SoftDeleteAccount(ctx, db.SoftDeleteAccountParams{ID: id, HouseholdID: scope.HouseholdID})
+			return t.q.SoftDeleteAccount(
+				ctx,
+				db.SoftDeleteAccountParams{ID: id, HouseholdID: scope.HouseholdID},
+			)
 		},
 		func() (*domain.Account, error) { return t.GetAccountAny(ctx, scope, id) },
 		domain.ErrAccountNotFound,
 		domain.SyncEntityAccount,
 		func(version int32) *domain.Account {
 			now := time.Now().UTC()
-			return &domain.Account{ID: id, UserID: scope.ActorID, Version: int(version), DeletedAt: &now}
+			return &domain.Account{
+				ID:        id,
+				UserID:    scope.ActorID,
+				Version:   int(version),
+				DeletedAt: &now,
+			}
 		},
 	)
 }
 
-func (t *syncTx) CreateCategory(ctx context.Context, params domain.CreateCategoryParams) (*domain.Category, error) {
+func (t *syncTx) CreateCategory(
+	ctx context.Context,
+	params domain.CreateCategoryParams,
+) (*domain.Category, error) {
 	const op = "repository.postgres.syncTx.CreateCategory"
 
 	row, err := t.q.CreateCategory(ctx, db.CreateCategoryParams{
@@ -693,7 +785,10 @@ func (t *syncTx) ReplaceCategory(
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			current, cerr := t.q.GetCategoryAny(ctx, db.GetCategoryAnyParams{ID: id, HouseholdID: householdID})
+			current, cerr := t.q.GetCategoryAny(
+				ctx,
+				db.GetCategoryAnyParams{ID: id, HouseholdID: householdID},
+			)
 			return nil, classifySyncWrite(
 				cerr,
 				current.DeletedAt != nil,
@@ -723,14 +818,22 @@ func (t *syncTx) TombstoneCategory(
 	return tombstoneEntity(ctx, t.q, scope, id,
 		"repository.postgres.syncTx.TombstoneCategory",
 		func() (int32, error) {
-			return t.q.SoftDeleteCategory(ctx, db.SoftDeleteCategoryParams{ID: id, HouseholdID: scope.HouseholdID})
+			return t.q.SoftDeleteCategory(
+				ctx,
+				db.SoftDeleteCategoryParams{ID: id, HouseholdID: scope.HouseholdID},
+			)
 		},
 		func() (*domain.Category, error) { return t.GetCategoryAny(ctx, scope, id) },
 		domain.ErrCategoryNotFound,
 		domain.SyncEntityCategory,
 		func(version int32) *domain.Category {
 			now := time.Now().UTC()
-			return &domain.Category{ID: id, UserID: scope.ActorID, Version: int(version), DeletedAt: &now}
+			return &domain.Category{
+				ID:        id,
+				UserID:    scope.ActorID,
+				Version:   int(version),
+				DeletedAt: &now,
+			}
 		},
 	)
 }
@@ -753,10 +856,13 @@ func (t *syncTx) CascadeTombstoneCategory(
 	if err != nil {
 		return nil, opWrap(op, err)
 	}
-	rows, err := t.q.SoftDeleteTransactionsForCategory(ctx, db.SoftDeleteTransactionsForCategoryParams{
-		HouseholdID: householdID,
-		CategoryID:  &id,
-	})
+	rows, err := t.q.SoftDeleteTransactionsForCategory(
+		ctx,
+		db.SoftDeleteTransactionsForCategoryParams{
+			HouseholdID: householdID,
+			CategoryID:  &id,
+		},
+	)
 	if err != nil {
 		return nil, opWrap(op, err)
 	}
@@ -771,7 +877,10 @@ func (t *syncTx) CascadeTombstoneCategory(
 	return c, nil
 }
 
-func (t *syncTx) CreateDebtor(ctx context.Context, params domain.CreateDebtorParams) (*domain.Debtor, error) {
+func (t *syncTx) CreateDebtor(
+	ctx context.Context,
+	params domain.CreateDebtorParams,
+) (*domain.Debtor, error) {
 	const op = "repository.postgres.syncTx.CreateDebtor"
 
 	row, err := t.q.CreateDebtor(ctx, db.CreateDebtorParams{
@@ -791,7 +900,14 @@ func (t *syncTx) CreateDebtor(ctx context.Context, params domain.CreateDebtorPar
 		return nil, opWrap(op, err)
 	}
 	return debtorFromFields(
-		row.ID, row.UserID, row.Name, row.Note, row.CreatedAt, row.UpdatedAt, int(row.Version),
+		row.ID,
+		row.UserID,
+		row.Name,
+		row.Note,
+		row.Currency,
+		row.CreatedAt,
+		row.UpdatedAt,
+		int(row.Version),
 	), nil
 }
 
@@ -813,7 +929,10 @@ func (t *syncTx) ReplaceDebtor(
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			current, cerr := t.q.GetDebtorAny(ctx, db.GetDebtorAnyParams{ID: id, HouseholdID: householdID})
+			current, cerr := t.q.GetDebtorAny(
+				ctx,
+				db.GetDebtorAnyParams{ID: id, HouseholdID: householdID},
+			)
 			return nil, classifySyncWrite(
 				cerr,
 				current.DeletedAt != nil,
@@ -830,7 +949,14 @@ func (t *syncTx) ReplaceDebtor(
 		return nil, opWrap(op, err)
 	}
 	return debtorFromFields(
-		row.ID, row.UserID, row.Name, row.Note, row.CreatedAt, row.UpdatedAt, int(row.Version),
+		row.ID,
+		row.UserID,
+		row.Name,
+		row.Note,
+		row.Currency,
+		row.CreatedAt,
+		row.UpdatedAt,
+		int(row.Version),
 	), nil
 }
 
@@ -841,14 +967,22 @@ func (t *syncTx) TombstoneDebtor(
 	return tombstoneEntity(ctx, t.q, scope, id,
 		"repository.postgres.syncTx.TombstoneDebtor",
 		func() (int32, error) {
-			return t.q.SoftDeleteDebtor(ctx, db.SoftDeleteDebtorParams{ID: id, HouseholdID: scope.HouseholdID})
+			return t.q.SoftDeleteDebtor(
+				ctx,
+				db.SoftDeleteDebtorParams{ID: id, HouseholdID: scope.HouseholdID},
+			)
 		},
 		func() (*domain.Debtor, error) { return t.GetDebtorAny(ctx, scope, id) },
 		domain.ErrDebtorNotFound,
 		domain.SyncEntityDebtor,
 		func(version int32) *domain.Debtor {
 			now := time.Now().UTC()
-			return &domain.Debtor{ID: id, UserID: scope.ActorID, Version: int(version), DeletedAt: &now}
+			return &domain.Debtor{
+				ID:        id,
+				UserID:    scope.ActorID,
+				Version:   int(version),
+				DeletedAt: &now,
+			}
 		},
 	)
 }
@@ -948,7 +1082,12 @@ func (t *syncTx) TombstoneDebtOperation(
 		domain.SyncEntityDebtOperation,
 		func(version int32) *domain.DebtOperation {
 			now := time.Now().UTC()
-			return &domain.DebtOperation{ID: id, UserID: scope.ActorID, Version: int(version), DeletedAt: &now}
+			return &domain.DebtOperation{
+				ID:        id,
+				UserID:    scope.ActorID,
+				Version:   int(version),
+				DeletedAt: &now,
+			}
 		},
 	)
 }
@@ -1059,7 +1198,12 @@ func (t *syncTx) TombstonePlannedPayment(
 		domain.SyncEntityPlannedPayment,
 		func(version int32) *domain.PlannedPayment {
 			now := time.Now().UTC()
-			return &domain.PlannedPayment{ID: id, UserID: scope.ActorID, Version: int(version), DeletedAt: &now}
+			return &domain.PlannedPayment{
+				ID:        id,
+				UserID:    scope.ActorID,
+				Version:   int(version),
+				DeletedAt: &now,
+			}
 		},
 	)
 }
@@ -1158,7 +1302,10 @@ func (t *syncTx) ReplaceTransaction(
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			current, cerr := t.q.GetTransactionAny(ctx, db.GetTransactionAnyParams{ID: id, HouseholdID: householdID})
+			current, cerr := t.q.GetTransactionAny(
+				ctx,
+				db.GetTransactionAnyParams{ID: id, HouseholdID: householdID},
+			)
 			return nil, classifySyncWrite(
 				cerr,
 				current.DeletedAt != nil,
@@ -1197,7 +1344,12 @@ func (t *syncTx) TombstoneTransaction(
 		domain.SyncEntityTransaction,
 		func(version int32) *domain.Transaction {
 			now := time.Now().UTC()
-			return &domain.Transaction{ID: id, UserID: scope.ActorID, Version: int(version), DeletedAt: &now}
+			return &domain.Transaction{
+				ID:        id,
+				UserID:    scope.ActorID,
+				Version:   int(version),
+				DeletedAt: &now,
+			}
 		},
 	)
 }
@@ -1318,7 +1470,10 @@ func (r *Repository) fetchPullStates(
 
 	accountsByID := make(map[uuid.UUID]db.SyncAccountsByIDsRow, len(accIDs))
 	if len(accIDs) > 0 {
-		items, err := r.q.SyncAccountsByIDs(ctx, db.SyncAccountsByIDsParams{HouseholdID: householdID, Ids: accIDs})
+		items, err := r.q.SyncAccountsByIDs(
+			ctx,
+			db.SyncAccountsByIDsParams{HouseholdID: householdID, Ids: accIDs},
+		)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -1328,7 +1483,10 @@ func (r *Repository) fetchPullStates(
 	}
 	categoriesByID := make(map[uuid.UUID]db.SyncCategoriesByIDsRow, len(catIDs))
 	if len(catIDs) > 0 {
-		items, err := r.q.SyncCategoriesByIDs(ctx, db.SyncCategoriesByIDsParams{HouseholdID: householdID, Ids: catIDs})
+		items, err := r.q.SyncCategoriesByIDs(
+			ctx,
+			db.SyncCategoriesByIDsParams{HouseholdID: householdID, Ids: catIDs},
+		)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -1380,7 +1538,10 @@ func (r *Repository) fetchDebtPullStates(
 
 	debtorsByID := make(map[uuid.UUID]db.SyncDebtorsByIDsRow, len(debtorIDs))
 	if len(debtorIDs) > 0 {
-		items, err := r.q.SyncDebtorsByIDs(ctx, db.SyncDebtorsByIDsParams{HouseholdID: householdID, Ids: debtorIDs})
+		items, err := r.q.SyncDebtorsByIDs(
+			ctx,
+			db.SyncDebtorsByIDsParams{HouseholdID: householdID, Ids: debtorIDs},
+		)
 		if err != nil {
 			return nil, nil, err
 		}

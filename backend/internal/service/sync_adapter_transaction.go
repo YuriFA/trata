@@ -21,6 +21,7 @@ type transactionTx interface {
 	repository.SyncCore
 	repository.TransactionSyncTx
 	LiveAccountExists(ctx context.Context, scope domain.Scope, id uuid.UUID) (bool, error)
+	LiveAccountCurrency(ctx context.Context, scope domain.Scope, id uuid.UUID) (string, error)
 	LiveCategory(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Category, error)
 }
 
@@ -55,7 +56,11 @@ func (transactionAdapter) invalidDataMessage() string {
 // (ValidateTransactionWrite checks amount first, so the error precedence is
 // unchanged: malformed type > amount > references).
 func (transactionAdapter) preValidate(
-	_ context.Context, _ transactionTx, _ domain.Scope, _ domain.SyncOperation, data domain.TransactionFullState,
+	_ context.Context,
+	_ transactionTx,
+	_ domain.Scope,
+	_ domain.SyncOperation,
+	data domain.TransactionFullState,
 ) (string, string, error) {
 	switch data.Type {
 	case domain.TransactionTypeIncome,
@@ -89,7 +94,8 @@ func (transactionAdapter) postReadValidate(
 		Type: data.Type, Amount: data.Amount,
 		AccountID: data.AccountID, CategoryID: data.CategoryID,
 		FromAccountID: data.FromAccountID, ToAccountID: data.ToAccountID,
-		PrevCategoryID: prevCategoryID,
+		DestinationAmount: data.DestinationAmount,
+		PrevCategoryID:    prevCategoryID,
 	})
 	if err != nil {
 		if spec, ok := domain.ErrorSpecFor(err); ok {
@@ -100,7 +106,10 @@ func (transactionAdapter) postReadValidate(
 	return "", "", nil
 }
 
-func (transactionAdapter) immutable(cur *domain.Transaction, data domain.TransactionFullState) (string, string) {
+func (transactionAdapter) immutable(
+	cur *domain.Transaction,
+	data domain.TransactionFullState,
+) (string, string) {
 	if err := ValidateTransactionTypeImmutable(cur.Type, data.Type); err != nil {
 		if spec, ok := domain.ErrorSpecFor(err); ok {
 			return spec.Code, spec.Message
@@ -112,7 +121,8 @@ func (transactionAdapter) immutable(cur *domain.Transaction, data domain.Transac
 func (transactionAdapter) version(tr *domain.Transaction) int   { return tr.Version }
 func (transactionAdapter) fullState(tr *domain.Transaction) any { return tr.FullState() }
 func (transactionAdapter) isWriteRace(err error) bool {
-	return errors.Is(err, domain.ErrTransactionVersionConflict) || errors.Is(err, domain.ErrRecordDeleted)
+	return errors.Is(err, domain.ErrTransactionVersionConflict) ||
+		errors.Is(err, domain.ErrRecordDeleted)
 }
 
 func (transactionAdapter) getAny(
@@ -126,13 +136,18 @@ func (transactionAdapter) getAny(
 }
 
 func (transactionAdapter) create(
-	ctx context.Context, t transactionTx, scope domain.Scope, id uuid.UUID, data domain.TransactionFullState,
+	ctx context.Context,
+	t transactionTx,
+	scope domain.Scope,
+	id uuid.UUID,
+	data domain.TransactionFullState,
 ) (*domain.Transaction, error) {
 	return t.CreateTransaction(ctx, domain.CreateTransactionParams{
 		ID: id, HouseholdID: scope.HouseholdID, UserID: scope.ActorID,
 		Type: data.Type, Amount: data.Amount, Description: data.Description, OccurredAt: data.OccurredAt,
 		AccountID: data.AccountID, CategoryID: data.CategoryID,
 		FromAccountID: data.FromAccountID, ToAccountID: data.ToAccountID,
+		DestinationAmount: data.DestinationAmount,
 	})
 }
 

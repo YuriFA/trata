@@ -13,7 +13,7 @@ import (
 )
 
 const getHouseholdByID = `-- name: GetHouseholdByID :one
-SELECT id, name, created_at
+SELECT id, name, currency, created_at
 FROM households
 WHERE id = $1
 `
@@ -21,13 +21,19 @@ WHERE id = $1
 type GetHouseholdByIDRow struct {
 	ID        uuid.UUID
 	Name      *string
+	Currency  string
 	CreatedAt time.Time
 }
 
 func (q *Queries) GetHouseholdByID(ctx context.Context, id uuid.UUID) (GetHouseholdByIDRow, error) {
 	row := q.db.QueryRow(ctx, getHouseholdByID, id)
 	var i GetHouseholdByIDRow
-	err := row.Scan(&i.ID, &i.Name, &i.CreatedAt)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Currency,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 

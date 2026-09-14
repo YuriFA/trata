@@ -62,16 +62,17 @@ func (s *Server) CreateTransaction(
 	}
 
 	params := domain.CreateTransactionParams{
-		ID:            id,
-		HouseholdID:   scope.HouseholdID,
-		UserID:        user.ID,
-		Type:          domain.TransactionType(req.Body.Type),
-		Amount:        req.Body.Amount,
-		OccurredAt:    req.Body.OccurredAt,
-		AccountID:     fromUUIDPtr(req.Body.AccountId),
-		CategoryID:    fromUUIDPtr(req.Body.CategoryId),
-		FromAccountID: fromUUIDPtr(req.Body.FromAccountId),
-		ToAccountID:   fromUUIDPtr(req.Body.ToAccountId),
+		ID:                id,
+		HouseholdID:       scope.HouseholdID,
+		UserID:            user.ID,
+		Type:              domain.TransactionType(req.Body.Type),
+		Amount:            req.Body.Amount,
+		OccurredAt:        req.Body.OccurredAt,
+		AccountID:         fromUUIDPtr(req.Body.AccountId),
+		CategoryID:        fromUUIDPtr(req.Body.CategoryId),
+		FromAccountID:     fromUUIDPtr(req.Body.FromAccountId),
+		ToAccountID:       fromUUIDPtr(req.Body.ToAccountId),
+		DestinationAmount: req.Body.DestinationAmount,
 	}
 	if req.Body.Description != nil {
 		params.Description = *req.Body.Description
@@ -101,14 +102,15 @@ func (s *Server) UpdateTransaction(
 	req api.UpdateTransactionRequestObject,
 ) (api.UpdateTransactionResponseObject, error) {
 	params := domain.UpdateTransactionParams{
-		Version:       req.Body.Version,
-		Amount:        req.Body.Amount,
-		Description:   req.Body.Description,
-		OccurredAt:    req.Body.OccurredAt,
-		AccountID:     fromUUIDPtr(req.Body.AccountId),
-		CategoryID:    fromUUIDPtr(req.Body.CategoryId),
-		FromAccountID: fromUUIDPtr(req.Body.FromAccountId),
-		ToAccountID:   fromUUIDPtr(req.Body.ToAccountId),
+		Version:           req.Body.Version,
+		Amount:            req.Body.Amount,
+		Description:       req.Body.Description,
+		OccurredAt:        req.Body.OccurredAt,
+		AccountID:         fromUUIDPtr(req.Body.AccountId),
+		CategoryID:        fromUUIDPtr(req.Body.CategoryId),
+		FromAccountID:     fromUUIDPtr(req.Body.FromAccountId),
+		ToAccountID:       fromUUIDPtr(req.Body.ToAccountId),
+		DestinationAmount: req.Body.DestinationAmount,
 	}
 	tx, err := s.txn.Update(ctx, s.currentScope(ctx), req.Id, params)
 	if err != nil {

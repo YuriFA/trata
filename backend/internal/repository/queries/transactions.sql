@@ -10,13 +10,13 @@
 -- id is the optional client-generated id (offline-first clients).
 INSERT INTO transactions (
     id, household_id, user_id, type, amount, description, occurred_at,
-    account_id, category_id, from_account_id, to_account_id
+    account_id, category_id, from_account_id, to_account_id, destination_amount
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING
     id, user_id, type, amount, description, occurred_at,
     created_at, updated_at, version,
-    account_id, category_id, from_account_id, to_account_id;
+    account_id, category_id, from_account_id, to_account_id, destination_amount;
 
 -- name: UpdateTransaction :one
 -- Optimistic concurrency: the WHERE clause includes version = @version (and
@@ -31,13 +31,14 @@ SET
     category_id      = COALESCE(sqlc.narg('category_id'), category_id),
     from_account_id  = COALESCE(sqlc.narg('from_account_id'), from_account_id),
     to_account_id    = COALESCE(sqlc.narg('to_account_id'), to_account_id),
+    destination_amount = COALESCE(sqlc.narg('destination_amount'), destination_amount),
     version          = version + 1,
     updated_at       = now()
 WHERE id = @id AND household_id = @household_id AND deleted_at IS NULL AND version = @version
 RETURNING
     id, user_id, type, amount, description, occurred_at,
     created_at, updated_at, version,
-    account_id, category_id, from_account_id, to_account_id;
+    account_id, category_id, from_account_id, to_account_id, destination_amount;
 
 -- name: SoftDeleteTransaction :one
 UPDATE transactions
@@ -49,7 +50,7 @@ RETURNING version;
 SELECT
     id, user_id, type, amount, description, occurred_at,
     created_at, updated_at, version,
-    account_id, category_id, from_account_id, to_account_id
+    account_id, category_id, from_account_id, to_account_id, destination_amount
 FROM transactions
 WHERE id = $1 AND household_id = $2 AND deleted_at IS NULL;
 
@@ -58,7 +59,7 @@ WHERE id = $1 AND household_id = $2 AND deleted_at IS NULL;
 SELECT
     id, user_id, type, amount, description, occurred_at,
     created_at, updated_at, version,
-    account_id, category_id, from_account_id, to_account_id,
+    account_id, category_id, from_account_id, to_account_id, destination_amount,
     deleted_at
 FROM transactions
 WHERE id = $1 AND household_id = $2;
@@ -71,7 +72,7 @@ WHERE id = $1 AND household_id = $2;
 SELECT
     id, user_id, type, amount, description, occurred_at,
     created_at, updated_at, version,
-    account_id, category_id, from_account_id, to_account_id
+    account_id, category_id, from_account_id, to_account_id, destination_amount
 FROM transactions
 WHERE
     household_id = @household_id
@@ -105,19 +106,20 @@ SET
     category_id     = @category_id,
     from_account_id = @from_account_id,
     to_account_id   = @to_account_id,
+    destination_amount = @destination_amount,
     version         = version + 1,
     updated_at      = now()
 WHERE id = @id AND household_id = @household_id AND deleted_at IS NULL AND version = @base_version
 RETURNING
     id, user_id, type, amount, description, occurred_at,
     created_at, updated_at, version,
-    account_id, category_id, from_account_id, to_account_id;
+    account_id, category_id, from_account_id, to_account_id, destination_amount;
 
 -- name: SyncTransactionsByIDs :many
 SELECT
     id, user_id, type, amount, description, occurred_at,
     created_at, updated_at, version,
-    account_id, category_id, from_account_id, to_account_id,
+    account_id, category_id, from_account_id, to_account_id, destination_amount,
     deleted_at
 FROM transactions
 WHERE household_id = @household_id AND id = ANY(@ids::uuid[]);

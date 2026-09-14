@@ -28,6 +28,10 @@ type Transaction struct {
 	// Transfer fields.
 	FromAccountID *uuid.UUID
 	ToAccountID   *uuid.UUID
+	// Cross-currency transfer credit in the destination account's currency
+	// (positive minor units); nil for same-currency transfers and non-transfer
+	// types.
+	DestinationAmount *int64
 	// Tombstone marker (nil = live).
 	DeletedAt *time.Time
 }
@@ -51,8 +55,9 @@ type CreateTransactionParams struct {
 	AccountID  *uuid.UUID
 	CategoryID *uuid.UUID
 	// Transfer fields.
-	FromAccountID *uuid.UUID
-	ToAccountID   *uuid.UUID
+	FromAccountID     *uuid.UUID
+	ToAccountID       *uuid.UUID
+	DestinationAmount *int64
 }
 
 // UpdateTransactionParams holds optional PATCH fields plus the required
@@ -68,6 +73,9 @@ type UpdateTransactionParams struct {
 	// Transfer fields.
 	FromAccountID *uuid.UUID
 	ToAccountID   *uuid.UUID
+	// Nil = leave unchanged. Clearing (cross-currency -> same-currency)
+	// happens via the sync full-state replace, mirroring account clearing.
+	DestinationAmount *int64
 }
 
 // TransactionCursor is the opaque keyset cursor for listTransactions.
@@ -87,22 +95,24 @@ type TransactionFullState struct {
 	AccountID  *uuid.UUID `json:"accountId"`
 	CategoryID *uuid.UUID `json:"categoryId"`
 	// Transfer fields.
-	FromAccountID *uuid.UUID `json:"fromAccountId"`
-	ToAccountID   *uuid.UUID `json:"toAccountId"`
+	FromAccountID     *uuid.UUID `json:"fromAccountId"`
+	ToAccountID       *uuid.UUID `json:"toAccountId"`
+	DestinationAmount *int64     `json:"destinationAmount,omitempty"`
 }
 
 // FullState returns the transaction's complete mutable state (for sync
 // payloads).
 func (t *Transaction) FullState() *TransactionFullState {
 	return &TransactionFullState{
-		Type:          t.Type,
-		Amount:        t.Amount,
-		Description:   t.Description,
-		OccurredAt:    t.OccurredAt,
-		AccountID:     t.AccountID,
-		CategoryID:    t.CategoryID,
-		FromAccountID: t.FromAccountID,
-		ToAccountID:   t.ToAccountID,
+		Type:              t.Type,
+		Amount:            t.Amount,
+		Description:       t.Description,
+		OccurredAt:        t.OccurredAt,
+		AccountID:         t.AccountID,
+		CategoryID:        t.CategoryID,
+		FromAccountID:     t.FromAccountID,
+		ToAccountID:       t.ToAccountID,
+		DestinationAmount: t.DestinationAmount,
 	}
 }
 

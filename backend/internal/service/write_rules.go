@@ -21,6 +21,9 @@ import (
 // RefReads is the seam both surfaces adapt their reads to.
 type RefReads interface {
 	AccountExists(ctx context.Context, scope domain.Scope, id uuid.UUID) (bool, error)
+	// Currency of the (live) account - the cross-currency transfer rule's
+	// input. Call sites map a missing account to their own not-found sentinel.
+	AccountCurrency(ctx context.Context, scope domain.Scope, id uuid.UUID) (string, error)
 	Category(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Category, error)
 }
 
@@ -28,6 +31,7 @@ type RefReads interface {
 // exposes; the per-entity tx interfaces satisfy it structurally.
 type liveRefSource interface {
 	LiveAccountExists(ctx context.Context, scope domain.Scope, id uuid.UUID) (bool, error)
+	LiveAccountCurrency(ctx context.Context, scope domain.Scope, id uuid.UUID) (string, error)
 	LiveCategory(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Category, error)
 }
 
@@ -57,6 +61,16 @@ func (r repoRefReads) Category(
 	return r.categories.GetCategory(ctx, scope, id)
 }
 
+func (r repoRefReads) AccountCurrency(
+	ctx context.Context, scope domain.Scope, id uuid.UUID,
+) (string, error) {
+	a, err := r.accounts.GetAccount(ctx, scope, id)
+	if err != nil {
+		return "", err
+	}
+	return a.Currency, nil
+}
+
 // syncRefReads adapts the sync batch-tx live reads to the seam.
 type syncRefReads struct {
 	src liveRefSource
@@ -66,6 +80,12 @@ func (r syncRefReads) AccountExists(
 	ctx context.Context, scope domain.Scope, id uuid.UUID,
 ) (bool, error) {
 	return r.src.LiveAccountExists(ctx, scope, id)
+}
+
+func (r syncRefReads) AccountCurrency(
+	ctx context.Context, scope domain.Scope, id uuid.UUID,
+) (string, error) {
+	return r.src.LiveAccountCurrency(ctx, scope, id)
 }
 
 func (r syncRefReads) Category(

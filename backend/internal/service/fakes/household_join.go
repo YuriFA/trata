@@ -16,7 +16,11 @@ import (
 	"github.com/yurifa/trata/backend/internal/domain"
 )
 
-func (s *Store) UpdateHouseholdName(_ context.Context, scope domain.Scope, name *string) error {
+func (s *Store) UpdateHousehold(
+	_ context.Context,
+	scope domain.Scope,
+	name, _ *string,
+) error {
 	householdID := scope.HouseholdID
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -99,7 +103,11 @@ func (s *Store) ListHouseholdInvitations(
 	return out, nil
 }
 
-func (s *Store) RevokeHouseholdInvitation(_ context.Context, scope domain.Scope, invitationID uuid.UUID) error {
+func (s *Store) RevokeHouseholdInvitation(
+	_ context.Context,
+	scope domain.Scope,
+	invitationID uuid.UUID,
+) error {
 	householdID := scope.HouseholdID
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -115,7 +123,10 @@ func (s *Store) RevokeHouseholdInvitation(_ context.Context, scope domain.Scope,
 	return domain.ErrInvitationNotFound
 }
 
-func (s *Store) GetHouseholdInvitationByToken(_ context.Context, token uuid.UUID) (*domain.HouseholdInvitation, error) {
+func (s *Store) GetHouseholdInvitationByToken(
+	_ context.Context,
+	token uuid.UUID,
+) (*domain.HouseholdInvitation, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, inv := range s.invitations {
@@ -210,7 +221,10 @@ func (s *Store) claimInvitationLocked(invitationID uuid.UUID) error {
 	return nil
 }
 
-func (s *Store) GenerateHouseholdCode(_ context.Context, scope domain.Scope) (*domain.HouseholdCode, error) {
+func (s *Store) GenerateHouseholdCode(
+	_ context.Context,
+	scope domain.Scope,
+) (*domain.HouseholdCode, error) {
 	householdID := scope.HouseholdID
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -256,7 +270,10 @@ func (s *Store) LeaveHousehold(_ context.Context, userID uuid.UUID) (*domain.Hou
 	return s.householdWithMembersLocked(householdID)
 }
 
-func (s *Store) RemoveHouseholdMember(_ context.Context, householdID, targetUserID uuid.UUID) error {
+func (s *Store) RemoveHouseholdMember(
+	_ context.Context,
+	householdID, targetUserID uuid.UUID,
+) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	m, ok := s.memberships[targetUserID]

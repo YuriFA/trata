@@ -34,7 +34,11 @@ func NewTransactionService(
 	accounts repository.AccountRepository,
 	categories repository.CategoryRepository,
 ) *TransactionService {
-	return &TransactionService{transactions: transactions, accounts: accounts, categories: categories}
+	return &TransactionService{
+		transactions: transactions,
+		accounts:     accounts,
+		categories:   categories,
+	}
 }
 
 // refReads adapts the service's repositories to the write-rules seam.
@@ -50,18 +54,18 @@ func (s *TransactionService) Create(
 	const op = "service.transaction.Create"
 
 	if err := ValidateTransactionWrite(ctx, s.refReads(), scope, TransactionWriteState{
-		Type:          params.Type,
-		Amount:        params.Amount,
-		AccountID:     params.AccountID,
-		CategoryID:    params.CategoryID,
-		FromAccountID: params.FromAccountID,
-		ToAccountID:   params.ToAccountID,
+		Type:              params.Type,
+		Amount:            params.Amount,
+		AccountID:         params.AccountID,
+		CategoryID:        params.CategoryID,
+		FromAccountID:     params.FromAccountID,
+		ToAccountID:       params.ToAccountID,
+		DestinationAmount: params.DestinationAmount,
 		// fresh record: any archived category is rejected
 		PrevCategoryID: nil,
 	}); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-
 	params.HouseholdID, params.UserID = scope.HouseholdID, scope.ActorID
 	tx, err := s.transactions.CreateTransaction(ctx, params)
 	if err != nil {
@@ -79,7 +83,8 @@ func (s *TransactionService) Update(
 
 	if params.Amount == nil && params.Description == nil && params.OccurredAt == nil &&
 		params.AccountID == nil && params.CategoryID == nil &&
-		params.FromAccountID == nil && params.ToAccountID == nil {
+		params.FromAccountID == nil && params.ToAccountID == nil &&
+		params.DestinationAmount == nil {
 		return nil, ErrNoFieldsToUpdate
 	}
 
@@ -111,13 +116,19 @@ func (s *TransactionService) Update(
 		effectiveAmount = *params.Amount
 	}
 
+	effectiveDestinationAmount := current.DestinationAmount
+	if params.DestinationAmount != nil {
+		effectiveDestinationAmount = params.DestinationAmount
+	}
+
 	if err := ValidateTransactionWrite(ctx, s.refReads(), scope, TransactionWriteState{
-		Type:          current.Type,
-		Amount:        effectiveAmount,
-		AccountID:     effectiveAccountID,
-		CategoryID:    effectiveCategoryID,
-		FromAccountID: effectiveFromAccountID,
-		ToAccountID:   effectiveToAccountID,
+		Type:              current.Type,
+		Amount:            effectiveAmount,
+		AccountID:         effectiveAccountID,
+		CategoryID:        effectiveCategoryID,
+		FromAccountID:     effectiveFromAccountID,
+		ToAccountID:       effectiveToAccountID,
+		DestinationAmount: effectiveDestinationAmount,
 		// unchanged assignment may keep an archived category
 		PrevCategoryID: current.CategoryID,
 	}); err != nil {
@@ -139,7 +150,11 @@ func (s *TransactionService) Delete(ctx context.Context, scope domain.Scope, id 
 	return nil
 }
 
-func (s *TransactionService) Get(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Transaction, error) {
+func (s *TransactionService) Get(
+	ctx context.Context,
+	scope domain.Scope,
+	id uuid.UUID,
+) (*domain.Transaction, error) {
 	const op = "service.transaction.Get"
 	tx, err := s.transactions.GetTransaction(ctx, scope, id)
 	if err != nil {

@@ -57,7 +57,14 @@ func newHouseholdJoinFixture(t *testing.T, cfg service.HouseholdJoinConfig) *hou
 	}
 	clock := func() time.Time { return f.now }
 	store.SetClock(clock)
-	f.svc = service.NewHouseholdServiceWithClock(store, store, mailer, logger.NewDiscardLogger(), cfg, clock)
+	f.svc = service.NewHouseholdServiceWithClock(
+		store,
+		store,
+		mailer,
+		logger.NewDiscardLogger(),
+		cfg,
+		clock,
+	)
 	f.owner = seedFakeUser(t, store)
 	f.member = seedFakeUser(t, store)
 	return f
@@ -201,7 +208,7 @@ func TestHouseholdService_OwnerGuards(t *testing.T) {
 	require.ErrorIs(t, err, domain.ErrHouseholdOwnerRequired)
 	err = f.svc.RevokeCode(ctx, memberMembership)
 	require.ErrorIs(t, err, domain.ErrHouseholdOwnerRequired)
-	_, err = f.svc.UpdateName(ctx, memberMembership, strPtr("Захват"))
+	_, err = f.svc.Update(ctx, memberMembership, strPtr("Захват"), nil)
 	require.ErrorIs(t, err, domain.ErrHouseholdOwnerRequired)
 	err = f.svc.RemoveMember(ctx, memberMembership, f.owner.ID)
 	require.ErrorIs(t, err, domain.ErrHouseholdOwnerRequired)
@@ -234,7 +241,10 @@ func TestHouseholdService_DissolveRequiresConfirm(t *testing.T) {
 
 func TestHouseholdService_InvitationEmailBestEffort(t *testing.T) {
 	t.Parallel()
-	f := newHouseholdJoinFixture(t, service.HouseholdJoinConfig{WebAppBaseURL: "https://app.example.com"})
+	f := newHouseholdJoinFixture(
+		t,
+		service.HouseholdJoinConfig{WebAppBaseURL: "https://app.example.com"},
+	)
 	ctx := context.Background()
 
 	// Happy delivery: the emailed link is the web accept URL with the token.

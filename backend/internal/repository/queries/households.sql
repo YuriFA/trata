@@ -9,7 +9,7 @@ FROM household_members
 WHERE user_id = $1;
 
 -- name: GetHouseholdByID :one
-SELECT id, name, created_at
+SELECT id, name, currency, created_at
 FROM households
 WHERE id = $1;
 

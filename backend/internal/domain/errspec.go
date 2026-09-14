@@ -47,16 +47,22 @@ var errorSpecs = map[error]ErrorSpec{
 	ErrPlannedPaymentNotFound: {"PLANNED_PAYMENT_NOT_FOUND", "planned payment not found"},
 
 	// --- push subscriptions (web-push change) ---
-	ErrPushSubscriptionNotFound:        {"PUSH_SUBSCRIPTION_NOT_FOUND", "push subscription not found"},
+	ErrPushSubscriptionNotFound: {
+		"PUSH_SUBSCRIPTION_NOT_FOUND",
+		"push subscription not found",
+	},
 	ErrPushSubscriptionTimezoneInvalid: {"PUSH_SUBSCRIPTION_TIMEZONE_INVALID", "unknown timezone"},
 
 	// --- conflict ---
-	ErrUserAlreadyExists:          {"USER_ALREADY_EXISTS", "user already exists"},
-	ErrCategoryAlreadyExists:      {"CATEGORY_ALREADY_EXISTS", "category already exists"},
-	ErrAccountAlreadyExists:       {"ACCOUNT_ALREADY_EXISTS", "account already exists"},
-	ErrTransactionAlreadyExists:   {"TRANSACTION_ALREADY_EXISTS", "transaction already exists"},
-	ErrDebtorAlreadyExists:        {"DEBTOR_ALREADY_EXISTS", "debtor already exists"},
-	ErrDebtOperationAlreadyExists: {"DEBT_OPERATION_ALREADY_EXISTS", "debt operation already exists"},
+	ErrUserAlreadyExists:        {"USER_ALREADY_EXISTS", "user already exists"},
+	ErrCategoryAlreadyExists:    {"CATEGORY_ALREADY_EXISTS", "category already exists"},
+	ErrAccountAlreadyExists:     {"ACCOUNT_ALREADY_EXISTS", "account already exists"},
+	ErrTransactionAlreadyExists: {"TRANSACTION_ALREADY_EXISTS", "transaction already exists"},
+	ErrDebtorAlreadyExists:      {"DEBTOR_ALREADY_EXISTS", "debtor already exists"},
+	ErrDebtOperationAlreadyExists: {
+		"DEBT_OPERATION_ALREADY_EXISTS",
+		"debt operation already exists",
+	},
 	ErrPlannedPaymentAlreadyExists: {
 		"PLANNED_PAYMENT_ALREADY_EXISTS",
 		"planned payment already exists",
@@ -85,9 +91,18 @@ var errorSpecs = map[error]ErrorSpec{
 		"PLANNED_PAYMENT_VERSION_CONFLICT",
 		"planned payment was modified by another request, please refetch and retry",
 	},
-	ErrAccountHasTransactions:  {"ACCOUNT_IN_USE", "account has transactions and cannot be deleted"},
-	ErrCategoryHasTransactions: {"CATEGORY_IN_USE", "category has transactions and cannot be deleted"},
-	ErrDebtorHasOperations:     {"DEBTOR_IN_USE", "debtor has debt operations and cannot be deleted"},
+	ErrAccountHasTransactions: {
+		"ACCOUNT_IN_USE",
+		"account has transactions and cannot be deleted",
+	},
+	ErrCategoryHasTransactions: {
+		"CATEGORY_IN_USE",
+		"category has transactions and cannot be deleted",
+	},
+	ErrDebtorHasOperations: {
+		"DEBTOR_IN_USE",
+		"debtor has debt operations and cannot be deleted",
+	},
 	ErrAccountHasPlannedPayments: {
 		"ACCOUNT_IN_USE",
 		"account has planned payments and cannot be deleted",
@@ -132,8 +147,23 @@ var errorSpecs = map[error]ErrorSpec{
 		"CATEGORY_ARCHIVED",
 		"category is archived and not available for new transactions",
 	},
-	ErrSameAccountTransfer:      {"SAME_ACCOUNT_TRANSFER", "transaction from and to accounts are the same"},
+	ErrSameAccountTransfer: {
+		"SAME_ACCOUNT_TRANSFER",
+		"transaction from and to accounts are the same",
+	},
+	ErrTransferDestinationAmountRequired: {
+		"INVALID_AMOUNT",
+		"cross-currency transfer requires a destination amount",
+	},
+	ErrTransferDestinationAmountForbidden: {
+		"INVALID_AMOUNT",
+		"destination amount is only allowed for a cross-currency transfer",
+	},
 	ErrTransactionTypeImmutable: {"VALIDATION_FAILED", "transaction type is immutable"},
+	ErrInvalidDebtorCurrency: {
+		"VALIDATION_FAILED",
+		"debtor currency is not in the supported catalog",
+	},
 	ErrDebtOperationDebtorNotFound: {
 		"DEBT_OPERATION_DEBTOR_NOT_FOUND",
 		"debtor not found",
@@ -165,6 +195,10 @@ var errorSpecs = map[error]ErrorSpec{
 	ErrInvalidCursor:    {"INVALID_REQUEST", "invalid cursor"},
 
 	// --- household / profile ---
+	ErrInvalidCurrency: {
+		"VALIDATION_FAILED",
+		"unsupported currency",
+	},
 	ErrInvalidDisplayName: {
 		"VALIDATION_FAILED",
 		"display name must be 1-100 characters after trimming",

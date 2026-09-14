@@ -85,23 +85,26 @@ func TestSyncPush_AccountProtocol(t *testing.T) {
 		assert.Empty(t, res.Code)
 	})
 
-	t.Run("a different opId claiming the id is an already-exists conflict with server state", func(t *testing.T) {
-		t.Parallel()
-		syncSvc, user, householdID := pushFixture(t)
-		recordID := uuid.New()
-		created := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityAccount, uuid.New(), recordID, 0, accountData))
-		require.Equal(t, domain.SyncStatusApplied, created.Status)
+	t.Run(
+		"a different opId claiming the id is an already-exists conflict with server state",
+		func(t *testing.T) {
+			t.Parallel()
+			syncSvc, user, householdID := pushFixture(t)
+			recordID := uuid.New()
+			created := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(domain.SyncEntityAccount, uuid.New(), recordID, 0, accountData))
+			require.Equal(t, domain.SyncStatusApplied, created.Status)
 
-		res := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityAccount, uuid.New(), recordID, 0, accountData))
-		assert.Equal(t, domain.SyncStatusConflict, res.Status)
-		assert.Equal(t, domain.SyncCodeAlreadyExists, res.Code)
-		require.NotNil(t, res.ServerState)
-		assert.Equal(t, 1, res.ServerState.Version)
-		assert.False(t, res.ServerState.Deleted)
-		assert.NotNil(t, res.ServerState.Data)
-	})
+			res := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(domain.SyncEntityAccount, uuid.New(), recordID, 0, accountData))
+			assert.Equal(t, domain.SyncStatusConflict, res.Status)
+			assert.Equal(t, domain.SyncCodeAlreadyExists, res.Code)
+			require.NotNil(t, res.ServerState)
+			assert.Equal(t, 1, res.ServerState.Version)
+			assert.False(t, res.ServerState.Deleted)
+			assert.NotNil(t, res.ServerState.Data)
+		},
+	)
 
 	t.Run("update on the current base applies and bumps the version", func(t *testing.T) {
 		t.Parallel()
@@ -157,33 +160,47 @@ func TestSyncPush_AccountProtocol(t *testing.T) {
 		assert.Equal(t, 0, res.Version)
 	})
 
-	t.Run("delete tombstones, repeats idempotently, and upserts hit the deleted conflict", func(t *testing.T) {
-		t.Parallel()
-		syncSvc, user, householdID := pushFixture(t)
-		recordID := uuid.New()
-		created := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityAccount, uuid.New(), recordID, 0, accountData))
-		require.Equal(t, domain.SyncStatusApplied, created.Status)
+	t.Run(
+		"delete tombstones, repeats idempotently, and upserts hit the deleted conflict",
+		func(t *testing.T) {
+			t.Parallel()
+			syncSvc, user, householdID := pushFixture(t)
+			recordID := uuid.New()
+			created := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(domain.SyncEntityAccount, uuid.New(), recordID, 0, accountData))
+			require.Equal(t, domain.SyncStatusApplied, created.Status)
 
-		deleted := pushOne(t, syncSvc, householdID, user.ID,
-			deleteOp(domain.SyncEntityAccount, uuid.New(), recordID))
-		assert.Equal(t, domain.SyncStatusApplied, deleted.Status)
-		assert.Equal(t, 2, deleted.Version)
+			deleted := pushOne(t, syncSvc, householdID, user.ID,
+				deleteOp(domain.SyncEntityAccount, uuid.New(), recordID))
+			assert.Equal(t, domain.SyncStatusApplied, deleted.Status)
+			assert.Equal(t, 2, deleted.Version)
 
-		again := pushOne(t, syncSvc, householdID, user.ID,
-			deleteOp(domain.SyncEntityAccount, uuid.New(), recordID))
-		assert.Equal(t, domain.SyncStatusApplied, again.Status)
-		assert.Equal(t, deleted.Version, again.Version)
+			again := pushOne(t, syncSvc, householdID, user.ID,
+				deleteOp(domain.SyncEntityAccount, uuid.New(), recordID))
+			assert.Equal(t, domain.SyncStatusApplied, again.Status)
+			assert.Equal(t, deleted.Version, again.Version)
 
-		res := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityAccount, uuid.New(), recordID, deleted.Version, accountData))
-		assert.Equal(t, domain.SyncStatusConflict, res.Status)
-		assert.Equal(t, domain.SyncCodeDeletedConflict, res.Code)
-		require.NotNil(t, res.ServerState)
-		assert.Equal(t, deleted.Version, res.ServerState.Version)
-		assert.True(t, res.ServerState.Deleted)
-		assert.Nil(t, res.ServerState.Data)
-	})
+			res := pushOne(
+				t,
+				syncSvc,
+				householdID,
+				user.ID,
+				upsertOp(
+					domain.SyncEntityAccount,
+					uuid.New(),
+					recordID,
+					deleted.Version,
+					accountData,
+				),
+			)
+			assert.Equal(t, domain.SyncStatusConflict, res.Status)
+			assert.Equal(t, domain.SyncCodeDeletedConflict, res.Code)
+			require.NotNil(t, res.ServerState)
+			assert.Equal(t, deleted.Version, res.ServerState.Version)
+			assert.True(t, res.ServerState.Deleted)
+			assert.Nil(t, res.ServerState.Data)
+		},
+	)
 
 	t.Run("delete of an account with live transactions is a per-item error", func(t *testing.T) {
 		t.Parallel()
@@ -206,38 +223,45 @@ func TestSyncPush_AccountProtocol(t *testing.T) {
 		assert.Equal(t, "account has transactions and cannot be deleted", res.Message)
 	})
 
-	t.Run("delete of an account with live planned payments is a per-item error", func(t *testing.T) {
-		t.Parallel()
-		syncSvc, user, householdID := pushFixture(t)
-		busy := uuid.New()
-		created := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityAccount, uuid.New(), busy, 0, accountData))
-		require.Equal(t, domain.SyncStatusApplied, created.Status)
+	t.Run(
+		"delete of an account with live planned payments is a per-item error",
+		func(t *testing.T) {
+			t.Parallel()
+			syncSvc, user, householdID := pushFixture(t)
+			busy := uuid.New()
+			created := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(domain.SyncEntityAccount, uuid.New(), busy, 0, accountData))
+			require.Equal(t, domain.SyncStatusApplied, created.Status)
 
-		// A live plan referencing the account (the plan's own reference
-		// validation needs a live expense account + category first).
-		categoryID := uuid.New()
-		for _, op := range []domain.SyncOperation{
-			upsertOp(domain.SyncEntityCategory, uuid.New(), categoryID, 0,
-				&domain.CategoryFullState{Name: "Подписки", Type: domain.TransactionTypeExpense}),
-			upsertOp(domain.SyncEntityPlannedPayment, uuid.New(), uuid.New(), 0,
-				&domain.PlannedPaymentFullState{
-					Type: domain.TransactionTypeExpense, Amount: 500, Name: "Интернет",
-					AccountID: busy, CategoryID: categoryID,
-					NextDue: domain.NewDate(2026, 10, 1), AnchorDate: domain.NewDate(2026, 9, 1),
-					Regularity: domain.PlannedRegularityMonthly, ConfirmMode: domain.PlannedConfirmManual,
-					Reminder: domain.PlannedReminderOff,
-				}),
-		} {
-			require.Equal(t, domain.SyncStatusApplied, pushOne(t, syncSvc, householdID, user.ID, op).Status)
-		}
+			// A live plan referencing the account (the plan's own reference
+			// validation needs a live expense account + category first).
+			categoryID := uuid.New()
+			for _, op := range []domain.SyncOperation{
+				upsertOp(domain.SyncEntityCategory, uuid.New(), categoryID, 0,
+					&domain.CategoryFullState{Name: "Подписки", Type: domain.TransactionTypeExpense}),
+				upsertOp(domain.SyncEntityPlannedPayment, uuid.New(), uuid.New(), 0,
+					&domain.PlannedPaymentFullState{
+						Type: domain.TransactionTypeExpense, Amount: 500, Name: "Интернет",
+						AccountID: busy, CategoryID: categoryID,
+						NextDue: domain.NewDate(2026, 10, 1), AnchorDate: domain.NewDate(2026, 9, 1),
+						Regularity: domain.PlannedRegularityMonthly, ConfirmMode: domain.PlannedConfirmManual,
+						Reminder: domain.PlannedReminderOff,
+					}),
+			} {
+				require.Equal(
+					t,
+					domain.SyncStatusApplied,
+					pushOne(t, syncSvc, householdID, user.ID, op).Status,
+				)
+			}
 
-		res := pushOne(t, syncSvc, householdID, user.ID,
-			deleteOp(domain.SyncEntityAccount, uuid.New(), busy))
-		assert.Equal(t, domain.SyncStatusError, res.Status)
-		assert.Equal(t, "ACCOUNT_IN_USE", res.Code)
-		assert.Equal(t, "account has planned payments and cannot be deleted", res.Message)
-	})
+			res := pushOne(t, syncSvc, householdID, user.ID,
+				deleteOp(domain.SyncEntityAccount, uuid.New(), busy))
+			assert.Equal(t, domain.SyncStatusError, res.Status)
+			assert.Equal(t, "ACCOUNT_IN_USE", res.Code)
+			assert.Equal(t, "account has planned payments and cannot be deleted", res.Message)
+		},
+	)
 
 	t.Run("opId replay returns the stored result with no new mutation", func(t *testing.T) {
 		t.Parallel()
@@ -250,7 +274,12 @@ func TestSyncPush_AccountProtocol(t *testing.T) {
 			upsertOp(domain.SyncEntityAccount, opID, fresh, 0, accountData))
 		assert.Equal(t, first, replayed)
 
-		page, err := syncSvc.Pull(context.Background(), domain.Scope{HouseholdID: householdID}, 0, nil)
+		page, err := syncSvc.Pull(
+			context.Background(),
+			domain.Scope{HouseholdID: householdID},
+			0,
+			nil,
+		)
 		require.NoError(t, err)
 		accountCreates := 0
 		for _, change := range page.Changes {
@@ -300,7 +329,7 @@ func TestSyncPush_DebtorProtocol(t *testing.T) {
 		syncSvc, user, householdID := pushFixture(t)
 		res := pushOne(t, syncSvc, householdID, user.ID,
 			upsertOp(domain.SyncEntityDebtor, uuid.New(), uuid.New(), 0,
-				&domain.DebtorFullState{Name: "Анна", Note: ""}))
+				&domain.DebtorFullState{Name: "Анна", Note: "", Currency: "RUB"}))
 		assert.Equal(t, domain.SyncStatusApplied, res.Status)
 		assert.Equal(t, 1, res.Version)
 	})
@@ -310,47 +339,50 @@ func TestSyncPush_DebtorProtocol(t *testing.T) {
 		syncSvc, user, householdID := pushFixture(t)
 		created := pushOne(t, syncSvc, householdID, user.ID,
 			upsertOp(domain.SyncEntityDebtor, uuid.New(), uuid.New(), 0,
-				&domain.DebtorFullState{Name: "Анна", Note: ""}))
+				&domain.DebtorFullState{Name: "Анна", Note: "", Currency: "RUB"}))
 		require.Equal(t, domain.SyncStatusApplied, created.Status)
 
 		res := pushOne(t, syncSvc, householdID, user.ID,
 			upsertOp(domain.SyncEntityDebtor, uuid.New(), uuid.New(), 0,
-				&domain.DebtorFullState{Name: "Анна", Note: "другая"}))
+				&domain.DebtorFullState{Name: "Анна", Note: "другая", Currency: "RUB"}))
 		assert.Equal(t, domain.SyncStatusError, res.Status)
 		assert.Equal(t, "DEBTOR_ALREADY_EXISTS", res.Code)
 	})
 
-	t.Run("update on the current base applies, unknown id conflicts with the zero state", func(t *testing.T) {
-		t.Parallel()
-		syncSvc, user, householdID := pushFixture(t)
-		recordID := uuid.New()
-		created := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityDebtor, uuid.New(), recordID, 0,
-				&domain.DebtorFullState{Name: "Борис", Note: "x"}))
-		require.Equal(t, domain.SyncStatusApplied, created.Status)
+	t.Run(
+		"update on the current base applies, unknown id conflicts with the zero state",
+		func(t *testing.T) {
+			t.Parallel()
+			syncSvc, user, householdID := pushFixture(t)
+			recordID := uuid.New()
+			created := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(domain.SyncEntityDebtor, uuid.New(), recordID, 0,
+					&domain.DebtorFullState{Name: "Борис", Note: "x", Currency: "RUB"}))
+			require.Equal(t, domain.SyncStatusApplied, created.Status)
 
-		updated := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityDebtor, uuid.New(), recordID, 1,
-				&domain.DebtorFullState{Name: "Борис", Note: "y"}))
-		assert.Equal(t, domain.SyncStatusApplied, updated.Status)
-		assert.Equal(t, 2, updated.Version)
+			updated := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(domain.SyncEntityDebtor, uuid.New(), recordID, 1,
+					&domain.DebtorFullState{Name: "Борис", Note: "y", Currency: "RUB"}))
+			assert.Equal(t, domain.SyncStatusApplied, updated.Status)
+			assert.Equal(t, 2, updated.Version)
 
-		unknown := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityDebtor, uuid.New(), uuid.New(), 3,
-				&domain.DebtorFullState{Name: "Григорий", Note: ""}))
-		assert.Equal(t, domain.SyncStatusConflict, unknown.Status)
-		assert.Equal(t, domain.SyncCodeVersionConflict, unknown.Code)
-		require.NotNil(t, unknown.ServerState)
-		assert.Equal(t, 0, unknown.ServerState.Version)
+			unknown := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(domain.SyncEntityDebtor, uuid.New(), uuid.New(), 3,
+					&domain.DebtorFullState{Name: "Григорий", Note: "", Currency: "RUB"}))
+			assert.Equal(t, domain.SyncStatusConflict, unknown.Status)
+			assert.Equal(t, domain.SyncCodeVersionConflict, unknown.Code)
+			require.NotNil(t, unknown.ServerState)
+			assert.Equal(t, 0, unknown.ServerState.Version)
 
-		// The name pre-check outranks the four-way classification: a taken
-		// name on an unknown id is DEBTOR_ALREADY_EXISTS, not a conflict.
-		precheck := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityDebtor, uuid.New(), uuid.New(), 3,
-				&domain.DebtorFullState{Name: "Борис", Note: ""}))
-		assert.Equal(t, domain.SyncStatusError, precheck.Status)
-		assert.Equal(t, "DEBTOR_ALREADY_EXISTS", precheck.Code)
-	})
+			// The name pre-check outranks the four-way classification: a taken
+			// name on an unknown id is DEBTOR_ALREADY_EXISTS, not a conflict.
+			precheck := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(domain.SyncEntityDebtor, uuid.New(), uuid.New(), 3,
+					&domain.DebtorFullState{Name: "Борис", Note: "", Currency: "RUB"}))
+			assert.Equal(t, domain.SyncStatusError, precheck.Status)
+			assert.Equal(t, "DEBTOR_ALREADY_EXISTS", precheck.Code)
+		},
+	)
 
 	t.Run("delete of a debtor with live debt operations is a per-item error", func(t *testing.T) {
 		t.Parallel()
@@ -358,7 +390,7 @@ func TestSyncPush_DebtorProtocol(t *testing.T) {
 		debtorID := uuid.New()
 		created := pushOne(t, syncSvc, householdID, user.ID,
 			upsertOp(domain.SyncEntityDebtor, uuid.New(), debtorID, 0,
-				&domain.DebtorFullState{Name: "Вера", Note: ""}))
+				&domain.DebtorFullState{Name: "Вера", Note: "", Currency: "RUB"}))
 		require.Equal(t, domain.SyncStatusApplied, created.Status)
 
 		pushOne(t, syncSvc, householdID, user.ID,
@@ -414,36 +446,57 @@ func TestSyncPush_CategoryProtocol(t *testing.T) {
 		assert.Equal(t, "invalid category type", res.Message)
 	})
 
-	t.Run("update on the current base applies, unknown id conflicts with the zero state", func(t *testing.T) {
-		t.Parallel()
-		syncSvc, user, householdID := pushFixture(t)
-		recordID := uuid.New()
-		created := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityCategory, uuid.New(), recordID, 0,
-				&domain.CategoryFullState{Name: "Кафе", Type: domain.TransactionTypeExpense, Icon: "coffee"}))
-		require.Equal(t, domain.SyncStatusApplied, created.Status)
+	t.Run(
+		"update on the current base applies, unknown id conflicts with the zero state",
+		func(t *testing.T) {
+			t.Parallel()
+			syncSvc, user, householdID := pushFixture(t)
+			recordID := uuid.New()
+			created := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(
+					domain.SyncEntityCategory,
+					uuid.New(),
+					recordID,
+					0,
+					&domain.CategoryFullState{
+						Name: "Кафе",
+						Type: domain.TransactionTypeExpense,
+						Icon: "coffee",
+					},
+				))
+			require.Equal(t, domain.SyncStatusApplied, created.Status)
 
-		updated := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityCategory, uuid.New(), recordID, 1,
-				&domain.CategoryFullState{Name: "Кафе", Type: domain.TransactionTypeExpense, Icon: "food"}))
-		assert.Equal(t, domain.SyncStatusApplied, updated.Status)
-		assert.Equal(t, 2, updated.Version)
+			updated := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(
+					domain.SyncEntityCategory,
+					uuid.New(),
+					recordID,
+					1,
+					&domain.CategoryFullState{
+						Name: "Кафе",
+						Type: domain.TransactionTypeExpense,
+						Icon: "food",
+					},
+				))
+			assert.Equal(t, domain.SyncStatusApplied, updated.Status)
+			assert.Equal(t, 2, updated.Version)
 
-		unknown := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityCategory, uuid.New(), uuid.New(), 3,
-				&domain.CategoryFullState{Name: "Свежая", Type: domain.TransactionTypeExpense}))
-		assert.Equal(t, domain.SyncStatusConflict, unknown.Status)
-		assert.Equal(t, domain.SyncCodeVersionConflict, unknown.Code)
-		require.NotNil(t, unknown.ServerState)
-		assert.Equal(t, 0, unknown.ServerState.Version)
+			unknown := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(domain.SyncEntityCategory, uuid.New(), uuid.New(), 3,
+					&domain.CategoryFullState{Name: "Свежая", Type: domain.TransactionTypeExpense}))
+			assert.Equal(t, domain.SyncStatusConflict, unknown.Status)
+			assert.Equal(t, domain.SyncCodeVersionConflict, unknown.Code)
+			require.NotNil(t, unknown.ServerState)
+			assert.Equal(t, 0, unknown.ServerState.Version)
 
-		// The name pre-check outranks the four-way classification.
-		precheck := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityCategory, uuid.New(), uuid.New(), 3,
-				&domain.CategoryFullState{Name: "Кафе", Type: domain.TransactionTypeExpense}))
-		assert.Equal(t, domain.SyncStatusError, precheck.Status)
-		assert.Equal(t, "CATEGORY_ALREADY_EXISTS", precheck.Code)
-	})
+			// The name pre-check outranks the four-way classification.
+			precheck := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(domain.SyncEntityCategory, uuid.New(), uuid.New(), 3,
+					&domain.CategoryFullState{Name: "Кафе", Type: domain.TransactionTypeExpense}))
+			assert.Equal(t, domain.SyncStatusError, precheck.Status)
+			assert.Equal(t, "CATEGORY_ALREADY_EXISTS", precheck.Code)
+		},
+	)
 
 	t.Run("delete of a category with live transactions is a per-item error", func(t *testing.T) {
 		t.Parallel()
@@ -461,7 +514,11 @@ func TestSyncPush_CategoryProtocol(t *testing.T) {
 					OccurredAt: time.Now().UTC(), AccountID: &accountID, CategoryID: &categoryID,
 				}),
 		} {
-			require.Equal(t, domain.SyncStatusApplied, pushOne(t, syncSvc, householdID, user.ID, op).Status)
+			require.Equal(
+				t,
+				domain.SyncStatusApplied,
+				pushOne(t, syncSvc, householdID, user.ID, op).Status,
+			)
 		}
 
 		res := pushOne(t, syncSvc, householdID, user.ID,
@@ -471,33 +528,40 @@ func TestSyncPush_CategoryProtocol(t *testing.T) {
 		assert.Equal(t, "category has transactions and cannot be deleted", res.Message)
 	})
 
-	t.Run("delete of a category with live planned payments is a per-item error", func(t *testing.T) {
-		t.Parallel()
-		syncSvc, user, householdID := pushFixture(t)
-		accountID, categoryID := uuid.New(), uuid.New()
-		for _, op := range []domain.SyncOperation{
-			upsertOp(domain.SyncEntityAccount, uuid.New(), accountID, 0,
-				&domain.AccountFullState{Name: "Карта", Currency: "RUB"}),
-			upsertOp(domain.SyncEntityCategory, uuid.New(), categoryID, 0,
-				&domain.CategoryFullState{Name: "Подписки", Type: domain.TransactionTypeExpense}),
-			upsertOp(domain.SyncEntityPlannedPayment, uuid.New(), uuid.New(), 0,
-				&domain.PlannedPaymentFullState{
-					Type: domain.TransactionTypeExpense, Amount: 500, Name: "Интернет",
-					AccountID: accountID, CategoryID: categoryID,
-					NextDue: domain.NewDate(2026, 10, 1), AnchorDate: domain.NewDate(2026, 9, 1),
-					Regularity: domain.PlannedRegularityMonthly, ConfirmMode: domain.PlannedConfirmManual,
-					Reminder: domain.PlannedReminderOff,
-				}),
-		} {
-			require.Equal(t, domain.SyncStatusApplied, pushOne(t, syncSvc, householdID, user.ID, op).Status)
-		}
+	t.Run(
+		"delete of a category with live planned payments is a per-item error",
+		func(t *testing.T) {
+			t.Parallel()
+			syncSvc, user, householdID := pushFixture(t)
+			accountID, categoryID := uuid.New(), uuid.New()
+			for _, op := range []domain.SyncOperation{
+				upsertOp(domain.SyncEntityAccount, uuid.New(), accountID, 0,
+					&domain.AccountFullState{Name: "Карта", Currency: "RUB"}),
+				upsertOp(domain.SyncEntityCategory, uuid.New(), categoryID, 0,
+					&domain.CategoryFullState{Name: "Подписки", Type: domain.TransactionTypeExpense}),
+				upsertOp(domain.SyncEntityPlannedPayment, uuid.New(), uuid.New(), 0,
+					&domain.PlannedPaymentFullState{
+						Type: domain.TransactionTypeExpense, Amount: 500, Name: "Интернет",
+						AccountID: accountID, CategoryID: categoryID,
+						NextDue: domain.NewDate(2026, 10, 1), AnchorDate: domain.NewDate(2026, 9, 1),
+						Regularity: domain.PlannedRegularityMonthly, ConfirmMode: domain.PlannedConfirmManual,
+						Reminder: domain.PlannedReminderOff,
+					}),
+			} {
+				require.Equal(
+					t,
+					domain.SyncStatusApplied,
+					pushOne(t, syncSvc, householdID, user.ID, op).Status,
+				)
+			}
 
-		res := pushOne(t, syncSvc, householdID, user.ID,
-			deleteOp(domain.SyncEntityCategory, uuid.New(), categoryID))
-		assert.Equal(t, domain.SyncStatusError, res.Status)
-		assert.Equal(t, "CATEGORY_IN_USE", res.Code)
-		assert.Equal(t, "category has planned payments and cannot be deleted", res.Message)
-	})
+			res := pushOne(t, syncSvc, householdID, user.ID,
+				deleteOp(domain.SyncEntityCategory, uuid.New(), categoryID))
+			assert.Equal(t, domain.SyncStatusError, res.Status)
+			assert.Equal(t, "CATEGORY_IN_USE", res.Code)
+			assert.Equal(t, "category has planned payments and cannot be deleted", res.Message)
+		},
+	)
 
 	t.Run("delete of an unknown id is idempotently applied at version 0", func(t *testing.T) {
 		t.Parallel()
@@ -523,7 +587,11 @@ func TestSyncPush_CategoryProtocol(t *testing.T) {
 					OccurredAt: time.Now().UTC(), AccountID: &accountID, CategoryID: &categoryID,
 				}),
 		} {
-			require.Equal(t, domain.SyncStatusApplied, pushOne(t, syncSvc, householdID, user.ID, op).Status)
+			require.Equal(
+				t,
+				domain.SyncStatusApplied,
+				pushOne(t, syncSvc, householdID, user.ID, op).Status,
+			)
 		}
 
 		res := pushOne(t, syncSvc, householdID, user.ID,
@@ -532,7 +600,12 @@ func TestSyncPush_CategoryProtocol(t *testing.T) {
 		assert.Positive(t, res.Version)
 
 		// The transaction tombstone travels through the pull feed.
-		page, err := syncSvc.Pull(context.Background(), domain.Scope{HouseholdID: householdID}, 0, nil)
+		page, err := syncSvc.Pull(
+			context.Background(),
+			domain.Scope{HouseholdID: householdID},
+			0,
+			nil,
+		)
 		require.NoError(t, err)
 		tombstoned := map[string]bool{}
 		for _, ch := range page.Changes {
@@ -540,8 +613,16 @@ func TestSyncPush_CategoryProtocol(t *testing.T) {
 				tombstoned[ch.Entity+"/"+ch.ID.String()] = true
 			}
 		}
-		assert.True(t, tombstoned[domain.SyncEntityCategory+"/"+categoryID.String()], "category tombstone in feed")
-		assert.True(t, tombstoned[domain.SyncEntityTransaction+"/"+txID.String()], "transaction tombstone in feed")
+		assert.True(
+			t,
+			tombstoned[domain.SyncEntityCategory+"/"+categoryID.String()],
+			"category tombstone in feed",
+		)
+		assert.True(
+			t,
+			tombstoned[domain.SyncEntityTransaction+"/"+txID.String()],
+			"transaction tombstone in feed",
+		)
 	})
 
 	t.Run("cascade delete is still blocked by live planned payments", func(t *testing.T) {
@@ -562,7 +643,11 @@ func TestSyncPush_CategoryProtocol(t *testing.T) {
 					Reminder: domain.PlannedReminderOff,
 				}),
 		} {
-			require.Equal(t, domain.SyncStatusApplied, pushOne(t, syncSvc, householdID, user.ID, op).Status)
+			require.Equal(
+				t,
+				domain.SyncStatusApplied,
+				pushOne(t, syncSvc, householdID, user.ID, op).Status,
+			)
 		}
 
 		res := pushOne(t, syncSvc, householdID, user.ID,
@@ -577,8 +662,16 @@ func TestSyncPush_CategoryProtocol(t *testing.T) {
 		syncSvc, user, householdID := pushFixture(t)
 		categoryID := uuid.New()
 		require.Equal(t, domain.SyncStatusApplied, pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityCategory, uuid.New(), categoryID, 0,
-				&domain.CategoryFullState{Name: "Продукты", Type: domain.TransactionTypeExpense})).Status)
+			upsertOp(
+				domain.SyncEntityCategory,
+				uuid.New(),
+				categoryID,
+				0,
+				&domain.CategoryFullState{
+					Name: "Продукты",
+					Type: domain.TransactionTypeExpense,
+				},
+			)).Status)
 
 		op := domain.SyncOperation{
 			OpID: uuid.New(), Entity: domain.SyncEntityCategory,
@@ -599,7 +692,7 @@ func TestSyncPush_DebtOperationProtocol(t *testing.T) {
 		t.Helper()
 		created := pushOne(t, syncSvc, householdID, userID,
 			upsertOp(domain.SyncEntityDebtor, uuid.New(), debtorID, 0,
-				&domain.DebtorFullState{Name: "Анна", Note: ""}))
+				&domain.DebtorFullState{Name: "Анна", Note: "", Currency: "RUB"}))
 		require.Equal(t, domain.SyncStatusApplied, created.Status)
 	}
 	debtOpData := func(kind domain.DebtOperationKind) *domain.DebtOperationFullState {
@@ -701,45 +794,13 @@ func TestSyncPush_DebtOperationProtocol(t *testing.T) {
 		}
 	})
 
-	t.Run("update on the current base applies, unknown id conflicts with the zero state", func(t *testing.T) {
-		t.Parallel()
-		syncSvc, user, householdID := pushFixture(t)
-		seedDebtor(t, syncSvc, householdID, user.ID)
-		recordID := uuid.New()
-		created := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityDebtOperation, uuid.New(), recordID, 0, debtOpData(domain.DebtOperationKindDebt)))
-		require.Equal(t, domain.SyncStatusApplied, created.Status)
-
-		updated := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityDebtOperation, uuid.New(), recordID, 1, debtOpData(domain.DebtOperationKindDebt)))
-		assert.Equal(t, domain.SyncStatusApplied, updated.Status)
-		assert.Equal(t, 2, updated.Version)
-
-		unknown := pushOne(
-			t,
-			syncSvc,
-			householdID,
-			user.ID,
-			upsertOp(
-				domain.SyncEntityDebtOperation,
-				uuid.New(),
-				uuid.New(),
-				3,
-				debtOpData(domain.DebtOperationKindDebt),
-			),
-		)
-		assert.Equal(t, domain.SyncStatusConflict, unknown.Status)
-		assert.Equal(t, domain.SyncCodeVersionConflict, unknown.Code)
-		require.NotNil(t, unknown.ServerState)
-		assert.Equal(t, 0, unknown.ServerState.Version)
-	})
-
-	t.Run("an immutable-field violation outranks the version conflict on a stale base", func(t *testing.T) {
-		t.Parallel()
-		syncSvc, user, householdID := pushFixture(t)
-		seedDebtor(t, syncSvc, householdID, user.ID)
-		recordID := uuid.New()
-		for _, base := range []int{0, 1} {
+	t.Run(
+		"update on the current base applies, unknown id conflicts with the zero state",
+		func(t *testing.T) {
+			t.Parallel()
+			syncSvc, user, householdID := pushFixture(t)
+			seedDebtor(t, syncSvc, householdID, user.ID)
+			recordID := uuid.New()
 			created := pushOne(
 				t,
 				syncSvc,
@@ -749,16 +810,99 @@ func TestSyncPush_DebtOperationProtocol(t *testing.T) {
 					domain.SyncEntityDebtOperation,
 					uuid.New(),
 					recordID,
-					base,
+					0,
 					debtOpData(domain.DebtOperationKindDebt),
 				),
 			)
 			require.Equal(t, domain.SyncStatusApplied, created.Status)
-		}
 
-		// Stale base (server is at v2) AND an immutable field changed: the
-		// immutability error fires before the version conflict.
-		res := pushOne(
+			updated := pushOne(
+				t,
+				syncSvc,
+				householdID,
+				user.ID,
+				upsertOp(
+					domain.SyncEntityDebtOperation,
+					uuid.New(),
+					recordID,
+					1,
+					debtOpData(domain.DebtOperationKindDebt),
+				),
+			)
+			assert.Equal(t, domain.SyncStatusApplied, updated.Status)
+			assert.Equal(t, 2, updated.Version)
+
+			unknown := pushOne(
+				t,
+				syncSvc,
+				householdID,
+				user.ID,
+				upsertOp(
+					domain.SyncEntityDebtOperation,
+					uuid.New(),
+					uuid.New(),
+					3,
+					debtOpData(domain.DebtOperationKindDebt),
+				),
+			)
+			assert.Equal(t, domain.SyncStatusConflict, unknown.Status)
+			assert.Equal(t, domain.SyncCodeVersionConflict, unknown.Code)
+			require.NotNil(t, unknown.ServerState)
+			assert.Equal(t, 0, unknown.ServerState.Version)
+		},
+	)
+
+	t.Run(
+		"an immutable-field violation outranks the version conflict on a stale base",
+		func(t *testing.T) {
+			t.Parallel()
+			syncSvc, user, householdID := pushFixture(t)
+			seedDebtor(t, syncSvc, householdID, user.ID)
+			recordID := uuid.New()
+			for _, base := range []int{0, 1} {
+				created := pushOne(
+					t,
+					syncSvc,
+					householdID,
+					user.ID,
+					upsertOp(
+						domain.SyncEntityDebtOperation,
+						uuid.New(),
+						recordID,
+						base,
+						debtOpData(domain.DebtOperationKindDebt),
+					),
+				)
+				require.Equal(t, domain.SyncStatusApplied, created.Status)
+			}
+
+			// Stale base (server is at v2) AND an immutable field changed: the
+			// immutability error fires before the version conflict.
+			res := pushOne(
+				t,
+				syncSvc,
+				householdID,
+				user.ID,
+				upsertOp(
+					domain.SyncEntityDebtOperation,
+					uuid.New(),
+					recordID,
+					1,
+					debtOpData(domain.DebtOperationKindRepayment),
+				),
+			)
+			assert.Equal(t, domain.SyncStatusError, res.Status)
+			assert.Equal(t, "VALIDATION_FAILED", res.Code)
+			assert.Equal(t, "debtor, direction, and kind are immutable", res.Message)
+		},
+	)
+
+	t.Run("delete tombstones unconditionally and repeats idempotently", func(t *testing.T) {
+		t.Parallel()
+		syncSvc, user, householdID := pushFixture(t)
+		seedDebtor(t, syncSvc, householdID, user.ID)
+		recordID := uuid.New()
+		created := pushOne(
 			t,
 			syncSvc,
 			householdID,
@@ -767,27 +911,20 @@ func TestSyncPush_DebtOperationProtocol(t *testing.T) {
 				domain.SyncEntityDebtOperation,
 				uuid.New(),
 				recordID,
-				1,
-				debtOpData(domain.DebtOperationKindRepayment),
+				0,
+				debtOpData(domain.DebtOperationKindDebt),
 			),
 		)
-		assert.Equal(t, domain.SyncStatusError, res.Status)
-		assert.Equal(t, "VALIDATION_FAILED", res.Code)
-		assert.Equal(t, "debtor, direction, and kind are immutable", res.Message)
-	})
-
-	t.Run("delete tombstones unconditionally and repeats idempotently", func(t *testing.T) {
-		t.Parallel()
-		syncSvc, user, householdID := pushFixture(t)
-		seedDebtor(t, syncSvc, householdID, user.ID)
-		recordID := uuid.New()
-		created := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityDebtOperation, uuid.New(), recordID, 0, debtOpData(domain.DebtOperationKindDebt)))
 		require.Equal(t, domain.SyncStatusApplied, created.Status)
 
 		deleted := pushOne(t, syncSvc, householdID, user.ID,
 			deleteOp(domain.SyncEntityDebtOperation, uuid.New(), recordID))
-		assert.Equal(t, domain.SyncStatusApplied, deleted.Status, "no in-use guard on debt operations")
+		assert.Equal(
+			t,
+			domain.SyncStatusApplied,
+			deleted.Status,
+			"no in-use guard on debt operations",
+		)
 		assert.Equal(t, 2, deleted.Version)
 
 		again := pushOne(t, syncSvc, householdID, user.ID,
@@ -809,7 +946,11 @@ func TestSyncPush_TransactionProtocol(t *testing.T) {
 			upsertOp(domain.SyncEntityCategory, uuid.New(), categoryID, 0,
 				&domain.CategoryFullState{Name: "Продукты", Type: domain.TransactionTypeExpense}),
 		} {
-			require.Equal(t, domain.SyncStatusApplied, pushOne(t, syncSvc, householdID, userID, op).Status)
+			require.Equal(
+				t,
+				domain.SyncStatusApplied,
+				pushOne(t, syncSvc, householdID, userID, op).Status,
+			)
 		}
 		return accountID, categoryID
 	}
@@ -926,39 +1067,46 @@ func TestSyncPush_TransactionProtocol(t *testing.T) {
 		assert.Equal(t, 2, cleared.Version)
 	})
 
-	t.Run("update on the current base applies, unknown id conflicts with the zero state", func(t *testing.T) {
-		t.Parallel()
-		syncSvc, user, householdID := pushFixture(t)
-		accountID, categoryID := seedRefs(t, syncSvc, householdID, user.ID)
-		recordID := uuid.New()
-		created := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityTransaction, uuid.New(), recordID, 0,
-				&domain.TransactionFullState{
-					Type: domain.TransactionTypeExpense, Amount: 250, Description: "хлеб",
-					OccurredAt: time.Now().UTC(), AccountID: &accountID, CategoryID: &categoryID,
-				}))
-		require.Equal(t, domain.SyncStatusApplied, created.Status)
+	t.Run(
+		"update on the current base applies, unknown id conflicts with the zero state",
+		func(t *testing.T) {
+			t.Parallel()
+			syncSvc, user, householdID := pushFixture(t)
+			accountID, categoryID := seedRefs(t, syncSvc, householdID, user.ID)
+			recordID := uuid.New()
+			created := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(domain.SyncEntityTransaction, uuid.New(), recordID, 0,
+					&domain.TransactionFullState{
+						Type: domain.TransactionTypeExpense, Amount: 250, Description: "хлеб",
+						OccurredAt: time.Now().
+							UTC(),
+						AccountID: &accountID, CategoryID: &categoryID,
+					}))
+			require.Equal(t, domain.SyncStatusApplied, created.Status)
 
-		updated := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityTransaction, uuid.New(), recordID, 1,
-				&domain.TransactionFullState{
-					Type: domain.TransactionTypeExpense, Amount: 300, Description: "хлеб и молоко",
-					OccurredAt: time.Now().UTC(), AccountID: &accountID, CategoryID: &categoryID,
-				}))
-		assert.Equal(t, domain.SyncStatusApplied, updated.Status)
-		assert.Equal(t, 2, updated.Version)
+			updated := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(domain.SyncEntityTransaction, uuid.New(), recordID, 1,
+					&domain.TransactionFullState{
+						Type: domain.TransactionTypeExpense, Amount: 300, Description: "хлеб и молоко",
+						OccurredAt: time.Now().
+							UTC(),
+						AccountID: &accountID, CategoryID: &categoryID,
+					}))
+			assert.Equal(t, domain.SyncStatusApplied, updated.Status)
+			assert.Equal(t, 2, updated.Version)
 
-		unknown := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityTransaction, uuid.New(), uuid.New(), 3,
-				&domain.TransactionFullState{
-					Type: domain.TransactionTypeAdjustment, Amount: 5,
-					OccurredAt: time.Now().UTC(), AccountID: &accountID,
-				}))
-		assert.Equal(t, domain.SyncStatusConflict, unknown.Status)
-		assert.Equal(t, domain.SyncCodeVersionConflict, unknown.Code)
-		require.NotNil(t, unknown.ServerState)
-		assert.Equal(t, 0, unknown.ServerState.Version)
-	})
+			unknown := pushOne(t, syncSvc, householdID, user.ID,
+				upsertOp(domain.SyncEntityTransaction, uuid.New(), uuid.New(), 3,
+					&domain.TransactionFullState{
+						Type: domain.TransactionTypeAdjustment, Amount: 5,
+						OccurredAt: time.Now().UTC(), AccountID: &accountID,
+					}))
+			assert.Equal(t, domain.SyncStatusConflict, unknown.Status)
+			assert.Equal(t, domain.SyncCodeVersionConflict, unknown.Code)
+			require.NotNil(t, unknown.ServerState)
+			assert.Equal(t, 0, unknown.ServerState.Version)
+		},
+	)
 
 	t.Run("a type change outranks the version conflict on a stale base", func(t *testing.T) {
 		t.Parallel()
@@ -970,7 +1118,9 @@ func TestSyncPush_TransactionProtocol(t *testing.T) {
 				upsertOp(domain.SyncEntityTransaction, uuid.New(), recordID, base,
 					&domain.TransactionFullState{
 						Type: domain.TransactionTypeExpense, Amount: 250,
-						OccurredAt: time.Now().UTC(), AccountID: &accountID, CategoryID: &categoryID,
+						OccurredAt: time.Now().
+							UTC(),
+						AccountID: &accountID, CategoryID: &categoryID,
 					}))
 			require.Equal(t, domain.SyncStatusApplied, created.Status)
 		}
@@ -1027,7 +1177,11 @@ func TestSyncPush_PlannedPaymentProtocol(t *testing.T) {
 			upsertOp(domain.SyncEntityCategory, uuid.New(), incomeCatID, 0,
 				&domain.CategoryFullState{Name: "Зарплата", Type: domain.TransactionTypeIncome}),
 		} {
-			require.Equal(t, domain.SyncStatusApplied, pushOne(t, syncSvc, householdID, userID, op).Status)
+			require.Equal(
+				t,
+				domain.SyncStatusApplied,
+				pushOne(t, syncSvc, householdID, userID, op).Status,
+			)
 		}
 		return accountID, expenseCatID, incomeCatID
 	}
@@ -1045,8 +1199,19 @@ func TestSyncPush_PlannedPaymentProtocol(t *testing.T) {
 		t.Parallel()
 		syncSvc, user, householdID := pushFixture(t)
 		accountID, categoryID, _ := seedRefs(t, syncSvc, householdID, user.ID)
-		res := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityPlannedPayment, uuid.New(), uuid.New(), 0, validPlan(accountID, categoryID)))
+		res := pushOne(
+			t,
+			syncSvc,
+			householdID,
+			user.ID,
+			upsertOp(
+				domain.SyncEntityPlannedPayment,
+				uuid.New(),
+				uuid.New(),
+				0,
+				validPlan(accountID, categoryID),
+			),
+		)
 		assert.Equal(t, domain.SyncStatusApplied, res.Status)
 		assert.Equal(t, 1, res.Version)
 	})
@@ -1060,12 +1225,24 @@ func TestSyncPush_PlannedPaymentProtocol(t *testing.T) {
 			mut  func(*domain.PlannedPaymentFullState)
 		}{
 			{"zero amount", func(p *domain.PlannedPaymentFullState) { p.Amount = 0 }},
-			{"bad type", func(p *domain.PlannedPaymentFullState) { p.Type = domain.TransactionTypeTransfer }},
+			{
+				"bad type",
+				func(p *domain.PlannedPaymentFullState) { p.Type = domain.TransactionTypeTransfer },
+			},
 			{"bad regularity", func(p *domain.PlannedPaymentFullState) { p.Regularity = "hourly" }},
-			{"bad confirm mode", func(p *domain.PlannedPaymentFullState) { p.ConfirmMode = "maybe" }},
+			{
+				"bad confirm mode",
+				func(p *domain.PlannedPaymentFullState) { p.ConfirmMode = "maybe" },
+			},
 			{"bad reminder", func(p *domain.PlannedPaymentFullState) { p.Reminder = "weekly" }},
-			{"zero next due", func(p *domain.PlannedPaymentFullState) { p.NextDue = domain.Date{} }},
-			{"zero anchor", func(p *domain.PlannedPaymentFullState) { p.AnchorDate = domain.Date{} }},
+			{
+				"zero next due",
+				func(p *domain.PlannedPaymentFullState) { p.NextDue = domain.Date{} },
+			},
+			{
+				"zero anchor",
+				func(p *domain.PlannedPaymentFullState) { p.AnchorDate = domain.Date{} },
+			},
 		}
 		for _, tc := range cases {
 			data := validPlan(accountID, categoryID)
@@ -1106,27 +1283,63 @@ func TestSyncPush_PlannedPaymentProtocol(t *testing.T) {
 		assert.Equal(t, "plan type does not match category type", res.Message)
 	})
 
-	t.Run("update on the current base applies, unknown id conflicts with the zero state", func(t *testing.T) {
-		t.Parallel()
-		syncSvc, user, householdID := pushFixture(t)
-		accountID, categoryID, _ := seedRefs(t, syncSvc, householdID, user.ID)
-		recordID := uuid.New()
-		created := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityPlannedPayment, uuid.New(), recordID, 0, validPlan(accountID, categoryID)))
-		require.Equal(t, domain.SyncStatusApplied, created.Status)
+	t.Run(
+		"update on the current base applies, unknown id conflicts with the zero state",
+		func(t *testing.T) {
+			t.Parallel()
+			syncSvc, user, householdID := pushFixture(t)
+			accountID, categoryID, _ := seedRefs(t, syncSvc, householdID, user.ID)
+			recordID := uuid.New()
+			created := pushOne(
+				t,
+				syncSvc,
+				householdID,
+				user.ID,
+				upsertOp(
+					domain.SyncEntityPlannedPayment,
+					uuid.New(),
+					recordID,
+					0,
+					validPlan(accountID, categoryID),
+				),
+			)
+			require.Equal(t, domain.SyncStatusApplied, created.Status)
 
-		updated := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityPlannedPayment, uuid.New(), recordID, 1, validPlan(accountID, categoryID)))
-		assert.Equal(t, domain.SyncStatusApplied, updated.Status)
-		assert.Equal(t, 2, updated.Version)
+			updated := pushOne(
+				t,
+				syncSvc,
+				householdID,
+				user.ID,
+				upsertOp(
+					domain.SyncEntityPlannedPayment,
+					uuid.New(),
+					recordID,
+					1,
+					validPlan(accountID, categoryID),
+				),
+			)
+			assert.Equal(t, domain.SyncStatusApplied, updated.Status)
+			assert.Equal(t, 2, updated.Version)
 
-		unknown := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityPlannedPayment, uuid.New(), uuid.New(), 3, validPlan(accountID, categoryID)))
-		assert.Equal(t, domain.SyncStatusConflict, unknown.Status)
-		assert.Equal(t, domain.SyncCodeVersionConflict, unknown.Code)
-		require.NotNil(t, unknown.ServerState)
-		assert.Equal(t, 0, unknown.ServerState.Version)
-	})
+			unknown := pushOne(
+				t,
+				syncSvc,
+				householdID,
+				user.ID,
+				upsertOp(
+					domain.SyncEntityPlannedPayment,
+					uuid.New(),
+					uuid.New(),
+					3,
+					validPlan(accountID, categoryID),
+				),
+			)
+			assert.Equal(t, domain.SyncStatusConflict, unknown.Status)
+			assert.Equal(t, domain.SyncCodeVersionConflict, unknown.Code)
+			require.NotNil(t, unknown.ServerState)
+			assert.Equal(t, 0, unknown.ServerState.Version)
+		},
+	)
 
 	t.Run("a plan-type change outranks the version conflict on a stale base", func(t *testing.T) {
 		t.Parallel()
@@ -1166,13 +1379,29 @@ func TestSyncPush_PlannedPaymentProtocol(t *testing.T) {
 		syncSvc, user, householdID := pushFixture(t)
 		accountID, categoryID, _ := seedRefs(t, syncSvc, householdID, user.ID)
 		recordID := uuid.New()
-		created := pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityPlannedPayment, uuid.New(), recordID, 0, validPlan(accountID, categoryID)))
+		created := pushOne(
+			t,
+			syncSvc,
+			householdID,
+			user.ID,
+			upsertOp(
+				domain.SyncEntityPlannedPayment,
+				uuid.New(),
+				recordID,
+				0,
+				validPlan(accountID, categoryID),
+			),
+		)
 		require.Equal(t, domain.SyncStatusApplied, created.Status)
 
 		deleted := pushOne(t, syncSvc, householdID, user.ID,
 			deleteOp(domain.SyncEntityPlannedPayment, uuid.New(), recordID))
-		assert.Equal(t, domain.SyncStatusApplied, deleted.Status, "no in-use guard on planned payments")
+		assert.Equal(
+			t,
+			domain.SyncStatusApplied,
+			deleted.Status,
+			"no in-use guard on planned payments",
+		)
 		assert.Equal(t, 2, deleted.Version)
 
 		again := pushOne(t, syncSvc, householdID, user.ID,

@@ -20,13 +20,33 @@ import (
 type stubRefReads struct {
 	accounts   map[uuid.UUID]bool
 	categories map[uuid.UUID]*domain.Category
+	currencies map[uuid.UUID]string
+}
+
+func (s stubRefReads) AccountCurrency(
+	_ context.Context,
+	_ domain.Scope,
+	id uuid.UUID,
+) (string, error) {
+	if !s.accounts[id] {
+		return "", domain.ErrTransactionAccountNotFound
+	}
+	if c, ok := s.currencies[id]; ok {
+		return c, nil
+	}
+	// Same-currency default keeps the pre-multi-currency cases unchanged.
+	return "RUB", nil
 }
 
 func (s stubRefReads) AccountExists(_ context.Context, _ domain.Scope, id uuid.UUID) (bool, error) {
 	return s.accounts[id], nil
 }
 
-func (s stubRefReads) Category(_ context.Context, _ domain.Scope, id uuid.UUID) (*domain.Category, error) {
+func (s stubRefReads) Category(
+	_ context.Context,
+	_ domain.Scope,
+	id uuid.UUID,
+) (*domain.Category, error) {
 	if c, ok := s.categories[id]; ok {
 		return c, nil
 	}
@@ -35,7 +55,10 @@ func (s stubRefReads) Category(_ context.Context, _ domain.Scope, id uuid.UUID) 
 
 func TestValidateTransactionWrite_AmountRule(t *testing.T) {
 	t.Parallel()
-	reads := stubRefReads{accounts: map[uuid.UUID]bool{}, categories: map[uuid.UUID]*domain.Category{}}
+	reads := stubRefReads{
+		accounts:   map[uuid.UUID]bool{},
+		categories: map[uuid.UUID]*domain.Category{},
+	}
 
 	cases := []struct {
 		name    string
@@ -50,7 +73,12 @@ func TestValidateTransactionWrite_AmountRule(t *testing.T) {
 		{"transfer positive ok", domain.TransactionTypeTransfer, 500, nil},
 		{"transfer zero rejected", domain.TransactionTypeTransfer, 0, domain.ErrInvalidAmount},
 		{"adjustment positive ok", domain.TransactionTypeAdjustment, 42, nil},
-		{"adjustment negative ok (reconciliation delta)", domain.TransactionTypeAdjustment, -42, nil},
+		{
+			"adjustment negative ok (reconciliation delta)",
+			domain.TransactionTypeAdjustment,
+			-42,
+			nil,
+		},
 		{"adjustment zero rejected", domain.TransactionTypeAdjustment, 0, domain.ErrInvalidAmount},
 	}
 	for _, tc := range cases {
@@ -87,7 +115,11 @@ func TestValidateTransactionWrite_CashflowRefs(t *testing.T) {
 	missingAcct := uuid.New()
 	income := &domain.Category{ID: uuid.New(), Type: domain.TransactionTypeIncome}
 	expense := &domain.Category{ID: uuid.New(), Type: domain.TransactionTypeExpense}
-	archived := &domain.Category{ID: uuid.New(), Type: domain.TransactionTypeIncome, ArchivedAt: new(time.Now())}
+	archived := &domain.Category{
+		ID:         uuid.New(),
+		Type:       domain.TransactionTypeIncome,
+		ArchivedAt: new(time.Now()),
+	}
 	missing := uuid.New()
 
 	reads := stubRefReads{
@@ -104,7 +136,11 @@ func TestValidateTransactionWrite_CashflowRefs(t *testing.T) {
 	}{
 		{
 			"account-less income with a live matching category ok",
-			service.TransactionWriteState{Type: domain.TransactionTypeIncome, Amount: 10, CategoryID: new(income.ID)},
+			service.TransactionWriteState{
+				Type:       domain.TransactionTypeIncome,
+				Amount:     10,
+				CategoryID: new(income.ID),
+			},
 			nil,
 		},
 		{
@@ -335,5 +371,86 @@ func TestValidateTransactionTypeImmutable(t *testing.T) {
 	require.NoError(t, service.ValidateTransactionTypeImmutable(
 		domain.TransactionTypeIncome, domain.TransactionTypeIncome))
 	require.ErrorIs(t, service.ValidateTransactionTypeImmutable(
-		domain.TransactionTypeIncome, domain.TransactionTypeExpense), domain.ErrTransactionTypeImmutable)
+		domain.TransactionTypeIncome,
+		domain.TransactionTypeExpense,
+	), domain.ErrTransactionTypeImmutable)
+}
+
+func TestValidateTransactionWrite_CrossCurrencyTransfer(t *testing.T) {
+	t.Parallel()
+
+	hh := uuid.New()
+	rubAccount := uuid.New()
+	secondRubAccount := uuid.New()
+	usdAccount := uuid.New()
+	reads := stubRefReads{
+		accounts:   map[uuid.UUID]bool{rubAccount: true, secondRubAccount: true, usdAccount: true},
+		categories: map[uuid.UUID]*domain.Category{},
+		currencies: map[uuid.UUID]string{
+			rubAccount:       "RUB",
+			secondRubAccount: "RUB",
+			usdAccount:       "USD",
+		},
+	}
+
+	positive := int64(400_000)
+
+	cases := []struct {
+		name    string
+		state   service.TransactionWriteState
+		wantErr error
+	}{
+		{
+			"cross-currency transfer without a destination amount rejected",
+			service.TransactionWriteState{
+				Type: domain.TransactionTypeTransfer, Amount: 35_000,
+				FromAccountID: new(rubAccount), ToAccountID: new(usdAccount),
+			},
+			domain.ErrTransferDestinationAmountRequired,
+		},
+		{
+			"cross-currency transfer with a positive destination amount ok",
+			service.TransactionWriteState{
+				Type: domain.TransactionTypeTransfer, Amount: 35_000,
+				FromAccountID: new(rubAccount), ToAccountID: new(usdAccount),
+				DestinationAmount: &positive,
+			},
+			nil,
+		},
+		{
+			"non-positive destination amount rejected",
+			service.TransactionWriteState{
+				Type: domain.TransactionTypeTransfer, Amount: 35_000,
+				FromAccountID: new(rubAccount), ToAccountID: new(usdAccount),
+				DestinationAmount: new(int64),
+			},
+			domain.ErrInvalidAmount,
+		},
+		{
+			"same-currency transfer with a destination amount rejected",
+			service.TransactionWriteState{
+				Type: domain.TransactionTypeTransfer, Amount: 35_000,
+				FromAccountID: new(rubAccount), ToAccountID: new(secondRubAccount),
+				DestinationAmount: &positive,
+			},
+			domain.ErrTransferDestinationAmountForbidden,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			err := service.ValidateTransactionWrite(
+				context.Background(),
+				reads,
+				domain.Scope{HouseholdID: hh},
+				tc.state,
+			)
+			if tc.wantErr == nil {
+				require.NoError(t, err)
+				return
+			}
+			require.ErrorIs(t, err, tc.wantErr)
+		})
+	}
 }

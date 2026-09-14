@@ -34,6 +34,9 @@ type TransactionWriteState struct {
 	CategoryID    *uuid.UUID
 	FromAccountID *uuid.UUID
 	ToAccountID   *uuid.UUID
+	// Cross-currency transfer credit (positive, in the destination account's
+	// currency). Nil is valid only when the two accounts share a currency.
+	DestinationAmount *int64
 	// PrevCategoryID is the category on the record BEFORE this write
 	// (nil = fresh assignment): an archived category may be kept, never
 	// newly assigned.
@@ -64,7 +67,14 @@ func ValidateTransactionWrite(
 			state.FromAccountID == nil || state.ToAccountID == nil {
 			return domain.ErrInvalidRefs
 		}
-		return validateTransferWriteRefs(ctx, reads, scope, *state.FromAccountID, *state.ToAccountID)
+		return validateTransferWriteRefs(
+			ctx,
+			reads,
+			scope,
+			*state.FromAccountID,
+			*state.ToAccountID,
+			state.DestinationAmount,
+		)
 	case domain.TransactionTypeAdjustment:
 		if state.CategoryID != nil || state.FromAccountID != nil || state.ToAccountID != nil ||
 			state.AccountID == nil {
@@ -142,7 +152,8 @@ func validateCashflowWriteRefs(
 	if cat.Type != state.Type {
 		return domain.ErrCategoryTypeMismatch
 	}
-	if cat.Archived() && (state.PrevCategoryID == nil || *state.PrevCategoryID != *state.CategoryID) {
+	if cat.Archived() &&
+		(state.PrevCategoryID == nil || *state.PrevCategoryID != *state.CategoryID) {
 		return domain.ErrCategoryArchived
 	}
 	return nil
@@ -151,7 +162,7 @@ func validateCashflowWriteRefs(
 func validateTransferWriteRefs(
 	ctx context.Context,
 	reads RefReads,
-	scope domain.Scope, fromAccountID, toAccountID uuid.UUID,
+	scope domain.Scope, fromAccountID, toAccountID uuid.UUID, destinationAmount *int64,
 ) error {
 	if err := writeAccountExists(
 		ctx, reads, scope, fromAccountID, domain.ErrTransactionFromAccountNotFound,
@@ -165,6 +176,30 @@ func validateTransferWriteRefs(
 	}
 	if fromAccountID == toAccountID {
 		return domain.ErrSameAccountTransfer
+	}
+
+	// Cross-currency iff-rule (multi-currency change): the destination amount
+	// is REQUIRED when the two accounts' currencies differ and FORBIDDEN when
+	// they match. The credit must be positive. Currency reads happen after
+	// the existence checks, so a not-found here cannot be the first failure.
+	fromCurrency, err := reads.AccountCurrency(ctx, scope, fromAccountID)
+	if err != nil {
+		return err
+	}
+	toCurrency, err := reads.AccountCurrency(ctx, scope, toAccountID)
+	if err != nil {
+		return err
+	}
+	crossCurrency := fromCurrency != toCurrency
+	switch {
+	case crossCurrency && destinationAmount == nil:
+		return domain.ErrTransferDestinationAmountRequired
+	case crossCurrency:
+		if *destinationAmount <= 0 {
+			return domain.ErrInvalidAmount
+		}
+	case destinationAmount != nil:
+		return domain.ErrTransferDestinationAmountForbidden
 	}
 	return nil
 }

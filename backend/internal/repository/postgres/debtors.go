@@ -17,7 +17,10 @@ import (
 // per-household partial unique index. householdID scopes every query; actorID
 // is the acting member whose id lands on the change_log row as authorship.
 
-func (r *Repository) CreateDebtor(ctx context.Context, params domain.CreateDebtorParams) (*domain.Debtor, error) {
+func (r *Repository) CreateDebtor(
+	ctx context.Context,
+	params domain.CreateDebtorParams,
+) (*domain.Debtor, error) {
 	const op = "repository.postgres.CreateDebtor"
 
 	id := newEntityID(params.ID)
@@ -30,6 +33,7 @@ func (r *Repository) CreateDebtor(ctx context.Context, params domain.CreateDebto
 			UserID:      params.UserID,
 			Name:        params.Name,
 			Note:        params.Note,
+			Currency:    params.Currency,
 		})
 		if err != nil {
 			if pgUniqueViolation(err) {
@@ -53,7 +57,16 @@ func (r *Repository) CreateDebtor(ctx context.Context, params domain.CreateDebto
 	if err != nil {
 		return nil, opWrap(op, err)
 	}
-	return debtorFromFields(row.ID, row.UserID, row.Name, row.Note, row.CreatedAt, row.UpdatedAt, int(row.Version)), nil
+	return debtorFromFields(
+		row.ID,
+		row.UserID,
+		row.Name,
+		row.Note,
+		row.Currency,
+		row.CreatedAt,
+		row.UpdatedAt,
+		int(row.Version),
+	), nil
 }
 
 func (r *Repository) UpdateDebtor(
@@ -97,7 +110,16 @@ func (r *Repository) UpdateDebtor(
 	if err != nil {
 		return nil, opWrap(op, err)
 	}
-	return debtorFromFields(row.ID, row.UserID, row.Name, row.Note, row.CreatedAt, row.UpdatedAt, int(row.Version)), nil
+	return debtorFromFields(
+		row.ID,
+		row.UserID,
+		row.Name,
+		row.Note,
+		row.Currency,
+		row.CreatedAt,
+		row.UpdatedAt,
+		int(row.Version),
+	), nil
 }
 
 func (r *Repository) DeleteDebtor(ctx context.Context, scope domain.Scope, id uuid.UUID) error {
@@ -118,7 +140,10 @@ func (r *Repository) DeleteDebtor(ctx context.Context, scope domain.Scope, id uu
 		if inUse {
 			return domain.ErrDebtorHasOperations
 		}
-		version, err := q.SoftDeleteDebtor(ctx, db.SoftDeleteDebtorParams{ID: id, HouseholdID: householdID})
+		version, err := q.SoftDeleteDebtor(
+			ctx,
+			db.SoftDeleteDebtorParams{ID: id, HouseholdID: householdID},
+		)
 		if err != nil {
 			if errNoRows(err) {
 				return classifyDebtorWrite(ctx, q, householdID, id)
@@ -126,7 +151,14 @@ func (r *Repository) DeleteDebtor(ctx context.Context, scope domain.Scope, id uu
 			return err
 		}
 		return appendChangeLog(
-			ctx, q, householdID, actorID, id, domain.SyncEntityDebtor, domain.SyncChangeTombstone, int(version),
+			ctx,
+			q,
+			householdID,
+			actorID,
+			id,
+			domain.SyncEntityDebtor,
+			domain.SyncChangeTombstone,
+			int(version),
 		)
 	})
 	if err != nil {
@@ -146,7 +178,11 @@ func classifyDebtorWrite(ctx context.Context, q *db.Queries, householdID, id uui
 	return domain.ErrDebtorVersionConflict
 }
 
-func (r *Repository) GetDebtor(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Debtor, error) {
+func (r *Repository) GetDebtor(
+	ctx context.Context,
+	scope domain.Scope,
+	id uuid.UUID,
+) (*domain.Debtor, error) {
 	householdID := scope.HouseholdID
 	const op = "repository.postgres.GetDebtor"
 
@@ -157,7 +193,16 @@ func (r *Repository) GetDebtor(ctx context.Context, scope domain.Scope, id uuid.
 		}
 		return nil, opWrap(op, err)
 	}
-	return debtorFromFields(row.ID, row.UserID, row.Name, row.Note, row.CreatedAt, row.UpdatedAt, int(row.Version)), nil
+	return debtorFromFields(
+		row.ID,
+		row.UserID,
+		row.Name,
+		row.Note,
+		row.Currency,
+		row.CreatedAt,
+		row.UpdatedAt,
+		int(row.Version),
+	), nil
 }
 
 func (r *Repository) GetDebtors(ctx context.Context, scope domain.Scope) ([]domain.Debtor, error) {
@@ -172,7 +217,7 @@ func (r *Repository) GetDebtors(ctx context.Context, scope domain.Scope) ([]doma
 	for _, row := range rows {
 		out = append(
 			out,
-			*debtorFromFields(row.ID, row.UserID, row.Name, row.Note, row.CreatedAt, row.UpdatedAt, int(row.Version)),
+			*debtorFromFields(row.ID, row.UserID, row.Name, row.Note, row.Currency, row.CreatedAt, row.UpdatedAt, int(row.Version)),
 		)
 	}
 	return out, nil
@@ -183,7 +228,7 @@ func (r *Repository) GetDebtors(ctx context.Context, scope domain.Scope) ([]doma
 // centralized here.
 func debtorFromFields(
 	id, userID uuid.UUID,
-	name, note string,
+	name, note, currency string,
 	createdAt, updatedAt time.Time,
 	version int,
 ) *domain.Debtor {
@@ -192,6 +237,7 @@ func debtorFromFields(
 		UserID:    userID,
 		Name:      name,
 		Note:      note,
+		Currency:  currency,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
 		Version:   version,

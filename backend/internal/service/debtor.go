@@ -61,7 +61,11 @@ func (s *DebtorService) Delete(ctx context.Context, scope domain.Scope, id uuid.
 	return nil
 }
 
-func (s *DebtorService) Get(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Debtor, error) {
+func (s *DebtorService) Get(
+	ctx context.Context,
+	scope domain.Scope,
+	id uuid.UUID,
+) (*domain.Debtor, error) {
 	const op = "service.debtor.Get"
 	d, err := s.debtors.GetDebtor(ctx, scope, id)
 	if err != nil {

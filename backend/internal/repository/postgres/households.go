@@ -11,7 +11,10 @@ import (
 // GetMembershipByUser resolves the user's (single, v1) membership - the auth
 // middleware's household resolution hop. Missing row -> ErrMembershipNotFound
 // (a data-invariant violation: every user owns exactly one household).
-func (r *Repository) GetMembershipByUser(ctx context.Context, userID uuid.UUID) (*domain.Membership, error) {
+func (r *Repository) GetMembershipByUser(
+	ctx context.Context,
+	userID uuid.UUID,
+) (*domain.Membership, error) {
 	const op = "repository.postgres.GetMembershipByUser"
 
 	row, err := r.q.GetMembershipByUser(ctx, userID)
@@ -31,7 +34,10 @@ func (r *Repository) GetMembershipByUser(ctx context.Context, userID uuid.UUID) 
 
 // GetHouseholdWithMembers loads the household with its full member listing
 // (email, display name, role, joined date). Unknown id -> ErrHouseholdNotFound.
-func (r *Repository) GetHouseholdWithMembers(ctx context.Context, scope domain.Scope) (*domain.Household, error) {
+func (r *Repository) GetHouseholdWithMembers(
+	ctx context.Context,
+	scope domain.Scope,
+) (*domain.Household, error) {
 	householdID := scope.HouseholdID
 	const op = "repository.postgres.GetHouseholdWithMembers"
 
@@ -57,5 +63,11 @@ func (r *Repository) GetHouseholdWithMembers(ctx context.Context, scope domain.S
 			JoinedAt:    row.JoinedAt,
 		})
 	}
-	return &domain.Household{ID: h.ID, CreatedAt: h.CreatedAt, Name: h.Name, Members: members}, nil
+	return &domain.Household{
+		ID:        h.ID,
+		CreatedAt: h.CreatedAt,
+		Name:      h.Name,
+		Currency:  h.Currency,
+		Members:   members,
+	}, nil
 }

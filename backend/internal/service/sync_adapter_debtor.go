@@ -40,6 +40,16 @@ func (debtorAdapter) invalidDataMessage() string {
 	return catalogSyncEntityInvalidDataMessage(domain.SyncEntityDebtor)
 }
 
+// Currency rides in the full state (required since the multi-currency
+// change): an unknown code is the entity-invalid-data guard's business.
+func (debtorAdapter) currencyGuard(data domain.DebtorFullState) (string, string, bool) {
+	if err := domain.ValidateCurrency(data.Currency); err != nil {
+		spec, _ := domain.ErrorSpecFor(domain.ErrInvalidDebtorCurrency)
+		return spec.Code, spec.Message, true
+	}
+	return "", "", false
+}
+
 // preValidate is the live-name uniqueness check, pre-checked under the
 // advisory lock so a violation surfaces as a per-item error, never an
 // aborted batch.
@@ -50,6 +60,9 @@ func (debtorAdapter) preValidate(
 	op domain.SyncOperation,
 	data domain.DebtorFullState,
 ) (string, string, error) {
+	if code, message, invalid := (debtorAdapter{}).currencyGuard(data); invalid {
+		return code, message, nil
+	}
 	nameTaken, err := t.DebtorNameTaken(ctx, scope, data.Name, op.ID)
 	if err != nil {
 		return "", "", err
@@ -66,7 +79,8 @@ func (debtorAdapter) preValidate(
 func (debtorAdapter) version(d *domain.Debtor) int   { return d.Version }
 func (debtorAdapter) fullState(d *domain.Debtor) any { return d.FullState() }
 func (debtorAdapter) isWriteRace(err error) bool {
-	return errors.Is(err, domain.ErrDebtorVersionConflict) || errors.Is(err, domain.ErrRecordDeleted)
+	return errors.Is(err, domain.ErrDebtorVersionConflict) ||
+		errors.Is(err, domain.ErrRecordDeleted)
 }
 
 func (debtorAdapter) getAny(
@@ -84,6 +98,7 @@ func (debtorAdapter) create(
 ) (*domain.Debtor, error) {
 	return t.CreateDebtor(ctx, domain.CreateDebtorParams{
 		ID: id, HouseholdID: scope.HouseholdID, UserID: scope.ActorID, Name: data.Name, Note: data.Note,
+		Currency: &data.Currency,
 	})
 }
 

@@ -119,12 +119,19 @@ func (r *Repository) UpdateTransaction(
 	), nil
 }
 
-func (r *Repository) DeleteTransaction(ctx context.Context, scope domain.Scope, id uuid.UUID) error {
+func (r *Repository) DeleteTransaction(
+	ctx context.Context,
+	scope domain.Scope,
+	id uuid.UUID,
+) error {
 	householdID, actorID := scope.HouseholdID, scope.ActorID
 	const op = "repository.postgres.DeleteTransaction"
 
 	err := r.withinLockedTx(ctx, householdID, func(q *db.Queries) error {
-		version, err := q.SoftDeleteTransaction(ctx, db.SoftDeleteTransactionParams{ID: id, HouseholdID: householdID})
+		version, err := q.SoftDeleteTransaction(
+			ctx,
+			db.SoftDeleteTransactionParams{ID: id, HouseholdID: householdID},
+		)
 		if err != nil {
 			if errNoRows(err) {
 				return classifyTransactionWrite(ctx, q, householdID, id)
@@ -152,7 +159,10 @@ func (r *Repository) DeleteTransaction(ctx context.Context, scope domain.Scope, 
 // tombstoned reads as not-found for the REST surface (delete is idempotent at
 // the sync layer instead), a live version mismatch is a version conflict.
 func classifyTransactionWrite(ctx context.Context, q *db.Queries, householdID, id uuid.UUID) error {
-	row, err := q.GetTransactionAny(ctx, db.GetTransactionAnyParams{ID: id, HouseholdID: householdID})
+	row, err := q.GetTransactionAny(
+		ctx,
+		db.GetTransactionAnyParams{ID: id, HouseholdID: householdID},
+	)
 	if err != nil || row.DeletedAt != nil {
 		return domain.ErrTransactionNotFound
 	}
@@ -195,7 +205,9 @@ func (r *Repository) GetTransactions(
 		typ = &s
 	}
 
-	limit := int32(defaultListTransactionsLimit) // default; the service always sets an explicit fetchLimit.
+	limit := int32(
+		defaultListTransactionsLimit,
+	) // default; the service always sets an explicit fetchLimit.
 	if params.Limit != nil {
 		limit = int32(*params.Limit) //nolint:gosec // page limit is bounded by the service (<= maxTransactionPageSize)
 	}

@@ -35,13 +35,19 @@ func (s *Server) GetHousehold(
 	return api.GetHousehold200JSONResponse(toAPIHousehold(*h)), nil
 }
 
-// UpdateHousehold sets or clears the household display name (owner only).
+// UpdateHousehold sets or clears the household display name (owner only; nil
+// name resets it) and optionally changes the base currency (owner only).
 func (s *Server) UpdateHousehold(
 	ctx context.Context,
 	req api.UpdateHouseholdRequestObject,
 ) (api.UpdateHouseholdResponseObject, error) {
 	user := s.currentUser(ctx)
-	h, err := s.households.UpdateName(ctx, s.currentMembership(ctx, user), req.Body.Name)
+	h, err := s.households.Update(
+		ctx,
+		s.currentMembership(ctx, user),
+		req.Body.Name,
+		currencyPtr(req.Body.Currency),
+	)
 	if err != nil {
 		return nil, err
 	}

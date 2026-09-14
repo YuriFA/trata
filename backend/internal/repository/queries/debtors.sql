@@ -4,10 +4,14 @@
 -- are soft (deleted_at tombstone).
 
 -- name: CreateDebtor :one
--- id is the optional client-generated id (offline-first clients).
-INSERT INTO debtors (id, household_id, user_id, name, note)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, user_id, name, note, created_at, updated_at, version;
+-- id is the optional client-generated id (offline-first clients). currency
+-- falls back to the household's base currency when the client omits it.
+INSERT INTO debtors (id, household_id, user_id, name, note, currency)
+VALUES (
+    $1, $2, $3, $4, $5,
+    COALESCE(sqlc.narg('currency')::text, (SELECT currency FROM households WHERE id = $2))
+)
+RETURNING id, user_id, name, note, currency, created_at, updated_at, version;
 
 -- name: UpdateDebtor :one
 -- Optimistic concurrency: the WHERE clause includes version = @version (and
@@ -20,7 +24,7 @@ SET
     version    = version + 1,
     updated_at = now()
 WHERE id = @id AND household_id = @household_id AND deleted_at IS NULL AND version = @version
-RETURNING id, user_id, name, note, created_at, updated_at, version;
+RETURNING id, user_id, name, note, currency, created_at, updated_at, version;
 
 -- name: SoftDeleteDebtor :one
 UPDATE debtors
@@ -29,18 +33,18 @@ WHERE id = $1 AND household_id = $2 AND deleted_at IS NULL
 RETURNING version;
 
 -- name: GetDebtor :one
-SELECT id, user_id, name, note, created_at, updated_at, version
+SELECT id, user_id, name, note, currency, created_at, updated_at, version
 FROM debtors
 WHERE id = $1 AND household_id = $2 AND deleted_at IS NULL;
 
 -- name: GetDebtorAny :one
 -- Includes tombstoned rows (sync push + conflict classification).
-SELECT id, user_id, name, note, created_at, updated_at, version, deleted_at
+SELECT id, user_id, name, note, currency, created_at, updated_at, version, deleted_at
 FROM debtors
 WHERE id = $1 AND household_id = $2;
 
 -- name: GetDebtors :many
-SELECT id, user_id, name, note, created_at, updated_at, version
+SELECT id, user_id, name, note, currency, created_at, updated_at, version
 FROM debtors
 WHERE household_id = @household_id AND deleted_at IS NULL
 ORDER BY created_at, id;
@@ -73,9 +77,9 @@ SET
     version    = version + 1,
     updated_at = now()
 WHERE id = @id AND household_id = @household_id AND deleted_at IS NULL AND version = @base_version
-RETURNING id, user_id, name, note, created_at, updated_at, version;
+RETURNING id, user_id, name, note, currency, created_at, updated_at, version;
 
 -- name: SyncDebtorsByIDs :many
-SELECT id, user_id, name, note, version, deleted_at
+SELECT id, user_id, name, note, currency, version, deleted_at
 FROM debtors
 WHERE household_id = @household_id AND id = ANY(@ids::uuid[]);

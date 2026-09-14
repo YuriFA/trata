@@ -21,6 +21,7 @@ type plannedPaymentTx interface {
 	repository.SyncCore
 	repository.PlannedPaymentSyncTx
 	LiveAccountExists(ctx context.Context, scope domain.Scope, id uuid.UUID) (bool, error)
+	LiveAccountCurrency(ctx context.Context, scope domain.Scope, id uuid.UUID) (string, error)
 	LiveCategory(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Category, error)
 }
 

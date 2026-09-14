@@ -11,10 +11,13 @@ import (
 // the optimistic-concurrency revision; DeletedAt marks a tombstone (soft
 // delete): tombstoned rows are excluded from listings but retained for sync.
 type Debtor struct {
-	ID        uuid.UUID
-	UserID    uuid.UUID
-	Name      string
-	Note      string
+	ID     uuid.UUID
+	UserID uuid.UUID
+	Name   string
+	Note   string
+	// Immutable ledger currency: every debt operation's amount is interpreted
+	// in it. Defaults to the household's base currency at creation.
+	Currency  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Version   int
@@ -34,6 +37,9 @@ type CreateDebtorParams struct {
 	UserID uuid.UUID
 	Name   string
 	Note   string
+	// Ledger currency; nil means the household's base currency. Ignored after
+	// creation (immutable).
+	Currency *string
 }
 
 // UpdateDebtorParams holds optional PATCH fields plus the required
@@ -48,14 +54,16 @@ type UpdateDebtorParams struct {
 // DebtorFullState is the complete mutable state of a debtor (sync upserts
 // carry the full record, not a PATCH).
 type DebtorFullState struct {
-	Name string `json:"name"`
-	Note string `json:"note"`
+	Name     string `json:"name"`
+	Note     string `json:"note"`
+	Currency string `json:"currency"`
 }
 
 // FullState returns the debtor's complete mutable state (for sync payloads).
 func (d *Debtor) FullState() *DebtorFullState {
 	return &DebtorFullState{
-		Name: d.Name,
-		Note: d.Note,
+		Name:     d.Name,
+		Note:     d.Note,
+		Currency: d.Currency,
 	}
 }

@@ -38,9 +38,10 @@ func (s *Server) CreateDebtor(
 		note = *req.Body.Note
 	}
 	d, err := s.debtors.Create(ctx, s.currentScope(ctx), domain.CreateDebtorParams{
-		ID:   id,
-		Name: req.Body.Name,
-		Note: note,
+		ID:       id,
+		Name:     req.Body.Name,
+		Note:     note,
+		Currency: currencyPtr(req.Body.Currency),
 	})
 	if err != nil {
 		return nil, err

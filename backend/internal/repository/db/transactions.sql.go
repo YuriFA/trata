@@ -16,43 +16,45 @@ const createTransaction = `-- name: CreateTransaction :one
 
 INSERT INTO transactions (
     id, household_id, user_id, type, amount, description, occurred_at,
-    account_id, category_id, from_account_id, to_account_id
+    account_id, category_id, from_account_id, to_account_id, destination_amount
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING
     id, user_id, type, amount, description, occurred_at,
     created_at, updated_at, version,
-    account_id, category_id, from_account_id, to_account_id
+    account_id, category_id, from_account_id, to_account_id, destination_amount
 `
 
 type CreateTransactionParams struct {
-	ID            uuid.UUID
-	HouseholdID   uuid.UUID
-	UserID        uuid.UUID
-	Type          string
-	Amount        int64
-	Description   string
-	OccurredAt    time.Time
-	AccountID     *uuid.UUID
-	CategoryID    *uuid.UUID
-	FromAccountID *uuid.UUID
-	ToAccountID   *uuid.UUID
+	ID                uuid.UUID
+	HouseholdID       uuid.UUID
+	UserID            uuid.UUID
+	Type              string
+	Amount            int64
+	Description       string
+	OccurredAt        time.Time
+	AccountID         *uuid.UUID
+	CategoryID        *uuid.UUID
+	FromAccountID     *uuid.UUID
+	ToAccountID       *uuid.UUID
+	DestinationAmount *int64
 }
 
 type CreateTransactionRow struct {
-	ID            uuid.UUID
-	UserID        uuid.UUID
-	Type          string
-	Amount        int64
-	Description   string
-	OccurredAt    time.Time
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Version       int32
-	AccountID     *uuid.UUID
-	CategoryID    *uuid.UUID
-	FromAccountID *uuid.UUID
-	ToAccountID   *uuid.UUID
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	Type              string
+	Amount            int64
+	Description       string
+	OccurredAt        time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	Version           int32
+	AccountID         *uuid.UUID
+	CategoryID        *uuid.UUID
+	FromAccountID     *uuid.UUID
+	ToAccountID       *uuid.UUID
+	DestinationAmount *int64
 }
 
 // transactions. Scoped by household_id everywhere (IDOR protection); user_id
@@ -76,6 +78,7 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		arg.CategoryID,
 		arg.FromAccountID,
 		arg.ToAccountID,
+		arg.DestinationAmount,
 	)
 	var i CreateTransactionRow
 	err := row.Scan(
@@ -92,6 +95,7 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		&i.CategoryID,
 		&i.FromAccountID,
 		&i.ToAccountID,
+		&i.DestinationAmount,
 	)
 	return i, err
 }
@@ -100,7 +104,7 @@ const getTransaction = `-- name: GetTransaction :one
 SELECT
     id, user_id, type, amount, description, occurred_at,
     created_at, updated_at, version,
-    account_id, category_id, from_account_id, to_account_id
+    account_id, category_id, from_account_id, to_account_id, destination_amount
 FROM transactions
 WHERE id = $1 AND household_id = $2 AND deleted_at IS NULL
 `
@@ -111,19 +115,20 @@ type GetTransactionParams struct {
 }
 
 type GetTransactionRow struct {
-	ID            uuid.UUID
-	UserID        uuid.UUID
-	Type          string
-	Amount        int64
-	Description   string
-	OccurredAt    time.Time
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Version       int32
-	AccountID     *uuid.UUID
-	CategoryID    *uuid.UUID
-	FromAccountID *uuid.UUID
-	ToAccountID   *uuid.UUID
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	Type              string
+	Amount            int64
+	Description       string
+	OccurredAt        time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	Version           int32
+	AccountID         *uuid.UUID
+	CategoryID        *uuid.UUID
+	FromAccountID     *uuid.UUID
+	ToAccountID       *uuid.UUID
+	DestinationAmount *int64
 }
 
 func (q *Queries) GetTransaction(ctx context.Context, arg GetTransactionParams) (GetTransactionRow, error) {
@@ -143,6 +148,7 @@ func (q *Queries) GetTransaction(ctx context.Context, arg GetTransactionParams) 
 		&i.CategoryID,
 		&i.FromAccountID,
 		&i.ToAccountID,
+		&i.DestinationAmount,
 	)
 	return i, err
 }
@@ -151,7 +157,7 @@ const getTransactionAny = `-- name: GetTransactionAny :one
 SELECT
     id, user_id, type, amount, description, occurred_at,
     created_at, updated_at, version,
-    account_id, category_id, from_account_id, to_account_id,
+    account_id, category_id, from_account_id, to_account_id, destination_amount,
     deleted_at
 FROM transactions
 WHERE id = $1 AND household_id = $2
@@ -163,20 +169,21 @@ type GetTransactionAnyParams struct {
 }
 
 type GetTransactionAnyRow struct {
-	ID            uuid.UUID
-	UserID        uuid.UUID
-	Type          string
-	Amount        int64
-	Description   string
-	OccurredAt    time.Time
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Version       int32
-	AccountID     *uuid.UUID
-	CategoryID    *uuid.UUID
-	FromAccountID *uuid.UUID
-	ToAccountID   *uuid.UUID
-	DeletedAt     *time.Time
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	Type              string
+	Amount            int64
+	Description       string
+	OccurredAt        time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	Version           int32
+	AccountID         *uuid.UUID
+	CategoryID        *uuid.UUID
+	FromAccountID     *uuid.UUID
+	ToAccountID       *uuid.UUID
+	DestinationAmount *int64
+	DeletedAt         *time.Time
 }
 
 // Includes tombstoned rows (sync push + conflict classification).
@@ -197,6 +204,7 @@ func (q *Queries) GetTransactionAny(ctx context.Context, arg GetTransactionAnyPa
 		&i.CategoryID,
 		&i.FromAccountID,
 		&i.ToAccountID,
+		&i.DestinationAmount,
 		&i.DeletedAt,
 	)
 	return i, err
@@ -206,7 +214,7 @@ const listTransactions = `-- name: ListTransactions :many
 SELECT
     id, user_id, type, amount, description, occurred_at,
     created_at, updated_at, version,
-    account_id, category_id, from_account_id, to_account_id
+    account_id, category_id, from_account_id, to_account_id, destination_amount
 FROM transactions
 WHERE
     household_id = $1
@@ -243,19 +251,20 @@ type ListTransactionsParams struct {
 }
 
 type ListTransactionsRow struct {
-	ID            uuid.UUID
-	UserID        uuid.UUID
-	Type          string
-	Amount        int64
-	Description   string
-	OccurredAt    time.Time
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Version       int32
-	AccountID     *uuid.UUID
-	CategoryID    *uuid.UUID
-	FromAccountID *uuid.UUID
-	ToAccountID   *uuid.UUID
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	Type              string
+	Amount            int64
+	Description       string
+	OccurredAt        time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	Version           int32
+	AccountID         *uuid.UUID
+	CategoryID        *uuid.UUID
+	FromAccountID     *uuid.UUID
+	ToAccountID       *uuid.UUID
+	DestinationAmount *int64
 }
 
 // Keyset cursor pagination (occurred_at DESC, id DESC). Each optional filter is
@@ -295,6 +304,7 @@ func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsPara
 			&i.CategoryID,
 			&i.FromAccountID,
 			&i.ToAccountID,
+			&i.DestinationAmount,
 		); err != nil {
 			return nil, err
 		}
@@ -335,42 +345,45 @@ SET
     category_id     = $5,
     from_account_id = $6,
     to_account_id   = $7,
+    destination_amount = $8,
     version         = version + 1,
     updated_at      = now()
-WHERE id = $8 AND household_id = $9 AND deleted_at IS NULL AND version = $10
+WHERE id = $9 AND household_id = $10 AND deleted_at IS NULL AND version = $11
 RETURNING
     id, user_id, type, amount, description, occurred_at,
     created_at, updated_at, version,
-    account_id, category_id, from_account_id, to_account_id
+    account_id, category_id, from_account_id, to_account_id, destination_amount
 `
 
 type SyncReplaceTransactionParams struct {
-	Amount        int64
-	Description   string
-	OccurredAt    time.Time
-	AccountID     *uuid.UUID
-	CategoryID    *uuid.UUID
-	FromAccountID *uuid.UUID
-	ToAccountID   *uuid.UUID
-	ID            uuid.UUID
-	HouseholdID   uuid.UUID
-	BaseVersion   int32
+	Amount            int64
+	Description       string
+	OccurredAt        time.Time
+	AccountID         *uuid.UUID
+	CategoryID        *uuid.UUID
+	FromAccountID     *uuid.UUID
+	ToAccountID       *uuid.UUID
+	DestinationAmount *int64
+	ID                uuid.UUID
+	HouseholdID       uuid.UUID
+	BaseVersion       int32
 }
 
 type SyncReplaceTransactionRow struct {
-	ID            uuid.UUID
-	UserID        uuid.UUID
-	Type          string
-	Amount        int64
-	Description   string
-	OccurredAt    time.Time
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Version       int32
-	AccountID     *uuid.UUID
-	CategoryID    *uuid.UUID
-	FromAccountID *uuid.UUID
-	ToAccountID   *uuid.UUID
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	Type              string
+	Amount            int64
+	Description       string
+	OccurredAt        time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	Version           int32
+	AccountID         *uuid.UUID
+	CategoryID        *uuid.UUID
+	FromAccountID     *uuid.UUID
+	ToAccountID       *uuid.UUID
+	DestinationAmount *int64
 }
 
 // Full-state CAS upsert from a sync push. Type is immutable.
@@ -383,6 +396,7 @@ func (q *Queries) SyncReplaceTransaction(ctx context.Context, arg SyncReplaceTra
 		arg.CategoryID,
 		arg.FromAccountID,
 		arg.ToAccountID,
+		arg.DestinationAmount,
 		arg.ID,
 		arg.HouseholdID,
 		arg.BaseVersion,
@@ -402,6 +416,7 @@ func (q *Queries) SyncReplaceTransaction(ctx context.Context, arg SyncReplaceTra
 		&i.CategoryID,
 		&i.FromAccountID,
 		&i.ToAccountID,
+		&i.DestinationAmount,
 	)
 	return i, err
 }
@@ -410,7 +425,7 @@ const syncTransactionsByIDs = `-- name: SyncTransactionsByIDs :many
 SELECT
     id, user_id, type, amount, description, occurred_at,
     created_at, updated_at, version,
-    account_id, category_id, from_account_id, to_account_id,
+    account_id, category_id, from_account_id, to_account_id, destination_amount,
     deleted_at
 FROM transactions
 WHERE household_id = $1 AND id = ANY($2::uuid[])
@@ -422,20 +437,21 @@ type SyncTransactionsByIDsParams struct {
 }
 
 type SyncTransactionsByIDsRow struct {
-	ID            uuid.UUID
-	UserID        uuid.UUID
-	Type          string
-	Amount        int64
-	Description   string
-	OccurredAt    time.Time
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Version       int32
-	AccountID     *uuid.UUID
-	CategoryID    *uuid.UUID
-	FromAccountID *uuid.UUID
-	ToAccountID   *uuid.UUID
-	DeletedAt     *time.Time
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	Type              string
+	Amount            int64
+	Description       string
+	OccurredAt        time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	Version           int32
+	AccountID         *uuid.UUID
+	CategoryID        *uuid.UUID
+	FromAccountID     *uuid.UUID
+	ToAccountID       *uuid.UUID
+	DestinationAmount *int64
+	DeletedAt         *time.Time
 }
 
 func (q *Queries) SyncTransactionsByIDs(ctx context.Context, arg SyncTransactionsByIDsParams) ([]SyncTransactionsByIDsRow, error) {
@@ -461,6 +477,7 @@ func (q *Queries) SyncTransactionsByIDs(ctx context.Context, arg SyncTransaction
 			&i.CategoryID,
 			&i.FromAccountID,
 			&i.ToAccountID,
+			&i.DestinationAmount,
 			&i.DeletedAt,
 		); err != nil {
 			return nil, err
@@ -483,42 +500,45 @@ SET
     category_id      = COALESCE($5, category_id),
     from_account_id  = COALESCE($6, from_account_id),
     to_account_id    = COALESCE($7, to_account_id),
+    destination_amount = COALESCE($8, destination_amount),
     version          = version + 1,
     updated_at       = now()
-WHERE id = $8 AND household_id = $9 AND deleted_at IS NULL AND version = $10
+WHERE id = $9 AND household_id = $10 AND deleted_at IS NULL AND version = $11
 RETURNING
     id, user_id, type, amount, description, occurred_at,
     created_at, updated_at, version,
-    account_id, category_id, from_account_id, to_account_id
+    account_id, category_id, from_account_id, to_account_id, destination_amount
 `
 
 type UpdateTransactionParams struct {
-	Amount        *int64
-	Description   *string
-	OccurredAt    *time.Time
-	AccountID     *uuid.UUID
-	CategoryID    *uuid.UUID
-	FromAccountID *uuid.UUID
-	ToAccountID   *uuid.UUID
-	ID            uuid.UUID
-	HouseholdID   uuid.UUID
-	Version       int32
+	Amount            *int64
+	Description       *string
+	OccurredAt        *time.Time
+	AccountID         *uuid.UUID
+	CategoryID        *uuid.UUID
+	FromAccountID     *uuid.UUID
+	ToAccountID       *uuid.UUID
+	DestinationAmount *int64
+	ID                uuid.UUID
+	HouseholdID       uuid.UUID
+	Version           int32
 }
 
 type UpdateTransactionRow struct {
-	ID            uuid.UUID
-	UserID        uuid.UUID
-	Type          string
-	Amount        int64
-	Description   string
-	OccurredAt    time.Time
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Version       int32
-	AccountID     *uuid.UUID
-	CategoryID    *uuid.UUID
-	FromAccountID *uuid.UUID
-	ToAccountID   *uuid.UUID
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	Type              string
+	Amount            int64
+	Description       string
+	OccurredAt        time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	Version           int32
+	AccountID         *uuid.UUID
+	CategoryID        *uuid.UUID
+	FromAccountID     *uuid.UUID
+	ToAccountID       *uuid.UUID
+	DestinationAmount *int64
 }
 
 // Optimistic concurrency: the WHERE clause includes version = @version (and
@@ -533,6 +553,7 @@ func (q *Queries) UpdateTransaction(ctx context.Context, arg UpdateTransactionPa
 		arg.CategoryID,
 		arg.FromAccountID,
 		arg.ToAccountID,
+		arg.DestinationAmount,
 		arg.ID,
 		arg.HouseholdID,
 		arg.Version,
@@ -552,6 +573,7 @@ func (q *Queries) UpdateTransaction(ctx context.Context, arg UpdateTransactionPa
 		&i.CategoryID,
 		&i.FromAccountID,
 		&i.ToAccountID,
+		&i.DestinationAmount,
 	)
 	return i, err
 }

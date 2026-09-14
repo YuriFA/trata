@@ -106,13 +106,17 @@ func (s *HouseholdService) Get(ctx context.Context, scope domain.Scope) (*domain
 	return h, nil
 }
 
-// UpdateName sets or clears the household display name (owner only).
-func (s *HouseholdService) UpdateName(
+// Update sets or clears the household display name (owner only; `nil` name
+// resets it) and optionally changes the base currency. A currency change
+// never rewrites stored amounts - it only moves the presentation conversion
+// target.
+func (s *HouseholdService) Update(
 	ctx context.Context,
 	membership *domain.Membership,
 	name *string,
+	currency *string,
 ) (*domain.Household, error) {
-	const op = "service.household.UpdateName"
+	const op = "service.household.Update"
 	if err := s.requireOwner(membership); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -123,7 +127,12 @@ func (s *HouseholdService) UpdateName(
 		}
 		name = &trimmed
 	}
-	if err := s.households.UpdateHouseholdName(ctx, membershipScope(membership), name); err != nil {
+	if currency != nil {
+		if err := domain.ValidateCurrency(*currency); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, domain.ErrInvalidCurrency)
+		}
+	}
+	if err := s.households.UpdateHousehold(ctx, membershipScope(membership), name, currency); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	return s.Get(ctx, membershipScope(membership))
@@ -273,7 +282,10 @@ func (s *HouseholdService) PreviewInvitation(
 		return nil, fmt.Errorf("%s: %w", op, domain.ErrInvitationEmailMismatch)
 	}
 
-	h, err := s.households.GetHouseholdWithMembers(ctx, domain.Scope{HouseholdID: invitation.HouseholdID})
+	h, err := s.households.GetHouseholdWithMembers(
+		ctx,
+		domain.Scope{HouseholdID: invitation.HouseholdID},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

@@ -19,13 +19,21 @@ func TestE2E_DebtorsRestFlows(t *testing.T) {
 	}
 
 	c := &client{t: t, jar: map[string]string{}}
-	resp := c.do("POST", "/api/auth/register", map[string]any{"email": uniqueEmail(), "password": "supersecret1"})
+	resp := c.do(
+		"POST",
+		"/api/auth/register",
+		map[string]any{"email": uniqueEmail(), "password": "supersecret1"},
+	)
 	require.Equal(t, 201, resp["__status"], resp["__body"])
 
 	debtorID := "88888888-8888-4888-8888-888888888888"
 
 	// --- Create with a client id ---
-	created := c.do("POST", "/api/debtors", map[string]any{"id": debtorID, "name": "Анна", "note": "colleague"})
+	created := c.do(
+		"POST",
+		"/api/debtors",
+		map[string]any{"id": debtorID, "name": "Анна", "note": "colleague"},
+	)
 	require.Equal(t, 201, created["__status"], created["__body"])
 	assert.Equal(t, "Анна", created["name"])
 	assert.Equal(t, "colleague", created["note"])
@@ -41,7 +49,11 @@ func TestE2E_DebtorsRestFlows(t *testing.T) {
 	require.Equal(t, 400, bad["__status"])
 
 	// --- PATCH: absent note keeps, empty string clears, null rejected ---
-	updated := c.do("PATCH", "/api/debtors/"+debtorID, map[string]any{"version": 1, "name": "Анна П."})
+	updated := c.do(
+		"PATCH",
+		"/api/debtors/"+debtorID,
+		map[string]any{"version": 1, "name": "Анна П."},
+	)
 	require.Equal(t, 200, updated["__status"], updated["__body"])
 	assert.Equal(t, "colleague", updated["note"], "absent note keeps the value")
 	assert.InDelta(t, float64(2), updated["version"], 0)
@@ -92,11 +104,19 @@ func TestE2E_DebtorsRestFlows(t *testing.T) {
 	overID, _ := over["id"].(string)
 
 	// --- Update with CAS ---
-	edited := c.do("PATCH", "/api/debt-operations/"+opID, map[string]any{"version": 1, "amount": 450000})
+	edited := c.do(
+		"PATCH",
+		"/api/debt-operations/"+opID,
+		map[string]any{"version": 1, "amount": 450000},
+	)
 	require.Equal(t, 200, edited["__status"], edited["__body"])
 	assert.InDelta(t, float64(450000), edited["amount"], 0)
 
-	conflict := c.do("PATCH", "/api/debt-operations/"+opID, map[string]any{"version": 1, "amount": 1})
+	conflict := c.do(
+		"PATCH",
+		"/api/debt-operations/"+opID,
+		map[string]any{"version": 1, "amount": 1},
+	)
 	require.Equal(t, 409, conflict["__status"])
 	assert.Equal(t, "DEBT_OPERATION_VERSION_CONFLICT", conflict["code"])
 
@@ -141,7 +161,11 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 	}
 
 	c := &client{t: t, jar: map[string]string{}}
-	resp := c.do("POST", "/api/auth/register", map[string]any{"email": uniqueEmail(), "password": "supersecret1"})
+	resp := c.do(
+		"POST",
+		"/api/auth/register",
+		map[string]any{"email": uniqueEmail(), "password": "supersecret1"},
+	)
 	require.Equal(t, 201, resp["__status"], resp["__body"])
 	_, cursor := pullAll(t, c, 0)
 
@@ -154,7 +178,7 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 	results := push(t, c, []map[string]any{
 		{
 			"opId": debtorCreateOp, "entity": "debtor", "action": "upsert", "id": debtorID, "baseVersion": 0,
-			"data": map[string]any{"name": "Михаил", "note": ""},
+			"data": map[string]any{"name": "Михаил", "note": "", "currency": "RUB"},
 		},
 		{
 			"opId": opCreateOp, "entity": "debt_operation", "action": "upsert", "id": opID, "baseVersion": 0,
@@ -174,19 +198,25 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 	results = push(t, c, []map[string]any{
 		{
 			"opId": debtorCreateOp, "entity": "debtor", "action": "upsert", "id": debtorID, "baseVersion": 0,
-			"data": map[string]any{"name": "Михаил", "note": ""},
+			"data": map[string]any{"name": "Михаил", "note": "", "currency": "RUB"},
 		},
 	})
 	require.Len(t, results, 1)
 	assert.Equal(t, "applied", results[0]["status"])
-	assert.InDelta(t, float64(1), results[0]["version"], 0, "replay reports the original result, not already-exists")
+	assert.InDelta(
+		t,
+		float64(1),
+		results[0]["version"],
+		0,
+		"replay reports the original result, not already-exists",
+	)
 
 	// --- Different opId claiming the same entity id -> SYNC_ALREADY_EXISTS ---
 	results = push(t, c, []map[string]any{
 		{
 			"opId": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", "entity": "debtor", "action": "upsert",
 			"id": debtorID, "baseVersion": 0,
-			"data": map[string]any{"name": "Другой", "note": ""},
+			"data": map[string]any{"name": "Другой", "note": "", "currency": "RUB"},
 		},
 	})
 	require.Len(t, results, 1)
@@ -215,7 +245,13 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 	// the update) - a sync delete is delete-wins, never a version conflict.
 	deleteOp := "11111111-2222-4222-8222-222222222222"
 	results = push(t, c, []map[string]any{
-		{"opId": deleteOp, "entity": "debt_operation", "action": "delete", "id": opID, "baseVersion": 1},
+		{
+			"opId":        deleteOp,
+			"entity":      "debt_operation",
+			"action":      "delete",
+			"id":          opID,
+			"baseVersion": 1,
+		},
 	})
 	require.Len(t, results, 1)
 	assert.Equal(t, "applied", results[0]["status"], "delete-wins over a concurrent edit")
@@ -224,7 +260,13 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 	// Delete of an already-deleted record is idempotent with the current version.
 	idemDelete := "11111111-3333-4333-8333-333333333333"
 	results = push(t, c, []map[string]any{
-		{"opId": idemDelete, "entity": "debt_operation", "action": "delete", "id": opID, "baseVersion": 3},
+		{
+			"opId":        idemDelete,
+			"entity":      "debt_operation",
+			"action":      "delete",
+			"id":          opID,
+			"baseVersion": 3,
+		},
 	})
 	require.Len(t, results, 1)
 	assert.Equal(t, "applied", results[0]["status"])
@@ -253,7 +295,13 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 	// guard passes), then push a new operation referencing it.
 	debtorDeleteOp := "11111111-5555-4555-8555-555555555555"
 	results = push(t, c, []map[string]any{
-		{"opId": debtorDeleteOp, "entity": "debtor", "action": "delete", "id": debtorID, "baseVersion": 1},
+		{
+			"opId":        debtorDeleteOp,
+			"entity":      "debtor",
+			"action":      "delete",
+			"id":          debtorID,
+			"baseVersion": 1,
+		},
 	})
 	require.Len(t, results, 1)
 	assert.Equal(t, "applied", results[0]["status"])
@@ -264,7 +312,7 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 		{
 			"opId": "11111111-7777-4777-8777-777777777777", "entity": "debtor", "action": "upsert",
 			"id": healthyDebtor, "baseVersion": 0,
-			"data": map[string]any{"name": "Ольга", "note": ""},
+			"data": map[string]any{"name": "Ольга", "note": "", "currency": "RUB"},
 		},
 		{
 			"opId": orphanOp, "entity": "debt_operation", "action": "upsert",
@@ -285,7 +333,7 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 		{
 			"opId": "11111111-8888-4888-8888-888888888888", "entity": "debtor", "action": "upsert",
 			"id": "aaaaaaaa-dddd-4ddd-8ddd-eeeeeeeeeeee", "baseVersion": 0,
-			"data": map[string]any{"name": "Ольга", "note": ""},
+			"data": map[string]any{"name": "Ольга", "note": "", "currency": "RUB"},
 		},
 	})
 	require.Len(t, results, 1)
@@ -326,7 +374,11 @@ func TestE2E_DebtsListingsHouseholdScoped(t *testing.T) {
 	}
 
 	c := &client{t: t, jar: map[string]string{}}
-	resp := c.do("POST", "/api/auth/register", map[string]any{"email": uniqueEmail(), "password": "supersecret1"})
+	resp := c.do(
+		"POST",
+		"/api/auth/register",
+		map[string]any{"email": uniqueEmail(), "password": "supersecret1"},
+	)
 	require.Equal(t, 201, resp["__status"], resp["__body"])
 
 	created := c.do("POST", "/api/debtors", map[string]any{"name": "Мария"})

@@ -24,7 +24,11 @@ type UserRepository interface {
 	RegisterUser(ctx context.Context, params domain.RegisterUserParams) (*domain.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*domain.User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
-	UpdateDisplayName(ctx context.Context, userID uuid.UUID, displayName string) (*domain.User, error)
+	UpdateDisplayName(
+		ctx context.Context,
+		userID uuid.UUID,
+		displayName string,
+	) (*domain.User, error)
 }
 
 // HouseholdRepository owns households + membership (the scoping unit). The
@@ -36,7 +40,7 @@ type HouseholdRepository interface {
 
 	// Join lifecycle (household-join change). Owner-side guards (role checks)
 	// live in the service; these are the persistence moves.
-	UpdateHouseholdName(ctx context.Context, scope domain.Scope, name *string) error
+	UpdateHousehold(ctx context.Context, scope domain.Scope, name, currency *string) error
 	CountHouseholdInvitationSends(ctx context.Context, scope domain.Scope) (int, error)
 	CreateHouseholdInvitation(
 		ctx context.Context,
@@ -45,9 +49,15 @@ type HouseholdRepository interface {
 		createdBy uuid.UUID,
 		ttl time.Duration,
 	) (*domain.HouseholdInvitation, error)
-	ListHouseholdInvitations(ctx context.Context, scope domain.Scope) ([]domain.HouseholdInvitation, error)
+	ListHouseholdInvitations(
+		ctx context.Context,
+		scope domain.Scope,
+	) ([]domain.HouseholdInvitation, error)
 	RevokeHouseholdInvitation(ctx context.Context, scope domain.Scope, invitationID uuid.UUID) error
-	GetHouseholdInvitationByToken(ctx context.Context, token uuid.UUID) (*domain.HouseholdInvitation, error)
+	GetHouseholdInvitationByToken(
+		ctx context.Context,
+		token uuid.UUID,
+	) (*domain.HouseholdInvitation, error)
 	JoinHousehold(
 		ctx context.Context,
 		userID, targetHouseholdID uuid.UUID,
@@ -69,7 +79,11 @@ type SessionRepository interface {
 	ExtendSession(ctx context.Context, id string, newExpiresAt time.Time) error
 	DeleteExpiredSessions(ctx context.Context) (int64, error)
 	GetSessionsByUser(ctx context.Context, userID uuid.UUID) ([]domain.Session, error)
-	DeleteSessionsByUserExcept(ctx context.Context, userID uuid.UUID, exceptSessionID string) (int64, error)
+	DeleteSessionsByUserExcept(
+		ctx context.Context,
+		userID uuid.UUID,
+		exceptSessionID string,
+	) (int64, error)
 	DeleteSessionsByUser(ctx context.Context, userID uuid.UUID) (int64, error)
 }
 
@@ -88,7 +102,10 @@ type AccountRepository interface {
 
 // CategoryRepository owns household categories.
 type CategoryRepository interface {
-	CreateCategory(ctx context.Context, params domain.CreateCategoryParams) (*domain.Category, error)
+	CreateCategory(
+		ctx context.Context,
+		params domain.CreateCategoryParams,
+	) (*domain.Category, error)
 	UpdateCategory(
 		ctx context.Context,
 		scope domain.Scope, id uuid.UUID,
@@ -110,14 +127,21 @@ type CategoryRepository interface {
 // TransactionRepository owns transactions (keyset-cursor pagination, optimistic
 // concurrency). Reference validation lives in the service layer.
 type TransactionRepository interface {
-	CreateTransaction(ctx context.Context, params domain.CreateTransactionParams) (*domain.Transaction, error)
+	CreateTransaction(
+		ctx context.Context,
+		params domain.CreateTransactionParams,
+	) (*domain.Transaction, error)
 	UpdateTransaction(
 		ctx context.Context,
 		scope domain.Scope, id uuid.UUID,
 		params domain.UpdateTransactionParams,
 	) (*domain.Transaction, error)
 	DeleteTransaction(ctx context.Context, scope domain.Scope, id uuid.UUID) error
-	GetTransaction(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Transaction, error)
+	GetTransaction(
+		ctx context.Context,
+		scope domain.Scope,
+		id uuid.UUID,
+	) (*domain.Transaction, error)
 	GetTransactions(
 		ctx context.Context,
 		scope domain.Scope,
@@ -142,14 +166,21 @@ type DebtorRepository interface {
 // DebtOperationRepository owns debt-operation ledger records (optimistic
 // concurrency). Debtor-reference validation lives in the service layer.
 type DebtOperationRepository interface {
-	CreateDebtOperation(ctx context.Context, params domain.CreateDebtOperationParams) (*domain.DebtOperation, error)
+	CreateDebtOperation(
+		ctx context.Context,
+		params domain.CreateDebtOperationParams,
+	) (*domain.DebtOperation, error)
 	UpdateDebtOperation(
 		ctx context.Context,
 		scope domain.Scope, id uuid.UUID,
 		params domain.UpdateDebtOperationParams,
 	) (*domain.DebtOperation, error)
 	DeleteDebtOperation(ctx context.Context, scope domain.Scope, id uuid.UUID) error
-	GetDebtOperation(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.DebtOperation, error)
+	GetDebtOperation(
+		ctx context.Context,
+		scope domain.Scope,
+		id uuid.UUID,
+	) (*domain.DebtOperation, error)
 	GetDebtOperations(
 		ctx context.Context,
 		scope domain.Scope,
@@ -161,14 +192,21 @@ type DebtOperationRepository interface {
 // concurrency). Account/category-reference validation lives in the service
 // layer; deletion is unguarded (a plan has no child records).
 type PlannedPaymentRepository interface {
-	CreatePlannedPayment(ctx context.Context, params domain.CreatePlannedPaymentParams) (*domain.PlannedPayment, error)
+	CreatePlannedPayment(
+		ctx context.Context,
+		params domain.CreatePlannedPaymentParams,
+	) (*domain.PlannedPayment, error)
 	UpdatePlannedPayment(
 		ctx context.Context,
 		scope domain.Scope, id uuid.UUID,
 		params domain.UpdatePlannedPaymentParams,
 	) (*domain.PlannedPayment, error)
 	DeletePlannedPayment(ctx context.Context, scope domain.Scope, id uuid.UUID) error
-	GetPlannedPayment(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.PlannedPayment, error)
+	GetPlannedPayment(
+		ctx context.Context,
+		scope domain.Scope,
+		id uuid.UUID,
+	) (*domain.PlannedPayment, error)
 	GetPlannedPayments(
 		ctx context.Context,
 		scope domain.Scope,
@@ -193,7 +231,11 @@ type PushSubscriptionRepository interface {
 // shared half of the per-batch unit-of-work; the per-entity halves are the
 // *SyncTx contracts below (ADR-0003).
 type SyncCore interface {
-	GetAppliedOperation(ctx context.Context, scope domain.Scope, opID uuid.UUID) (*domain.AppliedOperation, error)
+	GetAppliedOperation(
+		ctx context.Context,
+		scope domain.Scope,
+		opID uuid.UUID,
+	) (*domain.AppliedOperation, error)
 	InsertAppliedOperation(ctx context.Context, rec domain.AppliedOperation) error
 
 	// AdoptOrphanedID (household-join D3/D4): a base-0 create whose id exists
@@ -220,9 +262,21 @@ type AccountSyncTx interface {
 	GetAccountAny(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Account, error)
 	// Live-only read for reference validation.
 	LiveAccountExists(ctx context.Context, scope domain.Scope, id uuid.UUID) (bool, error)
+	// Currency of the live account (reference validation needs it for the
+	// cross-currency transfer rule). Errors when the account is missing or
+	// tombstoned.
+	LiveAccountCurrency(ctx context.Context, scope domain.Scope, id uuid.UUID) (string, error)
 	// In-use guards for deletes.
-	HasLiveTransactionsForAccount(ctx context.Context, scope domain.Scope, accountID uuid.UUID) (bool, error)
-	HasLivePlannedPaymentsForAccount(ctx context.Context, scope domain.Scope, accountID uuid.UUID) (bool, error)
+	HasLiveTransactionsForAccount(
+		ctx context.Context,
+		scope domain.Scope,
+		accountID uuid.UUID,
+	) (bool, error)
+	HasLivePlannedPaymentsForAccount(
+		ctx context.Context,
+		scope domain.Scope,
+		accountID uuid.UUID,
+	) (bool, error)
 	// Writes; each appends its change_log row on the same transaction. The
 	// Replace/Tombstone methods enforce the CAS/liveness invariants and return
 	// the classified domain sentinel on failure (Err*VersionConflict,
@@ -244,40 +298,75 @@ type CategorySyncTx interface {
 	LiveCategory(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Category, error)
 	// Live-name uniqueness, pre-checked under the advisory lock so a violation
 	// surfaces as a per-item error, never an aborted batch.
-	CategoryNameTaken(ctx context.Context, scope domain.Scope, name string, exceptID uuid.UUID) (bool, error)
+	CategoryNameTaken(
+		ctx context.Context,
+		scope domain.Scope,
+		name string,
+		exceptID uuid.UUID,
+	) (bool, error)
 	// In-use guards for deletes.
-	HasLiveTransactionsForCategory(ctx context.Context, scope domain.Scope, categoryID uuid.UUID) (bool, error)
-	HasLivePlannedPaymentsForCategory(ctx context.Context, scope domain.Scope, categoryID uuid.UUID) (bool, error)
+	HasLiveTransactionsForCategory(
+		ctx context.Context,
+		scope domain.Scope,
+		categoryID uuid.UUID,
+	) (bool, error)
+	HasLivePlannedPaymentsForCategory(
+		ctx context.Context,
+		scope domain.Scope,
+		categoryID uuid.UUID,
+	) (bool, error)
 	// Writes; each appends its change_log row on the same transaction. The
 	// Replace/Tombstone methods enforce the CAS/liveness invariants and return
 	// the classified domain sentinel on failure (Err*VersionConflict,
 	// ErrRecordDeleted, Err*NotFound).
-	CreateCategory(ctx context.Context, params domain.CreateCategoryParams) (*domain.Category, error)
+	CreateCategory(
+		ctx context.Context,
+		params domain.CreateCategoryParams,
+	) (*domain.Category, error)
 	ReplaceCategory(
 		ctx context.Context, scope domain.Scope, id uuid.UUID, baseVersion int, st domain.CategoryFullState,
 	) (*domain.Category, error)
-	TombstoneCategory(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Category, error)
+	TombstoneCategory(
+		ctx context.Context,
+		scope domain.Scope,
+		id uuid.UUID,
+	) (*domain.Category, error)
 	// CascadeTombstoneCategory tombstones the category plus every live
 	// transaction referencing it, appending a change_log row per tombstoned
 	// record on the same transaction. Used by cascade-flagged category delete
 	// push operations (the in-use guard reduced to live planned payments).
-	CascadeTombstoneCategory(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Category, error)
+	CascadeTombstoneCategory(
+		ctx context.Context,
+		scope domain.Scope,
+		id uuid.UUID,
+	) (*domain.Category, error)
 }
 
 // TransactionSyncTx is the transaction's push contract: the
 // tombstone-inclusive read and the create/replace/tombstone writes.
 type TransactionSyncTx interface {
 	// Read including tombstones (nil, nil when the id was never created).
-	GetTransactionAny(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Transaction, error)
+	GetTransactionAny(
+		ctx context.Context,
+		scope domain.Scope,
+		id uuid.UUID,
+	) (*domain.Transaction, error)
 	// Writes; each appends its change_log row on the same transaction. The
 	// Replace/Tombstone methods enforce the CAS/liveness invariants and return
 	// the classified domain sentinel on failure (Err*VersionConflict,
 	// ErrRecordDeleted, Err*NotFound).
-	CreateTransaction(ctx context.Context, params domain.CreateTransactionParams) (*domain.Transaction, error)
+	CreateTransaction(
+		ctx context.Context,
+		params domain.CreateTransactionParams,
+	) (*domain.Transaction, error)
 	ReplaceTransaction(
 		ctx context.Context, scope domain.Scope, id uuid.UUID, baseVersion int, st domain.TransactionFullState,
 	) (*domain.Transaction, error)
-	TombstoneTransaction(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Transaction, error)
+	TombstoneTransaction(
+		ctx context.Context,
+		scope domain.Scope,
+		id uuid.UUID,
+	) (*domain.Transaction, error)
 }
 
 // DebtorSyncTx is the debtor's push contract: the tombstone-inclusive read,
@@ -290,9 +379,18 @@ type DebtorSyncTx interface {
 	LiveDebtorExists(ctx context.Context, scope domain.Scope, id uuid.UUID) (bool, error)
 	// Live-name uniqueness, pre-checked under the advisory lock so a violation
 	// surfaces as a per-item error, never an aborted batch.
-	DebtorNameTaken(ctx context.Context, scope domain.Scope, name string, exceptID uuid.UUID) (bool, error)
+	DebtorNameTaken(
+		ctx context.Context,
+		scope domain.Scope,
+		name string,
+		exceptID uuid.UUID,
+	) (bool, error)
 	// In-use guard for deletes.
-	HasLiveDebtOperationsForDebtor(ctx context.Context, scope domain.Scope, debtorID uuid.UUID) (bool, error)
+	HasLiveDebtOperationsForDebtor(
+		ctx context.Context,
+		scope domain.Scope,
+		debtorID uuid.UUID,
+	) (bool, error)
 	// Writes; each appends its change_log row on the same transaction. The
 	// Replace/Tombstone methods enforce the CAS/liveness invariants and return
 	// the classified domain sentinel on failure (Err*VersionConflict,
@@ -308,16 +406,27 @@ type DebtorSyncTx interface {
 // tombstone-inclusive read and the create/replace/tombstone writes.
 type DebtOperationSyncTx interface {
 	// Read including tombstones (nil, nil when the id was never created).
-	GetDebtOperationAny(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.DebtOperation, error)
+	GetDebtOperationAny(
+		ctx context.Context,
+		scope domain.Scope,
+		id uuid.UUID,
+	) (*domain.DebtOperation, error)
 	// Writes; each appends its change_log row on the same transaction. The
 	// Replace/Tombstone methods enforce the CAS/liveness invariants and return
 	// the classified domain sentinel on failure (Err*VersionConflict,
 	// ErrRecordDeleted, Err*NotFound).
-	CreateDebtOperation(ctx context.Context, params domain.CreateDebtOperationParams) (*domain.DebtOperation, error)
+	CreateDebtOperation(
+		ctx context.Context,
+		params domain.CreateDebtOperationParams,
+	) (*domain.DebtOperation, error)
 	ReplaceDebtOperation(
 		ctx context.Context, scope domain.Scope, id uuid.UUID, baseVersion int, st domain.DebtOperationFullState,
 	) (*domain.DebtOperation, error)
-	TombstoneDebtOperation(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.DebtOperation, error)
+	TombstoneDebtOperation(
+		ctx context.Context,
+		scope domain.Scope,
+		id uuid.UUID,
+	) (*domain.DebtOperation, error)
 }
 
 // PlannedPaymentSyncTx is the planned payment's push contract: the
@@ -326,18 +435,33 @@ type DebtOperationSyncTx interface {
 // lock, so they ride the tx handle).
 type PlannedPaymentSyncTx interface {
 	// Read including tombstones (nil, nil when the id was never created).
-	GetPlannedPaymentAny(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.PlannedPayment, error)
+	GetPlannedPaymentAny(
+		ctx context.Context,
+		scope domain.Scope,
+		id uuid.UUID,
+	) (*domain.PlannedPayment, error)
 	// The auto-confirm job's due scan (live auto plans, next_due <= today).
-	DueAutoPlannedPayments(ctx context.Context, scope domain.Scope, today time.Time) ([]domain.PlannedPayment, error)
+	DueAutoPlannedPayments(
+		ctx context.Context,
+		scope domain.Scope,
+		today time.Time,
+	) ([]domain.PlannedPayment, error)
 	// Writes; each appends its change_log row on the same transaction. The
 	// Replace/Tombstone methods enforce the CAS/liveness invariants and return
 	// the classified domain sentinel on failure (Err*VersionConflict,
 	// ErrRecordDeleted, Err*NotFound).
-	CreatePlannedPayment(ctx context.Context, params domain.CreatePlannedPaymentParams) (*domain.PlannedPayment, error)
+	CreatePlannedPayment(
+		ctx context.Context,
+		params domain.CreatePlannedPaymentParams,
+	) (*domain.PlannedPayment, error)
 	ReplacePlannedPayment(
 		ctx context.Context, scope domain.Scope, id uuid.UUID, baseVersion int, st domain.PlannedPaymentFullState,
 	) (*domain.PlannedPayment, error)
-	TombstonePlannedPayment(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.PlannedPayment, error)
+	TombstonePlannedPayment(
+		ctx context.Context,
+		scope domain.Scope,
+		id uuid.UUID,
+	) (*domain.PlannedPayment, error)
 	// AdvancePlannedPayment moves next_due to the already-computed next
 	// occurrence (auto-confirm job only; runs under the advisory lock). The
 	// actor stamp is the plan's author (the job acts on their behalf).
@@ -373,20 +497,32 @@ type SyncRepository interface {
 	// PullChanges returns up to limit changes with seq > afterSeq in seq
 	// order. The caller derives nextCursor (last seq when the page is full,
 	// nil when caught up).
-	PullChanges(ctx context.Context, scope domain.Scope, afterSeq int64, limit int) ([]domain.SyncChange, error)
+	PullChanges(
+		ctx context.Context,
+		scope domain.Scope,
+		afterSeq int64,
+		limit int,
+	) ([]domain.SyncChange, error)
 }
 
 // IdempotencyRepository caches POST /api/transactions responses for replay.
 // User-scoped (keyed by the requester), not household-scoped: a replayed
 // cached response is per-requester by definition.
 type IdempotencyRepository interface {
-	CreateIdempotencyKey(ctx context.Context, params domain.CreateIdempotencyKeyParams) (*domain.IdempotencyKey, error)
+	CreateIdempotencyKey(
+		ctx context.Context,
+		params domain.CreateIdempotencyKeyParams,
+	) (*domain.IdempotencyKey, error)
 	UpdateIdempotencyKey(
 		ctx context.Context,
 		userID, id uuid.UUID,
 		params domain.UpdateIdempotencyKeyParams,
 	) (*domain.IdempotencyKey, error)
-	GetByUserAndKey(ctx context.Context, userID uuid.UUID, key string) (*domain.IdempotencyKey, error)
+	GetByUserAndKey(
+		ctx context.Context,
+		userID uuid.UUID,
+		key string,
+	) (*domain.IdempotencyKey, error)
 	DeleteIdempotencyKey(ctx context.Context, userID, id uuid.UUID) error
 	DeleteExpiredIdempotencyKeys(ctx context.Context) (int64, error)
 }
@@ -407,14 +543,24 @@ type TombstoneRetention interface {
 
 // EmailVerificationRepository owns OTP verification (atomic consume flow).
 type EmailVerificationRepository interface {
-	CreateEmailVerificationCode(ctx context.Context, userID uuid.UUID, code string, expiresAt time.Time) error
+	CreateEmailVerificationCode(
+		ctx context.Context,
+		userID uuid.UUID,
+		code string,
+		expiresAt time.Time,
+	) error
 	VerifyEmailCode(ctx context.Context, userID uuid.UUID, code string) error
 	LatestVerificationCodeAgeSeconds(ctx context.Context, userID uuid.UUID) (int, bool, error)
 }
 
 // PasswordResetRepository owns hashed reset tokens (atomic consume + revoke).
 type PasswordResetRepository interface {
-	CreatePasswordResetToken(ctx context.Context, userID uuid.UUID, tokenHash string, expiresAt time.Time) error
+	CreatePasswordResetToken(
+		ctx context.Context,
+		userID uuid.UUID,
+		tokenHash string,
+		expiresAt time.Time,
+	) error
 	ResetPassword(ctx context.Context, tokenHash, passwordHash string) error
 	LatestPasswordResetTokenAgeSeconds(ctx context.Context, userID uuid.UUID) (int, bool, error)
 }

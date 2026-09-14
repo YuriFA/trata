@@ -104,6 +104,7 @@ type Debtor struct {
 	Version     int32
 	DeletedAt   *time.Time
 	HouseholdID uuid.UUID
+	Currency    string
 }
 
 type EmailVerificationCode struct {
@@ -119,6 +120,7 @@ type Household struct {
 	ID        uuid.UUID
 	CreatedAt time.Time
 	Name      *string
+	Currency  string
 }
 
 type HouseholdCode struct {
@@ -216,21 +218,22 @@ type Session struct {
 }
 
 type Transaction struct {
-	ID            uuid.UUID
-	UserID        uuid.UUID
-	Type          string
-	Amount        int64
-	Description   string
-	OccurredAt    time.Time
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Version       int32
-	AccountID     *uuid.UUID
-	CategoryID    *uuid.UUID
-	FromAccountID *uuid.UUID
-	ToAccountID   *uuid.UUID
-	DeletedAt     *time.Time
-	HouseholdID   uuid.UUID
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	Type              string
+	Amount            int64
+	Description       string
+	OccurredAt        time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	Version           int32
+	AccountID         *uuid.UUID
+	CategoryID        *uuid.UUID
+	FromAccountID     *uuid.UUID
+	ToAccountID       *uuid.UUID
+	DeletedAt         *time.Time
+	HouseholdID       uuid.UUID
+	DestinationAmount *int64
 }
 
 type User struct {

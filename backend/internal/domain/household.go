@@ -20,10 +20,13 @@ const (
 // debtor, debt operation, and planned payment belongs to exactly one
 // household, and members access it equally. Name is the optional owner-set
 // display name (nil = never set; consumers derive a label from the owner).
+// Currency is the base currency - the presentation conversion target; editing
+// it never rewrites stored amounts.
 type Household struct {
 	ID        uuid.UUID
 	CreatedAt time.Time
 	Name      *string
+	Currency  string
 	Members   []HouseholdMember
 }
 
