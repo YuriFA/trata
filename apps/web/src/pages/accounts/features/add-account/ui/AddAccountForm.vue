@@ -31,7 +31,6 @@ const { mutateAsync: createAccount } = useCreateAccount()
 // Fresh form: the household base currency is preselected (multi-currency,
 // the accounts capability) and the amount field follows the choice.
 const defaultCurrency = useDefaultCreationCurrency()
-const selectedCurrency = useFieldValue<AddAccountFormValues['currency']>('currency')
 
 const openingBalancePlaceholder = computed(() =>
   locale.value.startsWith('ru') ? '1000,00' : '1000.00',
@@ -49,6 +48,10 @@ const {
     currency: defaultCurrency.value,
   },
 })
+// The live field value: the amount suffix and payload follow the picker.
+// Must be read AFTER useForm - without the form context the value never
+// updates from its default (the account form currency bug).
+const selectedCurrency = useFieldValue<AddAccountFormValues['currency']>('currency')
 
 const handleSubmit = handleFormSubmit(async (data) => {
   try {
