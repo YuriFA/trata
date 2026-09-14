@@ -4,6 +4,7 @@
 // tombstones, and atomic mutation+outbox writes.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { CurrencyCode } from '@trata/money'
 import { eq } from 'drizzle-orm'
 import {
   AlreadyExistsError,
@@ -256,5 +257,34 @@ describe('local debt operation repository', () => {
     const ops = db.select().from(syncOutbox).all()
     expect(ops).toHaveLength(1)
     expect(ops[0]).toMatchObject({ entity: 'debt_operation', op: 'delete', baseVersion: 2 })
+  })
+})
+
+describe('local debtor repository: currency', () => {
+  it('defaults the currency to RUB and mirrors it into the outbox payload', async () => {
+    const debtor = await createLocalDebtorRepository(db).create({ name: 'Анна', note: '' })
+    expect(debtor.currency).toBe('RUB')
+
+    const [op] = db.select().from(syncOutbox).all()
+    expect(JSON.parse(op.payloadJson).currency).toBe('RUB')
+  })
+
+  it('stores an explicit catalog currency', async () => {
+    const debtor = await createLocalDebtorRepository(db).create({
+      name: 'Анна',
+      note: '',
+      currency: 'TRY',
+    })
+    expect(debtor.currency).toBe('TRY')
+  })
+
+  it('rejects a non-catalog currency', async () => {
+    // Intentionally outside the catalog: the runtime check must reject it
+    // (the static currency type already does).
+    const NON_CATALOG = 'JPY' as CurrencyCode
+    const error = await createLocalDebtorRepository(db)
+      .create({ name: 'Анна', note: '', currency: NON_CATALOG })
+      .catch((e) => e)
+    expect(error).toBeInstanceOf(InvalidPayloadError)
   })
 })

@@ -38,14 +38,41 @@ export const createTransactionSchema = z.discriminatedUnion('kind', [
     accountId: z.string().min(1, 'Выберите счёт'),
     categoryId: z.string().min(1, 'Выберите категорию'),
   }),
-  z.object({
-    kind: z.literal('transfer'),
-    amount: amountField,
-    description: noteField,
-    occurredAt: occurredAtField,
-    fromAccountId: z.string().min(1, 'Выберите счёт списания'),
-    toAccountId: z.string().min(1, 'Выберите счёт зачисления'),
-  }),
+  z
+    .object({
+      kind: z.literal('transfer'),
+      amount: amountField,
+      description: noteField,
+      occurredAt: occurredAtField,
+      fromAccountId: z.string().min(1, 'Выберите счёт списания'),
+      toAccountId: z.string().min(1, 'Выберите счёт зачисления'),
+      // The currency comparison the schema cannot derive on its own: the form
+      // carries it as data (TransferFields keeps it in sync with the two
+      // accounts), so the iff-rule becomes ordinary schema validation.
+      crossCurrency: z.boolean(),
+      destinationAmount: z.string(),
+    })
+    .superRefine((values, ctx) => {
+      if (!values.crossCurrency) {
+        if (values.destinationAmount !== '') {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['destinationAmount'],
+            message: 'Сумма зачисления не используется при одинаковых валютах',
+          })
+        }
+        return
+      }
+      const parsed =
+        values.destinationAmount === '' ? null : parseMajorUnitsToMinor(values.destinationAmount)
+      if (parsed === null || parsed < 1) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['destinationAmount'],
+          message: 'Введите сумму зачисления',
+        })
+      }
+    }),
 ])
 
 export type CreateTransactionFormValues = z.infer<typeof createTransactionSchema>
@@ -63,7 +90,14 @@ export function createTransactionDefaultValues(
   const categoryId = defaultCategoryId ?? ''
   switch (kind) {
     case 'transfer':
-      return { kind, ...base, fromAccountId: '', toAccountId: '' }
+      return {
+        kind,
+        ...base,
+        fromAccountId: '',
+        toAccountId: '',
+        crossCurrency: false,
+        destinationAmount: '',
+      }
     case 'income':
       return { kind, ...base, accountId: '', categoryId }
     case 'expense':

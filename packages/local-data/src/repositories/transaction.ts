@@ -60,6 +60,9 @@ function toTransaction(row: TransactionRow): Transaction {
       type: 'transfer',
       fromAccountId: row.fromAccountId as string,
       toAccountId: row.toAccountId as string,
+      // Present iff the two accounts' currencies differ (the API's optional
+      // field is the iff-rule's wire shape).
+      destinationAmount: row.destinationAmount ?? undefined,
     }
   }
   if (row.type === 'adjustment') {
@@ -112,6 +115,47 @@ function assertAmount(type: Transaction['type'], value: number): void {
       apiCode: 'INVALID_AMOUNT',
     })
   }
+}
+
+/**
+ * The destination-amount iff-rule against the EFFECTIVE account references
+ * (the backend re-validates it on every create and update): same-currency
+ * transfers never carry one - a provided value is rejected and a stale
+ * stored value is dropped - while cross-currency transfers require a
+ * positive integer minor-unit amount. Returns the column value.
+ */
+function resolveDestinationAmount(
+  tx: LocalTx,
+  fromAccountId: string,
+  toAccountId: string,
+  provided: number | undefined,
+  previous: number | null,
+): number | null {
+  const currencyOf = (id: string) =>
+    tx
+      .select({ currency: accounts.currency })
+      .from(accounts)
+      .where(and(eq(accounts.id, id), isNull(accounts.deletedAt)))
+      .get()?.currency
+  const sameCurrency = currencyOf(fromAccountId) === currencyOf(toAccountId)
+  const value = provided ?? previous ?? null
+
+  if (sameCurrency) {
+    if (provided !== undefined) {
+      throw new InvalidPayloadError(
+        'A same-currency transfer must not carry a destination amount',
+        { apiCode: 'INVALID_AMOUNT' },
+      )
+    }
+    return null
+  }
+  if (value === null || !Number.isSafeInteger(value) || value < 1) {
+    throw new InvalidPayloadError(
+      'A cross-currency transfer requires a positive destination amount',
+      { apiCode: 'INVALID_AMOUNT' },
+    )
+  }
+  return value
 }
 
 function findLiveAccount(tx: LocalTx, id: string | null) {
@@ -320,6 +364,7 @@ export function createLocalTransactionRepository(db: LocalDatabase): Transaction
                 categoryId: null,
                 fromAccountId: payload.fromAccountId,
                 toAccountId: payload.toAccountId,
+                destinationAmount: null,
                 version: 1,
                 serverVersion: 0,
                 deletedAt: null,
@@ -337,6 +382,7 @@ export function createLocalTransactionRepository(db: LocalDatabase): Transaction
                   categoryId: null,
                   fromAccountId: null,
                   toAccountId: null,
+                  destinationAmount: null,
                   version: 1,
                   serverVersion: 0,
                   deletedAt: null,
@@ -353,6 +399,7 @@ export function createLocalTransactionRepository(db: LocalDatabase): Transaction
                 categoryId: payload.categoryId,
                 fromAccountId: null,
                 toAccountId: null,
+                destinationAmount: null,
                 version: 1,
                 serverVersion: 0,
                 deletedAt: null,
@@ -367,7 +414,18 @@ export function createLocalTransactionRepository(db: LocalDatabase): Transaction
           row.toAccountId,
           null, // fresh assignment: an archived category is rejected
         )
-
+        if (payload.type === 'transfer') {
+          // Validated against the EFFECTIVE references, after reference
+          // validation proved both accounts live (the iff-rule resolver
+          // reads their currencies).
+          row.destinationAmount = resolveDestinationAmount(
+            tx,
+            row.fromAccountId as string,
+            row.toAccountId as string,
+            payload.destinationAmount,
+            null,
+          )
+        }
         tx.insert(transactions).values(row).run()
         enqueueOperation(tx, {
           entity: 'transaction',
@@ -389,7 +447,8 @@ export function createLocalTransactionRepository(db: LocalDatabase): Transaction
         patch.accountId !== undefined ||
         patch.categoryId !== undefined ||
         patch.fromAccountId !== undefined ||
-        patch.toAccountId !== undefined
+        patch.toAccountId !== undefined ||
+        patch.destinationAmount !== undefined
       if (!hasFields) throw new InvalidPayloadError('No fields to update')
       if (patch.description !== undefined && typeof patch.description !== 'string') {
         throw new InvalidPayloadError('description must be a string')
@@ -440,7 +499,18 @@ export function createLocalTransactionRepository(db: LocalDatabase): Transaction
           next.toAccountId,
           row.categoryId, // unchanged assignment may keep an archived category
         )
-
+        if (next.type === 'transfer') {
+          // The iff-rule re-validates against the EFFECTIVE references:
+          // switching either account can turn the transfer same-currency
+          // (the stored amount drops) or demand one where none was stored.
+          next.destinationAmount = resolveDestinationAmount(
+            tx,
+            next.fromAccountId as string,
+            next.toAccountId as string,
+            patch.destinationAmount,
+            row.destinationAmount,
+          )
+        }
         tx.update(transactions).set(next).where(eq(transactions.id, id)).run()
         enqueueOperation(tx, {
           entity: 'transaction',

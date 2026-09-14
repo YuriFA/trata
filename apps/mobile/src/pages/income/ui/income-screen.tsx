@@ -10,28 +10,30 @@ import {
   CASHFLOW_KIND_VIEWS,
   CategorySection,
   SummaryCard,
+  cashflowTotal,
   currentMonth,
   nextMonth,
   previousMonth,
-  totalCashflow,
+  useCashflowPresentation,
   type MonthCursor,
 } from '@/features/cashflow-overview'
+import { aggregateDetailText, aggregateHeroText, rateDateLabel } from '@/shared/lib/money/aggregate'
 import { Screen } from '@/shared/ui/screen'
 import { ScreenHeader, ScreenScrollView } from '@/shared/ui/screen-header'
 import type { BottomSheetRef } from '@/shared/ui/bottom-sheet'
-import { formatAmount } from '@/shared/lib/format/format'
 
 /**
  * Income screen: the dashboard's month-scoped composition mirrored for
  * income only (openspec mobile-local-data "Income screen data behavior").
  * A stack destination without the tab bar, so the collapsible ScreenHeader
  * carries the title and the back affordance. The summary is a fixed «Доходы»
- * title with the month income total — no balance modes; transactions and
- * categories are income-scoped at the query level.
+ * title with the month income aggregate — no balance modes; transactions
+ * and categories are income-scoped at the query level.
  */
 export function IncomeScreen() {
   const [cursor, setCursor] = useState<MonthCursor>(() => currentMonth())
   const { ids } = CASHFLOW_KIND_VIEWS.income
+  const presentation = useCashflowPresentation()
 
   // Page-level composition of the new-transaction sheets (invariant #15):
   // the cashflow feature must not import the create-transaction slice.
@@ -48,6 +50,8 @@ export function IncomeScreen() {
   const categoriesQuery = useCategoriesIncludingArchived('income')
   const transactions = transactionsQuery.data ?? []
   const categories = categoriesQuery.data ?? []
+
+  const incomeAggregate = cashflowTotal(transactions, cursor, 'income', presentation)
 
   const goPrev = () => setCursor(previousMonth(cursor))
   const goNext = () => setCursor(nextMonth(cursor))
@@ -71,7 +75,13 @@ export function IncomeScreen() {
       <ScreenScrollView>
         <View className="px-6 gap-6">
           <SummaryCard
-            amountText={formatAmount(totalCashflow(transactions, cursor, 'income'))}
+            amountText={aggregateHeroText(incomeAggregate)}
+            detailText={aggregateDetailText(incomeAggregate) ?? undefined}
+            footnoteText={
+              incomeAggregate.converted
+                ? `Курс на ${rateDateLabel(presentation.rates?.asOf ?? '')}`
+                : undefined
+            }
             cursor={cursor}
             onPrevPeriod={goPrev}
             onNextPeriod={goNext}

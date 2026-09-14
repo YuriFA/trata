@@ -11,7 +11,7 @@
 // local creates from the device owner binding, by pull-apply from the
 // server-delivered author. Never pushed - the server stamps from the session.
 
-import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 /** Syncable entity kinds stored in the outbox / conflict tables. */
 export type SyncEntity =
@@ -80,6 +80,9 @@ export const transactions = sqliteTable(
     // Transfer references; NULL for cashflow.
     fromAccountId: text('from_account_id'),
     toAccountId: text('to_account_id'),
+    // Cross-currency transfer credit in the destination account's currency
+    // (minor units); NULL for same-currency transfers and cashflow.
+    destinationAmount: integer('destination_amount'),
     version: integer('version').notNull().default(1),
     serverVersion: integer('server_version').notNull().default(0),
     deletedAt: text('deleted_at'),
@@ -98,6 +101,12 @@ export const debtors = sqliteTable('debtors', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   note: text('note').notNull().default(''),
+  /**
+   * Immutable ledger currency (ISO code from the 18-currency catalog): every
+   * debt operation's amount is interpreted in it. RUB backfills the
+   * ruble-only era rows; new creates carry the household base explicitly.
+   */
+  currency: text('currency').notNull().default('RUB'),
   version: integer('version').notNull().default(1),
   serverVersion: integer('server_version').notNull().default(0),
   deletedAt: text('deleted_at'),
@@ -169,6 +178,37 @@ export const plannedPayments = sqliteTable(
   ],
 )
 
+// --- Device-local presentation data (never synchronized; exchange-rates
+// capability: "the sync protocol carries no rate records") ------------------
+
+/**
+ * Per-device cache of the external provider's published rates: one row per
+ * catalog currency, `rate` = 1 unit of `base` = `rate` units of `code` (the
+ * open.er-api.com convention). Refreshed wholesale (one transaction per
+ * refresh), so every row of a snapshot shares `base` and `asOf`.
+ */
+export const exchangeRates = sqliteTable('exchange_rates', {
+  /** CurrencyCode the row quotes. */
+  code: text('code').primaryKey(),
+  /** The snapshot's pivot (e.g. 'USD'). */
+  base: text('base').notNull(),
+  /** Multiplication factor: 1 unit of `base` = `rate` units of `code`. */
+  rate: real('rate').notNull(),
+  /** Provider publish timestamp, ISO-8601 UTC - shown next to converted figures. */
+  asOf: text('as_of').notNull(),
+})
+
+/**
+ * Device-local key/value app settings (not synchronized): the display
+ * currency preference lives under the `display_currency` key (absent = the
+ * resolution chain falls through to the household base currency).
+ */
+export const appSettings = sqliteTable('app_settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+})
+
+
 // --- Sync plumbing (exists from day one so the sync engine plugs in without
 // schema changes; see design D6, D8, D9) ------------------------------------
 
@@ -225,3 +265,4 @@ export type DebtOperationRow = typeof debtOperations.$inferSelect
 export type PlannedPaymentRow = typeof plannedPayments.$inferSelect
 export type SyncOutboxRow = typeof syncOutbox.$inferSelect
 export type SyncConflictRow = typeof syncConflicts.$inferSelect
+export type ExchangeRateRow = typeof exchangeRates.$inferSelect

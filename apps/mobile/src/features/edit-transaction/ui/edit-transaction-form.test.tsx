@@ -43,6 +43,20 @@ jest.mock('@/entities/household', () => ({
   useHousehold: () => ({ data: mockMembers ? { members: mockMembers } : undefined }),
 }))
 
+// These suites run on a fresh anonymous device: no stored display-currency
+// preference, so the resolution chain falls through to the household base
+// (undefined here) and then the RUB default.
+jest.mock('@/shared/lib/db/app-settings', () => ({
+  ...(jest.requireActual('@/shared/lib/db/app-settings') as Record<string, unknown>),
+  useDisplayCurrencySetting: () => ({ data: null, setDisplayCurrency: jest.fn() }),
+}))
+// No cached rates on a fresh device: the transfer form renders no conversion
+// hint and the destination amount starts empty.
+jest.mock('@/shared/lib/db/rates', () => ({
+  ...(jest.requireActual('@/shared/lib/db/rates') as Record<string, unknown>),
+  useRates: () => ({ data: null }),
+}))
+
 beforeEach(() => {
   mockAuth = { status: 'anonymous', user: null }
   mockMembers = null

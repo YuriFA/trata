@@ -1,10 +1,12 @@
 // Pure derived-data helpers for month-scoped cashflow overviews (the
 // dashboard's expense view and the income screen) over the DOMAIN types
-// from @trata/api. Integer money math only (minor units);
-// balances come pre-computed from the account repository (opening +
-// manualAdjustment + signed transaction impacts), so selectors only
-// aggregate them. The dashboard-only balance aggregates (monthlyBalance,
-// totalBalance) live in pages/dashboard/model.
+// from @trata/api. Integer money math only (minor units); balances come
+// pre-computed from the account repository, so selectors only aggregate
+// them. Multi-currency (6.4): every figure is built from NATIVE currency
+// buckets via the shared aggregate module - exact per-currency sums, one
+// conversion per bucket when a hero figure needs the display currency. The
+// dashboard-only balance aggregates (monthlyBalance, totalBalance) live in
+// pages/dashboard/model.
 
 import type { Category, HouseholdMember, Transaction } from '@trata/api'
 import {
@@ -17,6 +19,15 @@ import {
   type PeriodCursor,
 } from '@trata/dates'
 import type { IconName } from '@/shared/ui/icon'
+import {
+  aggregateByCurrency,
+  aggregateExactText,
+  aggregateHeroText,
+  cashflowBuckets,
+  nativeCurrencyOf,
+  type CurrencyAggregate,
+  type MoneyPresentation,
+} from '@/shared/lib/money/aggregate'
 import { formatAmount } from '@/shared/lib/format/format'
 import { authorLabel } from '@/entities/household'
 import type { CashflowRowView } from '../ui/cashflow-list-sheet'
@@ -62,6 +73,7 @@ export interface CashflowAuthorContext {
 function toCashflowRow(
   tx: Transaction,
   categories: Category[],
+  presentation: MoneyPresentation,
   author?: CashflowAuthorContext,
 ): CashflowRowView {
   const category = categories.find((c) => c.id === tx.categoryId)
@@ -74,7 +86,9 @@ function toCashflowRow(
     // theme-aware token class), keeping this pure function free of theming.
     categoryColor: category?.color,
     dayLabel: relativeDayLabel(tx.occurredAt),
-    amountText: formatAmount(tx.amount),
+    // Native currency (app-currency): the row shows the amount in its
+    // account's currency; account-less amounts in the display currency.
+    amountText: formatAmount(tx.amount, nativeCurrencyOf(tx, presentation)),
     authorLabel: author ? authorLabel(tx.authorId, author.members, author.currentUserId) : null,
   }
 }
@@ -84,7 +98,7 @@ export interface CashflowDayGroup {
   key: string
   /** "17 августа" */
   title: string
-  /** "3 123 ₽" — the day's cashflow total. */
+  /** The day's cashflow total: exact single-currency or per-currency join. */
   totalText: string
   rows: CashflowRowView[]
 }
@@ -98,35 +112,44 @@ function byOccurredAtDesc(a: Transaction, b: Transaction): number {
 
 /**
  * Day-grouped cashflow over PRE-TRIMMED, newest-first transactions of one
- * kind (shared by the month and period variants below).
+ * kind (shared by the month and period variants below). Day headers stay
+ * EXACT: single-currency days show their compact total, mixed days the
+ * per-currency join - list contexts never carry the «≈» conversion.
  */
 function groupCashflowByDay(
   matching: Transaction[],
   categories: Category[],
+  presentation: MoneyPresentation,
   author?: CashflowAuthorContext,
 ): CashflowDayGroup[] {
-  const buckets: Array<Omit<CashflowDayGroup, 'totalText'> & { totalMinor: number }> = []
+  const buckets: Array<Omit<CashflowDayGroup, 'totalText'> & { txs: Transaction[] }> = []
   for (const tx of matching) {
     const key = calendarDayKey(new Date(tx.occurredAt))
 
     const current = buckets[buckets.length - 1]
     if (current?.key === key) {
-      current.rows.push(toCashflowRow(tx, categories, author))
-      current.totalMinor += tx.amount
+      current.rows.push(toCashflowRow(tx, categories, presentation, author))
+      current.txs.push(tx)
     } else {
       buckets.push({
         key,
         title: fullDayLabel(tx.occurredAt),
-        totalMinor: tx.amount,
-        rows: [toCashflowRow(tx, categories, author)],
+        txs: [tx],
+        rows: [toCashflowRow(tx, categories, presentation, author)],
       })
     }
   }
 
-  return buckets.map(({ key, title, totalMinor, rows }) => ({
+  return buckets.map(({ key, title, txs, rows }) => ({
     key,
     title,
-    totalText: formatAmount(totalMinor),
+    totalText: aggregateExactText(
+      aggregateByCurrency(
+        cashflowBuckets(txs, presentation.currencyByAccountId, presentation.displayCurrency),
+        presentation.displayCurrency,
+        null,
+      ),
+    ),
     rows,
   }))
 }
@@ -140,11 +163,13 @@ export function cashflowDayGroups(
   categories: Category[],
   cursor: MonthCursor,
   kind: CashflowKind,
+  presentation: MoneyPresentation,
   author?: CashflowAuthorContext,
 ): CashflowDayGroup[] {
   return groupCashflowByDay(
     cashflowInMonth(txs, cursor, kind).slice().sort(byOccurredAtDesc),
     categories,
+    presentation,
     author,
   )
 }
@@ -155,51 +180,107 @@ export function cashflowDayGroupsInPeriod(
   categories: Category[],
   cursor: PeriodCursor,
   kind: CashflowKind,
+  presentation: MoneyPresentation,
   author?: CashflowAuthorContext,
 ): CashflowDayGroup[] {
   return groupCashflowByDay(
     cashflowInPeriod(txs, cursor, kind).slice().sort(byOccurredAtDesc),
     categories,
+    presentation,
     author,
   )
 }
 
-export function totalCashflow(txs: Transaction[], cursor: MonthCursor, kind: CashflowKind): number {
-  return cashflowInMonth(txs, cursor, kind).reduce((sum, t) => sum + t.amount, 0)
+/**
+ * The period's cashflow aggregate of one kind: per-currency exact totals
+ * plus the optional «≈» conversion into the display currency (the summary
+ * cards' hero figure).
+ */
+export function cashflowTotal(
+  txs: Transaction[],
+  cursor: MonthCursor,
+  kind: CashflowKind,
+  presentation: MoneyPresentation,
+): CurrencyAggregate {
+  return aggregateByCurrency(
+    cashflowBuckets(
+      cashflowInMonth(txs, cursor, kind),
+      presentation.currencyByAccountId,
+      presentation.displayCurrency,
+    ),
+    presentation.displayCurrency,
+    presentation.rates,
+  )
 }
 
-export function totalCashflowInPeriod(
+/** PeriodCursor equivalent of cashflowTotal (any week/month/year). */
+export function cashflowTotalInPeriod(
   txs: Transaction[],
   cursor: PeriodCursor,
   kind: CashflowKind,
-): number {
-  return cashflowInPeriod(txs, cursor, kind).reduce((sum, t) => sum + t.amount, 0)
+  presentation: MoneyPresentation,
+): CurrencyAggregate {
+  return aggregateByCurrency(
+    cashflowBuckets(
+      cashflowInPeriod(txs, cursor, kind),
+      presentation.currencyByAccountId,
+      presentation.displayCurrency,
+    ),
+    presentation.displayCurrency,
+    presentation.rates,
+  )
 }
 
 export interface CategoryCashflow {
   category: Category
-  totalMinor: number
+  /** The category's aggregate hero: exact, «≈» converted, or the exact join. */
+  amountText: string
+  /** Ordering key: the converted figure when present, else the largest bucket. */
+  sortMinor: number
 }
 
 /**
- * Cashflow totals per category for the period, descending by amount.
- * Categories without movement in the period are omitted.
+ * Cashflow totals per category for the period, ordered by the converted
+ * figures when rates allow (the analytics rule), descending. Categories
+ * without movement in the period are omitted.
  */
 export function categoryBreakdown(
   txs: Transaction[],
   categories: Category[],
   cursor: MonthCursor,
   kind: CashflowKind,
+  presentation: MoneyPresentation,
 ): CategoryCashflow[] {
-  const totals = new Map<string, number>()
+  const byCategory = new Map<string, Transaction[]>()
   for (const t of cashflowInMonth(txs, cursor, kind)) {
-    if (t.type !== kind || !t.categoryId) continue
-    totals.set(t.categoryId, (totals.get(t.categoryId) ?? 0) + t.amount)
+    if (!t.categoryId) continue
+    const bucket = byCategory.get(t.categoryId)
+    if (bucket) bucket.push(t)
+    else byCategory.set(t.categoryId, [t])
   }
+
   return categories
-    .filter((c) => totals.has(c.id))
-    .map((c) => ({ category: c, totalMinor: totals.get(c.id) as number }))
-    .sort((a, b) => b.totalMinor - a.totalMinor)
+    .filter((c) => byCategory.has(c.id))
+    .map((category) => {
+      const txsOfCategory = byCategory.get(category.id) as Transaction[]
+      const aggregate = aggregateByCurrency(
+        cashflowBuckets(
+          txsOfCategory,
+          presentation.currencyByAccountId,
+          presentation.displayCurrency,
+        ),
+        presentation.displayCurrency,
+        presentation.rates,
+      )
+      return {
+        category,
+        amountText: aggregateHeroText(aggregate),
+        sortMinor:
+          aggregate.converted?.amount ??
+          Math.max(0, ...aggregate.totals.map((total) => Math.abs(total.amount))),
+      }
+    })
+    .sort((a, b) => b.sortMinor - a.sortMinor)
 }
 
 /** Most recent cashflow transaction of the period (ties broken by id). */

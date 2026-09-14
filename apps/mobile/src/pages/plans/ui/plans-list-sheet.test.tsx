@@ -6,6 +6,7 @@
 import { describe, expect, it, jest } from '@jest/globals'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
+import type { MoneyPresentation } from '@/shared/lib/money/aggregate'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { Category, PlannedPayment } from '@trata/api'
 import { ThemeProvider } from '@/shared/config/theme'
@@ -37,6 +38,12 @@ const CATEGORIES: Category[] = [
     version: 1,
   },
 ]
+
+const PRESENTATION: MoneyPresentation = {
+  currencyByAccountId: new Map([['acc-1', 'RUB']]),
+  displayCurrency: 'RUB',
+  rates: null,
+}
 
 function plan(overrides: Partial<PlannedPayment>): PlannedPayment {
   return {
@@ -86,6 +93,7 @@ function renderSheet({
               type={type}
               plans={plans}
               categories={CATEGORIES}
+              presentation={PRESENTATION}
               onAdd={onAdd}
               onEdit={onEdit}
               onConfirm={onConfirm}

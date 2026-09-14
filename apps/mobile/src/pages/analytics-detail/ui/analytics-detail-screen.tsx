@@ -29,8 +29,11 @@ import {
   DonutChart,
   OTHER_ENTRY_COLOR,
   categoryTotals,
+  chartTotal,
   percentLabel,
   periodTotal,
+  useAnalyticsPresentation,
+  zeroCategoryTotal,
   type AnalyticsDirection,
   type CategoryTotal,
   type DonutSegment,
@@ -47,9 +50,14 @@ import { Pressable } from '@/shared/ui/pressable'
 import { Screen } from '@/shared/ui/screen'
 import { ScreenHeader, ScreenScrollView } from '@/shared/ui/screen-header'
 import { Text } from '@/shared/ui/text'
+import {
+  aggregateDetailText,
+  aggregateHeroText,
+  rateDateLabel,
+  type MoneyPresentation,
+} from '@/shared/lib/money/aggregate'
 import type { BottomSheetRef } from '@/shared/ui/bottom-sheet'
 import { cn } from '@/shared/lib/utils'
-import { formatAmount } from '@/shared/lib/format/format'
 import {
   CHART_SIZE,
   CHART_STROKE,
@@ -72,27 +80,26 @@ const DIRECTION_VIEWS: Record<AnalyticsDirection, { title: string; allLabel: str
 // past it so its pages travel edge-to-edge (PeriodChartCarousel contentInset).
 const CONTENT_INSET = 24
 
-/**
- * Neighbor-period carousel page composition: every category with movement,
- * no session filtering (selection/exclusions reset on commit anyway); a
- * period without movement renders the same neutral empty ring as the current
- * one.
- */
 function neighborSegments(
   transactions: Transaction[],
   categories: Category[],
   cursor: PeriodCursor,
   direction: AnalyticsDirection,
+  presentation: MoneyPresentation,
 ): DonutSegment[] {
-  const withMovement = categoryTotals(transactions, categories, cursor, direction).filter(
-    ({ totalMinor }) => totalMinor > 0,
-  )
+  const withMovement = categoryTotals(
+    transactions,
+    categories,
+    cursor,
+    direction,
+    presentation,
+  ).filter(({ sortMinor }) => sortMinor > 0)
   if (withMovement.length === 0) {
     return [{ id: 'empty-period', value: 1, color: OTHER_ENTRY_COLOR }]
   }
-  return withMovement.map(({ category, totalMinor }) => ({
+  return withMovement.map(({ category, sortMinor }) => ({
     id: category.id,
-    value: totalMinor,
+    value: sortMinor,
     color: category.color,
   }))
 }
@@ -172,19 +179,23 @@ export function AnalyticsDetailScreen({ direction }: AnalyticsDetailScreenProps)
   const transactions = transactionsQuery.data ?? []
   const categories = categoriesQuery.data ?? []
 
-  const total = periodTotal(transactions, cursor, direction)
+  const presentation = useAnalyticsPresentation()
+
+  const total = periodTotal(transactions, cursor, direction, presentation)
   const rangeLabel = periodRangeLabel(cursor)
   const kind = cursor.kind
 
   // The list shows EVERY direction category (0 when without movement);
   // the chart charts the included categories with movement.
-  const movementTotals = categoryTotals(transactions, categories, cursor, direction)
-  const movementByCategory = new Map(
-    movementTotals.map(({ category, totalMinor }) => [category.id, totalMinor]),
-  )
+  const movementTotals = categoryTotals(transactions, categories, cursor, direction, presentation)
+  const movementByCategory = new Map(movementTotals.map((total) => [total.category.id, total]))
   const allTotals: CategoryTotal[] = categories
-    .map((category) => ({ category, totalMinor: movementByCategory.get(category.id) ?? 0 }))
-    .sort((a, b) => b.totalMinor - a.totalMinor)
+    .map(
+      (category) =>
+        movementByCategory.get(category.id) ??
+        zeroCategoryTotal(category, presentation.displayCurrency),
+    )
+    .sort((a, b) => b.sortMinor - a.sortMinor)
 
   // Every period change resets selection and filtering and the carousel
   // commits through the stepper (conventions §2 - the reset lives in the
@@ -235,19 +246,19 @@ export function AnalyticsDetailScreen({ direction }: AnalyticsDetailScreenProps)
     editTransactionRef.current?.present()
   }
 
-  const includedWithMovement = includedTotals.filter(({ totalMinor }) => totalMinor > 0)
+  const includedWithMovement = includedTotals.filter(({ sortMinor }) => sortMinor > 0)
   const chartSegments: DonutSegment[] =
     includedWithMovement.length === 0
       ? [{ id: 'empty-period', value: 1, color: OTHER_ENTRY_COLOR }]
-      : includedWithMovement.map(({ category, totalMinor }) => ({
+      : includedWithMovement.map(({ category, sortMinor }) => ({
           id: category.id,
-          value: totalMinor,
+          value: sortMinor,
           color: category.color,
         }))
 
   const carouselPages: PeriodCarouselPages = {
     prev: {
-      segments: neighborSegments(prevTransactions, categories, prevCursor, direction),
+      segments: neighborSegments(prevTransactions, categories, prevCursor, direction, presentation),
       rangeLabel: periodRangeLabel(prevCursor).toUpperCase(),
     },
     cur: {
@@ -256,7 +267,7 @@ export function AnalyticsDetailScreen({ direction }: AnalyticsDetailScreenProps)
       selectedSegmentId: selectedCategoryId,
     },
     next: {
-      segments: neighborSegments(nextTransactions, categories, nextCursor, direction),
+      segments: neighborSegments(nextTransactions, categories, nextCursor, direction, presentation),
       rangeLabel: periodRangeLabel(nextCursor).toUpperCase(),
     },
   }
@@ -268,15 +279,22 @@ export function AnalyticsDetailScreen({ direction }: AnalyticsDetailScreenProps)
       ]
     : allTotals
 
+  // Percentages need one shared unit (the «≈» conversion or a single
+  // currency); the missing-rates degradation names exact figures instead.
+  const unitTotal = chartTotal(total)
   const chartSummary =
-    total > 0
+    unitTotal === null
       ? movementTotals
-          .map(
-            ({ category, totalMinor }) =>
-              `${category.name} ${Math.round((totalMinor / total) * 100)}%`,
-          )
+          .map(({ category, amountText }) => `${category.name} ${amountText}`)
           .join(', ')
-      : 'нет данных за период'
+      : unitTotal > 0
+        ? movementTotals
+            .map(
+              ({ category, sortMinor }) =>
+                `${category.name} ${Math.round((sortMinor / unitTotal) * 100)}%`,
+            )
+            .join(', ')
+        : 'нет данных за период'
 
   const sheetCategory = categories.find((category) => category.id === drillDownCategoryId)
 
@@ -299,15 +317,25 @@ export function AnalyticsDetailScreen({ direction }: AnalyticsDetailScreenProps)
               />
             ))}
           </View>
-
-          <View
-            className="flex-row items-baseline gap-2 self-start"
-            testID="analytics-detail-total"
-          >
-            <Text variant="h2" className="font-bold">
-              {formatAmount(total)}
-            </Text>
-            <Text variant="caption">всего</Text>
+          <View className="gap-1 self-start" testID="analytics-detail-total">
+            <View className="flex-row items-baseline gap-2">
+              <Text variant="h2" className="font-bold">
+                {aggregateHeroText(total)}
+              </Text>
+              <Text variant="caption">всего</Text>
+              {/* The «≈» figure names its rate's as-of date. */}
+              {total.converted && presentation.rates ? (
+                <Text variant="caption" testID="analytics-total-rate-date">
+                  курс на {rateDateLabel(presentation.rates.asOf)}
+                </Text>
+              ) : null}
+            </View>
+            {/* The exact per-currency breakdown under a converted hero. */}
+            {aggregateDetailText(total) ? (
+              <Text variant="caption" className="text-muted-foreground">
+                {aggregateDetailText(total)}
+              </Text>
+            ) : null}
           </View>
 
           {/* Only the chart steps - the swipe tracks the finger and settles
@@ -349,12 +377,12 @@ export function AnalyticsDetailScreen({ direction }: AnalyticsDetailScreenProps)
               </Text>
               <View className="items-end">
                 <Text variant="body" className="font-semibold">
-                  {formatAmount(total)}
+                  {aggregateHeroText(total)}
                 </Text>
-                <Text variant="caption">100%</Text>
+                {unitTotal !== null ? <Text variant="caption">100%</Text> : null}
               </View>
             </View>
-            {orderedTotals.map(({ category, totalMinor }) => (
+            {orderedTotals.map(({ category, amountText, sortMinor }) => (
               <Pressable
                 key={category.id}
                 className={cn(
@@ -380,9 +408,13 @@ export function AnalyticsDetailScreen({ direction }: AnalyticsDetailScreenProps)
                 </Text>
                 <View className="items-end">
                   <Text variant="body" className="font-semibold">
-                    {formatAmount(totalMinor)}
+                    {amountText}
                   </Text>
-                  <Text variant="caption">{percentLabel(totalMinor, total)}</Text>
+                  {/* Percentages exist only in a shared unit; the
+                      missing-rates degradation hides them entirely. */}
+                  {unitTotal !== null ? (
+                    <Text variant="caption">{percentLabel(sortMinor, unitTotal)}</Text>
+                  ) : null}
                 </View>
               </Pressable>
             ))}

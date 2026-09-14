@@ -20,8 +20,8 @@ import { BottomSheetProvider } from '@/shared/ui/bottom-sheet/bottom-sheet-provi
 import { OperationForm, type OperationFormProps } from './operation-form'
 
 const DEBTORS: Debtor[] = [
-  { id: 'debtor-anna', name: 'Анна', note: '', version: 1 },
-  { id: 'debtor-sergey', name: 'Сергей', note: '', version: 1 },
+  { id: 'debtor-anna', name: 'Анна', note: '', currency: 'RUB', version: 1 },
+  { id: 'debtor-sergey', name: 'Сергей', note: '', currency: 'RUB', version: 1 },
 ]
 
 const EXISTING: DebtOperation[] = [

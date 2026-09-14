@@ -14,6 +14,29 @@ import { AnalyticsScreen } from './analytics-screen'
 const mockPush = jest.fn()
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }))
 
+// The suite pins the presentation context: anonymous fresh device - empty
+// account map (native = display RUB), no cached rates, exact figures only.
+jest.mock('@/features/analytics/model/presentation', () => ({
+  useAnalyticsPresentation: () => ({
+    currencyByAccountId: new Map(),
+    displayCurrency: 'RUB',
+    rates: null,
+  }),
+}))
+jest.mock('@/features/cashflow-overview/model/presentation', () => ({
+  useCashflowPresentation: () => ({
+    currencyByAccountId: new Map(),
+    displayCurrency: 'RUB',
+    rates: null,
+  }),
+}))
+
+// No cached rates on a fresh device: aggregates render exact native figures.
+jest.mock('@/shared/lib/db/rates', () => ({
+  ...(jest.requireActual('@/shared/lib/db/rates') as Record<string, unknown>),
+  useRates: () => ({ data: null }),
+}))
+
 const ZERO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 }
 
 const CATEGORIES: Category[] = [

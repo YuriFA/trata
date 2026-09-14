@@ -21,7 +21,7 @@ import { DebtorHistorySheet } from './debtor-history-sheet'
 
 const ZERO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 }
 
-const ANNA: Debtor = { id: 'debtor-anna', name: 'Анна', note: '', version: 1 }
+const ANNA: Debtor = { id: 'debtor-anna', name: 'Анна', note: '', currency: 'RUB', version: 1 }
 
 const OPERATIONS: DebtOperation[] = [
   {
@@ -102,7 +102,9 @@ describe('DebtorHistorySheet', () => {
     renderSheet()
 
     // 5 000,00 − 1 500,00 = 3 500,00; the payable op must not net in.
-    expect(screen.getByTestId('debts-history-balance')).toHaveTextContent(formatAmount(350_000))
+    expect(screen.getByTestId('debts-history-balance')).toHaveTextContent(
+      formatAmount(350_000, 'RUB'),
+    )
     expect(screen.getByText('Мне должны')).toBeTruthy()
   })
 
@@ -115,8 +117,8 @@ describe('DebtorHistorySheet', () => {
     expect(screen.getByText('займ')).toBeTruthy()
     expect(screen.getByText('Списание')).toBeTruthy()
     // Signed display: the debt grows (+), the repayment shrinks (−).
-    expect(screen.getByText(`+\u00A0${formatAmount(500_000)}`)).toBeTruthy()
-    expect(screen.getByText(`−\u00A0${formatAmount(150_000)}`)).toBeTruthy()
+    expect(screen.getByText(`+\u00A0${formatAmount(500_000, 'RUB')}`)).toBeTruthy()
+    expect(screen.getByText(`−\u00A0${formatAmount(150_000, 'RUB')}`)).toBeTruthy()
   })
 
   it('reports row taps, debtor edit, and the new-repayment CTA upward', () => {

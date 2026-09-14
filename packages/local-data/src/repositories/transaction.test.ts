@@ -11,6 +11,8 @@ import {
   type CreateTransactionPayload,
   InvalidPayloadError,
   NotFoundError,
+  type Transaction,
+  type TransferTransaction,
   UnknownReferencesError,
   VersionConflictError,
 } from '@trata/api'
@@ -485,5 +487,108 @@ describe('local transaction repository: account-less cashflow', () => {
       .where(eq(syncOutbox.entityId, cleared.id))
       .all()
     expect(JSON.parse(op.payloadJson).accountId).toBeNull()
+  })
+})
+
+describe('local transaction repository: cross-currency transfers', () => {
+  let usdId: string
+
+  beforeEach(async () => {
+    usdId = (
+      await accountRepo.create({ name: 'USD', currency: 'USD', openingBalance: 0 })
+    ).id
+  })
+
+  // The transfer-branch payload: only this branch carries destinationAmount,
+  // so the spreads below keep their excess-property checks meaningful.
+  const transferPayload = (toAccountId: string): CreateTransactionPayload<TransferTransaction> => ({
+    type: 'transfer',
+    amount: 3_500,
+    description: '',
+    occurredAt: '2026-08-10T12:00:00.000Z',
+    fromAccountId: cardId,
+    toAccountId,
+  })
+
+  /** Narrows create/update results to the transfer variant for assertions. */
+  function expectTransfer(transaction: Transaction): TransferTransaction {
+    if (transaction.type !== 'transfer') throw new Error('expected a transfer record')
+    return transaction
+  }
+
+  it('stores the destination amount on a cross-currency transfer and mirrors it to the outbox', async () => {
+    const transfer = expectTransfer(
+      await transactionRepo.create({
+        ...transferPayload(usdId),
+        destinationAmount: 4_000,
+      }),
+    )
+    expect(transfer.destinationAmount).toBe(4_000)
+
+    const [op] = db
+      .select()
+      .from(syncOutbox)
+      .where(eq(syncOutbox.entityId, transfer.id))
+      .all()
+    expect(JSON.parse(op.payloadJson).destinationAmount).toBe(4_000)
+  })
+
+  it('rejects a cross-currency transfer without, zero, or negative destination amount', async () => {
+    for (const destinationAmount of [undefined, 0, -100]) {
+      const error = await transactionRepo
+        .create({ ...transferPayload(usdId), destinationAmount })
+        .catch((e) => e)
+      expect(error).toBeInstanceOf(InvalidPayloadError)
+      expect((error as InvalidPayloadError).apiCode).toBe('INVALID_AMOUNT')
+    }
+  })
+
+  it('rejects a same-currency transfer that carries a destination amount', async () => {
+    const error = await transactionRepo
+      .create({ ...transferPayload(cashId), destinationAmount: 3_500 })
+      .catch((e) => e)
+    expect(error).toBeInstanceOf(InvalidPayloadError)
+    expect((error as InvalidPayloadError).apiCode).toBe('INVALID_AMOUNT')
+  })
+
+  it('re-validates the iff-rule against the effective accounts on update', async () => {
+    const transfer = expectTransfer(
+      await transactionRepo.create({
+        ...transferPayload(usdId),
+        destinationAmount: 4_000,
+      }),
+    )
+
+    // Switching the destination to a same-currency account drops the amount.
+    const sameCurrency = expectTransfer(
+      await transactionRepo.update(transfer.id, {
+        version: transfer.version,
+        toAccountId: cashId,
+      }),
+    )
+    expect(sameCurrency.destinationAmount).toBeUndefined()
+
+    // Re-crossing without a new amount is rejected: the record would be
+    // invalid against the effective references.
+    const error = await transactionRepo
+      .update(sameCurrency.id, { version: sameCurrency.version, toAccountId: usdId })
+      .catch((e) => e)
+    expect(error).toBeInstanceOf(InvalidPayloadError)
+
+    // Editing the destination amount keeps the transfer valid.
+    const recrossed = expectTransfer(
+      await transactionRepo.update(sameCurrency.id, {
+        version: sameCurrency.version,
+        toAccountId: usdId,
+        destinationAmount: 4_100,
+      }),
+    )
+    expect(recrossed.destinationAmount).toBe(4_100)
+  })
+
+  it('credits the destination balance with the destination amount, not the source amount', async () => {
+    await transactionRepo.create({ ...transferPayload(usdId), destinationAmount: 4_000 })
+    const usd = await accountRepo.getById(usdId)
+    expect(usd?.balance).toBe(4_000)
   })
 })

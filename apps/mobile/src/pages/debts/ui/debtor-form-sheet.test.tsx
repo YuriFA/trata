@@ -17,7 +17,13 @@ import {
 } from '@/shared/lib/testing/mock-debt-repositories'
 import { DebtorForm } from './debtor-form-sheet'
 
-const ANNA: Debtor = { id: 'debtor-anna', name: 'Анна', note: 'коллега', version: 3 }
+const ANNA: Debtor = {
+  id: 'debtor-anna',
+  name: 'Анна',
+  note: 'коллега',
+  currency: 'RUB',
+  version: 3,
+}
 
 function renderForm(debtor: Debtor = ANNA) {
   const debtorRepository = createMockDebtorRepository([debtor])

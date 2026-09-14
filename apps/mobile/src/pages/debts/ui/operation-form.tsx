@@ -183,17 +183,19 @@ function OverRepaymentWarning() {
   const direction = useWatch({ control, name: 'direction' })
   const amount = useWatch({ control, name: 'amount' })
   const operations = useDebtOperations().data ?? []
-
+  // The debtor's immutable ledger currency formats the remaining balance
+  // (debts capability: operations inherit the debtor's currency).
+  const debtor = useDebtors().data?.find((candidate) => candidate.id === debtorId)
   if (kind !== 'repayment' || !debtorId) return null
   const minor = parseMajorUnitsToMinor(amount ?? '')
   if (minor === null || minor <= 0) return null
 
   const remaining = balanceInDirection(operations, debtorId, direction)
-  if (minor <= remaining) return null
+  if (minor <= remaining || !debtor) return null
 
   return (
     <Text variant="caption" className="text-warning" testID="debts-operation-over-repayment">
-      {DEBTS_COPY.overRepayment(formatAmount(remaining))}
+      {DEBTS_COPY.overRepayment(formatAmount(remaining, debtor.currency))}
     </Text>
   )
 }

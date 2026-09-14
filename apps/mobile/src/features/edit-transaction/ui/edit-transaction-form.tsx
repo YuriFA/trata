@@ -102,7 +102,16 @@ function toUpdatePayload(
   }
 
   if (values.type === 'transfer') {
-    return { ...base, fromAccountId: values.fromAccountId, toAccountId: values.toAccountId }
+    return {
+      ...base,
+      fromAccountId: values.fromAccountId,
+      toAccountId: values.toAccountId,
+      // The iff-rule: the figure travels only across currencies (the schema
+      // validated presence and magnitude); same-currency updates omit it.
+      ...(values.crossCurrency && values.destinationAmount !== ''
+        ? { destinationAmount: parseMajorUnitsToMinor(values.destinationAmount) ?? 0 }
+        : {}),
+    }
   }
   if (values.type === 'adjustment') {
     return { ...base, accountId: values.accountId }

@@ -35,6 +35,7 @@ const PREVIEW: HouseholdInvitationPreview = {
 
 const JOINED_HOUSEHOLD: Household = {
   id: 'hh-target',
+  currency: 'RUB',
   createdAt: '2026-08-01T00:00:00.000Z',
   name: 'Семья',
   members: [],

@@ -13,8 +13,10 @@ import {
   ChartLegend,
   DonutChart,
   categoryTotals,
+  chartTotal,
   periodTotal,
   toChartEntries,
+  useAnalyticsPresentation,
   type AnalyticsDirection,
   type ChartEntry,
 } from '@/features/analytics'
@@ -25,7 +27,12 @@ import { Icon } from '@/shared/ui/icon'
 import { Pressable } from '@/shared/ui/pressable'
 import { Screen } from '@/shared/ui/screen'
 import { Text } from '@/shared/ui/text'
-import { formatAmount } from '@/shared/lib/format/format'
+import {
+  aggregateDetailText,
+  aggregateHeroText,
+  rateDateLabel,
+  type MoneyPresentation,
+} from '@/shared/lib/money/aggregate'
 
 const DIRECTION_VIEWS: Record<
   AnalyticsDirection,
@@ -49,9 +56,14 @@ const DIRECTION_VIEWS: Record<
 }
 
 /** Compact speech summary of the capped breakdown ("Такси 66%, Кафе 20%"). */
-function chartSummaryLabel(entries: ChartEntry[], total: number): string {
+function chartSummaryLabel(entries: ChartEntry[], unitTotal: number | null): string {
+  // Percentages need one shared unit; the missing-rates degradation names
+  // the exact per-currency figures instead.
+  if (unitTotal === null || unitTotal <= 0) {
+    return entries.map((entry) => `${entry.label} ${entry.amountText}`).join(', ')
+  }
   return entries
-    .map((entry) => `${entry.label} ${Math.round((entry.totalMinor / total) * 100)}%`)
+    .map((entry) => `${entry.label} ${Math.round((entry.totalMinor / unitTotal) * 100)}%`)
     .join(', ')
 }
 
@@ -60,6 +72,7 @@ interface OverviewCardProps {
   cursor: PeriodCursor
   transactions: Transaction[]
   categories: Category[]
+  presentation: MoneyPresentation
   onPress: () => void
 }
 
@@ -68,19 +81,21 @@ function AnalyticsOverviewCard({
   cursor,
   transactions,
   categories,
+  presentation,
   onPress,
 }: OverviewCardProps) {
   const view = DIRECTION_VIEWS[direction]
-  const totals = categoryTotals(transactions, categories, cursor, direction)
-  const total = periodTotal(transactions, cursor, direction)
+  const totals = categoryTotals(transactions, categories, cursor, direction, presentation)
+  const total = periodTotal(transactions, cursor, direction, presentation)
   const entries = toChartEntries(totals)
+  const unitTotal = chartTotal(total)
   const monthName = monthLabel(cursor.start.getFullYear(), cursor.start.getMonth())
 
   return (
     <Pressable
       testID={view.testId}
       accessibilityRole="button"
-      accessibilityLabel={`${view.title} за ${monthName} ${cursor.start.getFullYear()}, ${formatAmount(total)}`}
+      accessibilityLabel={`${view.title} за ${monthName} ${cursor.start.getFullYear()}, ${aggregateHeroText(total)}`}
       onPress={onPress}
     >
       <Card variant="elevated" className="gap-4">
@@ -102,20 +117,31 @@ function AnalyticsOverviewCard({
               }))}
               size={120}
               strokeWidth={14}
-              accessibilityLabel={`${view.title} по категориям: ${chartSummaryLabel(entries, total)}`}
+              accessibilityLabel={`${view.title} по категориям: ${chartSummaryLabel(entries, unitTotal)}`}
             >
               <View className="items-center px-3">
                 <Text variant="caption" className="uppercase text-muted-foreground">
                   СУММА
                 </Text>
                 <Text variant="label" className="font-semibold">
-                  {formatAmount(total)}
+                  {aggregateHeroText(total)}
                 </Text>
               </View>
             </DonutChart>
             <ChartLegend entries={entries} testIdPrefix={`${view.testId}-legend`} />
           </View>
         )}
+        {/* The «≈» figure carries its exact per-currency breakdown and the
+            rate's as-of date (the exchange-rates presentation rule). */}
+        {total.converted && presentation.rates ? (
+          <Text
+            variant="caption"
+            className="text-muted-foreground"
+            testID={`analytics-${direction}-rate-date`}
+          >
+            {aggregateDetailText(total)} · курс на {rateDateLabel(presentation.rates.asOf)}
+          </Text>
+        ) : null}
       </Card>
     </Pressable>
   )
@@ -130,6 +156,7 @@ export function AnalyticsScreen() {
   const incomeQuery = useTransactions({ type: 'income', ...range })
   const categoriesQuery = useCategoriesIncludingArchived()
   const categories = categoriesQuery.data ?? []
+  const presentation = useAnalyticsPresentation()
 
   const handleOpenDetail = (direction: AnalyticsDirection) => {
     router.push({ pathname: '/analytics-detail', params: { type: direction } })
@@ -145,6 +172,7 @@ export function AnalyticsScreen() {
             cursor={cursor}
             transactions={expenseQuery.data ?? []}
             categories={categories}
+            presentation={presentation}
             onPress={() => handleOpenDetail('expense')}
           />
           <AnalyticsOverviewCard
@@ -152,6 +180,7 @@ export function AnalyticsScreen() {
             cursor={cursor}
             transactions={incomeQuery.data ?? []}
             categories={categories}
+            presentation={presentation}
             onPress={() => handleOpenDetail('income')}
           />
         </View>

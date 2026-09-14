@@ -15,6 +15,7 @@ const USER_ID = '11111111-1111-4111-8111-111111111111'
 function household(displayName: string | null): Household {
   return {
     id: 'hh-1',
+    currency: 'RUB',
     createdAt: '2026-08-01T00:00:00.000Z',
     name: null,
     members: [

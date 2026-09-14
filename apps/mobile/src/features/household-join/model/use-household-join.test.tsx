@@ -21,6 +21,7 @@ const USER_ID = '11111111-1111-4111-8111-111111111111'
 
 const HOUSEHOLD: Household = {
   id: 'hh-new',
+  currency: 'RUB',
   createdAt: '2026-08-01T00:00:00.000Z',
   name: 'Семья',
   members: [

@@ -37,15 +37,16 @@ import {
   BottomSheetRef,
   BottomSheetScrollView,
 } from '@/shared/ui/bottom-sheet'
-import { formatAmount } from '@/shared/lib/format/format'
+import { aggregateHeroText } from '@/shared/lib/money/aggregate'
 import {
   cashflowDayGroupsInPeriod,
+  cashflowTotalInPeriod,
   currentMonth,
-  totalCashflowInPeriod,
   type CashflowDayGroup,
   type CashflowKind,
 } from '../model/selectors'
 import { useCashflowAuthor } from '../model/use-cashflow-author'
+import { useCashflowPresentation } from '../model/presentation'
 import { CASHFLOW_KIND_VIEWS } from './kind'
 import { EditCategorySheet } from './edit-category-sheet'
 import { SheetFooter, useSheetFooterScroll } from '@/shared/ui/sheet-footer'
@@ -121,13 +122,23 @@ export function CategoryCashflowSheet({
   // Depends on `categoryQuery.data` (a stable reference per fetch), not a
   // `?? []` fallback computed at render time.
   const author = useCashflowAuthor()
+  const presentation = useCashflowPresentation()
   const { groups, totalText } = useMemo(() => {
     const categoryTransactions = categoryQuery.data ?? []
     return {
-      groups: cashflowDayGroupsInPeriod(categoryTransactions, categories, period, kind, author),
-      totalText: formatAmount(totalCashflowInPeriod(categoryTransactions, period, kind)),
+      groups: cashflowDayGroupsInPeriod(
+        categoryTransactions,
+        categories,
+        period,
+        kind,
+        presentation,
+        author,
+      ),
+      totalText: aggregateHeroText(
+        cashflowTotalInPeriod(categoryTransactions, period, kind, presentation),
+      ),
     }
-  }, [categoryQuery.data, categories, period, kind, author])
+  }, [categoryQuery.data, categories, period, kind, author, presentation])
   const orderedGroups = sortAscending ? reverseGroups(groups) : groups
   const periodLabel = isMonthMode
     ? monthRangeLabelShort(period.start.getFullYear(), period.start.getMonth())

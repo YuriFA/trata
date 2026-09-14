@@ -24,6 +24,19 @@ import type { BottomSheetRef } from '@/shared/ui/bottom-sheet'
 import { NewTransactionForm } from './new-transaction-form'
 import { NewTransactionSheet } from './new-transaction-sheet'
 
+// These suites run on a fresh anonymous device: no stored display-currency
+// preference, so the resolution chain falls through to the household base
+// (undefined here) and then the RUB default.
+jest.mock('@/shared/lib/db/app-settings', () => ({
+  ...(jest.requireActual('@/shared/lib/db/app-settings') as Record<string, unknown>),
+  useDisplayCurrencySetting: () => ({ data: null, setDisplayCurrency: jest.fn() }),
+}))
+// No cached rates on a fresh device: aggregates render exact native figures.
+jest.mock('@/shared/lib/db/rates', () => ({
+  ...(jest.requireActual('@/shared/lib/db/rates') as Record<string, unknown>),
+  useRates: () => ({ data: null }),
+}))
+
 const ZERO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 }
 
 const ACCOUNTS = [
@@ -246,7 +259,7 @@ describe('NewTransactionSheet', () => {
     expect(repository.snapshot()).toHaveLength(0)
   })
 
-  it('selects transfer accounts through pickers with same-currency destinations', async () => {
+  it('selects transfer accounts through pickers: every other account is a destination', async () => {
     const { transactionRepository: repository } = await renderSheet('transfer')
 
     // The destination stays disabled until the source is picked.
@@ -254,12 +267,12 @@ describe('NewTransactionSheet', () => {
 
     await selectAccount('new-transaction-from', 'acc-rub-1')
 
-    // The destination picker offers only the other RUB account.
+    // The destination picker offers every other account regardless of
+    // currency; only the source itself is excluded.
     expect(screen.getByTestId('new-transaction-to').props.accessibilityState.disabled).toBe(false)
     fireEvent.press(screen.getByTestId('new-transaction-to'))
-    expect(await screen.findByTestId('new-transaction-to-option-acc-rub-2')).toBeTruthy()
+    expect(await screen.findByTestId('new-transaction-to-option-acc-usd')).toBeTruthy()
     expect(screen.queryByTestId('new-transaction-to-option-acc-rub-1')).toBeNull()
-    expect(screen.queryByTestId('new-transaction-to-option-acc-usd')).toBeNull()
 
     fireEvent.press(screen.getByTestId('new-transaction-to-option-acc-rub-2'))
     typeAmount(['1', '0', '0'])
@@ -268,12 +281,14 @@ describe('NewTransactionSheet', () => {
 
     await waitFor(() => expect(repository.snapshot()).toHaveLength(1))
     const [created] = repository.snapshot()
+    // Same-currency transfer: no destination amount is ever sent.
     expect(created).toMatchObject({
       type: 'transfer',
       amount: 10_000,
       fromAccountId: 'acc-rub-1',
       toAccountId: 'acc-rub-2',
     })
+    expect(created).not.toHaveProperty('destinationAmount')
   })
 
   it('re-initializes the form when the flow kind changes', async () => {

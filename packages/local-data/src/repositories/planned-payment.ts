@@ -394,6 +394,7 @@ export function createLocalPlannedPaymentRepository(
           categoryId: row.categoryId,
           fromAccountId: null,
           toAccountId: null,
+          destinationAmount: null,
           version: 1,
           serverVersion: 0,
           deletedAt: null,

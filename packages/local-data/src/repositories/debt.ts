@@ -8,6 +8,7 @@
 // machine-readable error codes.
 
 import { and, asc, eq, isNull } from 'drizzle-orm'
+import { DEFAULT_CURRENCY, isCurrencyCode } from '@trata/money'
 import { nowIso } from '@trata/dates'
 import {
   AlreadyExistsError,
@@ -42,7 +43,13 @@ import { generateId } from '../id-factory'
 type LocalTx = Parameters<Parameters<LocalDatabase['transaction']>[0]>[0]
 
 function toDebtor(row: DebtorRow): Debtor {
-  return { id: row.id, name: row.name, note: row.note, version: row.version }
+  return {
+    id: row.id,
+    name: row.name,
+    note: row.note,
+    currency: row.currency as Debtor['currency'],
+    version: row.version,
+  }
 }
 
 function toDebtOperation(row: DebtOperationRow): DebtOperation {
@@ -153,6 +160,11 @@ export function createLocalDebtorRepository(db: LocalDatabase): DebtorRepository
     async create(payload: CreateDebtorPayload) {
       const name = payload.name?.trim() ?? ''
       if (!name) throw new InvalidPayloadError('Debtor name is required')
+      // The household base currency is the client's knowledge (the local db
+      // has no household table), so callers pass it explicitly; RUB is the
+      // same DB backstop the backend falls back to.
+      const currency = payload.currency ?? DEFAULT_CURRENCY
+      if (!isCurrencyCode(currency)) throw new InvalidPayloadError('Invalid currency')
 
       const id = payload.id ?? generateId()
 
@@ -173,6 +185,7 @@ export function createLocalDebtorRepository(db: LocalDatabase): DebtorRepository
           userId: getOwnerUserId(db),
           name,
           note: payload.note ?? '',
+          currency,
           version: 1,
           serverVersion: 0,
           deletedAt: null,

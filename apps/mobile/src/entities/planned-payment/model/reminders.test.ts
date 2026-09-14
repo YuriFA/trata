@@ -132,15 +132,15 @@ describe('reschedule', () => {
     const manual = mocked._store.get('plan-reminder-plan-manual')
     expect(manual?.content).toEqual({
       title: 'Планы',
-      body: `Подтверди платёж ${formatAmount(59_900)}`,
+      body: `Подтверди платёж ${formatAmount(59_900, 'RUB')}`,
     })
     expect(manual?.trigger?.date).toEqual(new Date(2099, 8, 4, 10, 0, 0))
 
     expect(mocked._store.get('plan-reminder-plan-auto-expense')?.content.body).toBe(
-      `Сегодня спишется ${formatAmount(59_900)}`,
+      `Сегодня спишется ${formatAmount(59_900, 'RUB')}`,
     )
     expect(mocked._store.get('plan-reminder-plan-auto-income')?.content.body).toBe(
-      `Сегодня зачислится ${formatAmount(59_900)}`,
+      `Сегодня зачислится ${formatAmount(59_900, 'RUB')}`,
     )
   })
 

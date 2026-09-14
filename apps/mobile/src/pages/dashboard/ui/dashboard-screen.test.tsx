@@ -12,17 +12,26 @@ import { createMockCategoryRepository } from '@/shared/lib/testing/mock-category
 import { TransactionRepositoryProvider } from '@/entities/transaction'
 import { createMockTransactionRepository } from '@/shared/lib/testing/mock-transaction-repository'
 import { BottomSheetProvider } from '@/shared/ui/bottom-sheet/bottom-sheet-provider'
-import { formatAmount } from '@/shared/lib/format/format'
 import { monthRangeLabelShort } from '@trata/dates'
+import { aggregateHeroText } from '@/shared/lib/money/aggregate'
+import type { MoneyPresentation } from '@/shared/lib/money/aggregate'
 import {
   cashflowDayGroups,
   cashflowInMonth,
+  cashflowTotal,
   currentMonth,
   previousMonth,
-  totalCashflow,
 } from '@/features/cashflow-overview'
 import { DashboardScreen } from './dashboard-screen'
 import { monthlyBalance, totalBalance } from '../model/selectors'
+
+// The suite runs anonymous: the empty account map falls back to the display
+// currency (RUB) and no rates are cached, so figures stay exact single-currency.
+const PRESENTATION: MoneyPresentation = {
+  currencyByAccountId: new Map(),
+  displayCurrency: 'RUB',
+  rates: null,
+}
 
 // Authorship markers (household-ux 2.4) resolve against the household cache;
 // these suites run anonymous with no members, so no marker ever renders.
@@ -40,6 +49,16 @@ jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn() }) }))
 // it has its own test in the widget slice.
 jest.mock('@/widgets/sync-status', () => ({
   SyncStatusBadge: () => null,
+}))
+
+// The suite pins the presentation context: anonymous fresh device - empty
+// account map (native = display RUB), no cached rates, exact figures only.
+jest.mock('@/features/cashflow-overview/model/presentation', () => ({
+  useCashflowPresentation: () => ({
+    currencyByAccountId: new Map(),
+    displayCurrency: 'RUB',
+    rates: null,
+  }),
 }))
 
 const ZERO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 }
@@ -223,9 +242,10 @@ describe('DashboardScreen (Home)', () => {
     expect(screen.getByTestId('home-quick-debts')).toBeTruthy()
 
     expect(screen.getByText('Расходы')).toBeTruthy()
-    const expected = formatAmount(totalCashflow(TRANSACTIONS, currentMonth(), 'expense'))
+    const expected = aggregateHeroText(
+      cashflowTotal(TRANSACTIONS, currentMonth(), 'expense', PRESENTATION),
+    )
     await waitFor(() => expect(screen.getByText(expected)).toBeTruthy())
-    expect(screen.getByTestId('home-new-category')).toBeTruthy()
   })
 
   it('switches the summary mode via the bottom sheet', async () => {
@@ -239,14 +259,17 @@ describe('DashboardScreen (Home)', () => {
     expect(screen.queryByTestId('home-mode-sheet')).toBeNull()
     expect(screen.getByText('Баланс общий')).toBeTruthy()
     await waitFor(() =>
-      expect(screen.getByText(formatAmount(totalBalance(expectedAccounts())))).toBeTruthy(),
+      expect(
+        screen.getByText(aggregateHeroText(totalBalance(expectedAccounts(), PRESENTATION))),
+      ).toBeTruthy(),
     )
-
     fireEvent.press(screen.getByTestId('home-summary-mode'))
     fireEvent.press(screen.getByTestId('home-mode-option-monthly-balance'))
     await waitFor(() =>
       expect(
-        screen.getByText(formatAmount(monthlyBalance(TRANSACTIONS, currentMonth()))),
+        screen.getByText(
+          aggregateHeroText(monthlyBalance(TRANSACTIONS, currentMonth(), PRESENTATION)),
+        ),
       ).toBeTruthy(),
     )
   })
@@ -260,7 +283,9 @@ describe('DashboardScreen (Home)', () => {
     // The amount also appears in the category breakdown row - at least once.
     await waitFor(() =>
       expect(
-        screen.getAllByText(formatAmount(totalCashflow(TRANSACTIONS, prev, 'expense'))).length,
+        screen.getAllByText(
+          aggregateHeroText(cashflowTotal(TRANSACTIONS, prev, 'expense', PRESENTATION)),
+        ).length,
       ).toBeGreaterThanOrEqual(1),
     )
   })
@@ -286,14 +311,14 @@ describe('DashboardScreen (Home)', () => {
 
     // Subtitle: the selected period range plus its expense total.
     const now = new Date()
-    const expectedSubtitle = `${monthRangeLabelShort(now.getFullYear(), now.getMonth())}, ${formatAmount(
-      totalCashflow(TRANSACTIONS, currentMonth(), 'expense'),
+    const expectedSubtitle = `${monthRangeLabelShort(now.getFullYear(), now.getMonth())}, ${aggregateHeroText(
+      cashflowTotal(TRANSACTIONS, currentMonth(), 'expense', PRESENTATION),
     )}`
     expect(screen.getByText(expectedSubtitle)).toBeTruthy()
 
     // One day header per distinct expense day of the period.
     expect(screen.queryAllByTestId(/^home-expense-day-/).length).toBe(
-      cashflowDayGroups(TRANSACTIONS, CATEGORIES, currentMonth(), 'expense').length,
+      cashflowDayGroups(TRANSACTIONS, CATEGORIES, currentMonth(), 'expense', PRESENTATION).length,
     )
   })
 

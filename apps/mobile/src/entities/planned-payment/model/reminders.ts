@@ -12,6 +12,7 @@
 
 import * as Notifications from 'expo-notifications'
 import type { PlannedPayment } from '@trata/api'
+import { DEFAULT_CURRENCY, type CurrencyCode } from '@trata/money'
 import { formatAmount } from '@/shared/lib/format/format'
 
 const ID_PREFIX = 'plan-reminder-'
@@ -48,8 +49,15 @@ export function planReminderDate(
 }
 
 /** Copy per confirm mode: auto announces the charge, manual prompts. */
-function reminderBody(plan: PlannedPayment): string {
-  const amountText = formatAmount(plan.amount)
+function reminderBody(
+  plan: PlannedPayment,
+  currencyByAccountId: ReadonlyMap<string, CurrencyCode> | undefined,
+): string {
+  // A plan has no currency of its own (design D8): its amounts live in its
+  // account's currency. A missing map entry falls back to the chain's final
+  // fallback (RUB) - in the app the map always covers the plan's account.
+  const currency = currencyByAccountId?.get(plan.accountId) ?? DEFAULT_CURRENCY
+  const amountText = formatAmount(plan.amount, currency)
   if (plan.confirmMode === 'manual') {
     return `Подтверди платёж ${amountText}`
   }
@@ -61,9 +69,14 @@ function reminderBody(plan: PlannedPayment): string {
 /**
  * Re-syncs pending reminders with the given live plans: cancel every
  * `plan-reminder-*` notification, then schedule one per plan (reminder
- * enabled, trigger date in the future, permission granted).
+ * enabled, trigger date in the future, permission granted). The
+ * account-currency map feeds the copy's amount formatting (design D8).
  */
-export async function reschedule(plans: PlannedPayment[], now: Date = new Date()): Promise<void> {
+export async function reschedule(
+  plans: PlannedPayment[],
+  now: Date = new Date(),
+  currencyByAccountId?: ReadonlyMap<string, CurrencyCode>,
+): Promise<void> {
   // Only notifications this module owns are touched — other ids survive.
   const scheduled = await Notifications.getAllScheduledNotificationsAsync()
   for (const notification of scheduled) {
@@ -81,7 +94,7 @@ export async function reschedule(plans: PlannedPayment[], now: Date = new Date()
     if (!date) continue
     await Notifications.scheduleNotificationAsync({
       identifier: `${ID_PREFIX}${plan.id}`,
-      content: { title: 'Планы', body: reminderBody(plan) },
+      content: { title: 'Планы', body: reminderBody(plan, currencyByAccountId) },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date },
     })
   }

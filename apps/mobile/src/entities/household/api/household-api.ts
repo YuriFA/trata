@@ -20,7 +20,7 @@ import {
   revokeHouseholdCode,
   revokeHouseholdInvitation,
   updateDisplayName,
-  updateHouseholdName,
+  updateHousehold,
 } from '@trata/api'
 import { apiClient } from '@/shared/api/client'
 
@@ -32,7 +32,7 @@ export const householdApi = {
 
   /** Sets or clears the household display name (owner only). */
   rename(name: string | null) {
-    return updateHouseholdName(apiClient, name)
+    return updateHousehold(apiClient, { name })
   },
 
   /** Sets the current user's display name (the authorship/member label). */

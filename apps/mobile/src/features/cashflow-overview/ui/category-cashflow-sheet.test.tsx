@@ -24,9 +24,21 @@ import { createMockTransactionRepository } from '@/shared/lib/testing/mock-trans
 import { BottomSheetProvider } from '@/shared/ui/bottom-sheet/bottom-sheet-provider'
 import type { BottomSheetRef } from '@/shared/ui/bottom-sheet'
 import { CategoryCashflowSheet } from './category-cashflow-sheet'
+
+// Anonymous presentation: empty account map falls back to the display
+// currency (RUB); no rates are cached, so figures stay exact single-currency.
+const PRESENTATION: MoneyPresentation = {
+  currencyByAccountId: new Map(),
+  displayCurrency: 'RUB',
+  rates: null,
+}
+// The compact hero rendering of a single RUB figure (aggregate screens).
+const rubHero = (amount: number): string =>
+  aggregateHeroText({ totals: [{ currency: 'RUB', amount }], isMixed: false, converted: null })
 import { CategorySection } from './category-section'
-import { formatAmount } from '@/shared/lib/format/format'
-import { currentMonth, previousMonth, totalCashflow } from '../model/selectors'
+import { aggregateHeroText } from '@/shared/lib/money/aggregate'
+import type { MoneyPresentation } from '@/shared/lib/money/aggregate'
+import { cashflowTotal, currentMonth, previousMonth } from '../model/selectors'
 
 // Authorship markers (household-ux 2.4) resolve against the household cache;
 // these suites run anonymous with no members, so no marker ever renders.
@@ -38,6 +50,16 @@ jest.mock('@/entities/session', () => ({
 jest.mock('@/entities/household', () => ({
   ...(jest.requireActual('@/entities/household') as Record<string, unknown>),
   useHousehold: () => ({ data: undefined }),
+}))
+
+// The suite pins the presentation context: anonymous fresh device - empty
+// account map (native = display RUB), no cached rates, exact figures only.
+jest.mock('@/features/cashflow-overview/model/presentation', () => ({
+  useCashflowPresentation: () => ({
+    currencyByAccountId: new Map(),
+    displayCurrency: 'RUB',
+    rates: null,
+  }),
 }))
 const ZERO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 }
 
@@ -183,7 +205,7 @@ describe('CategoryCashflowSheet (expense kind)', () => {
     // is selected; the totals and rows follow in the same render.
     await waitFor(() => expect(screen.getAllByTestId(/^category-expense-row-/)).toHaveLength(2))
     expect(screen.getByTestId('category-expenses-total')).toHaveTextContent(
-      `${formatAmount(totalCashflow(taxiTransactions, currentMonth(), 'expense'))} потрачено`,
+      `${aggregateHeroText(cashflowTotal(taxiTransactions, currentMonth(), 'expense', PRESENTATION))} потрачено`,
     )
 
     // Only this category's expenses of the selected month, one group per day.
@@ -212,7 +234,7 @@ describe('CategoryCashflowSheet (expense kind)', () => {
     )
     expect(screen.getAllByTestId(/^category-expense-row-/)).toHaveLength(1)
     expect(screen.getByTestId('category-expenses-total')).toHaveTextContent(
-      `${formatAmount(totalCashflow(taxiTransactions, prev, 'expense'))} потрачено`,
+      `${aggregateHeroText(cashflowTotal(taxiTransactions, prev, 'expense', PRESENTATION))} потрачено`,
     )
   })
 
@@ -331,7 +353,7 @@ describe('CategoryCashflowSheet (period mode)', () => {
     )
     await waitFor(() => expect(screen.getByTestId('category-expense-row-tx-taxi-mon')).toBeTruthy())
     expect(screen.getByTestId('category-expenses-total')).toHaveTextContent(
-      `${formatAmount(420_000)} потрачено`,
+      `${rubHero(420_000)} потрачено`,
     )
 
     // Previous week: no fixtures → the period-scoped empty state.
@@ -430,7 +452,7 @@ describe('CategoryCashflowSheet (income kind)', () => {
 
     await waitFor(() => expect(screen.getAllByTestId(/^category-income-row-/)).toHaveLength(1))
     expect(screen.getByTestId('category-incomes-total')).toHaveTextContent(
-      `${formatAmount(1_500_000)} получено`,
+      `${rubHero(1_500_000)} получено`,
     )
     expect(screen.getByText('Все доходы')).toBeTruthy()
     expect(screen.queryByTestId('category-income-row-tx-taxi-noise')).toBeNull()

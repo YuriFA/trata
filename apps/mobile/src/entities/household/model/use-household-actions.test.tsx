@@ -34,6 +34,7 @@ const { householdApi } = require('../api/household-api') as {
 function household(name: string | null): Household {
   return {
     id: 'hh-1',
+    currency: 'RUB',
     createdAt: '2026-08-01T00:00:00.000Z',
     name,
     members: [

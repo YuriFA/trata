@@ -21,6 +21,7 @@ import { IconButton } from '@/shared/ui/icon-button'
 import { Pressable } from '@/shared/ui/pressable'
 import { Text } from '@/shared/ui/text'
 import { formatAmount } from '@/shared/lib/format/format'
+import { nativeCurrencyOf, type MoneyPresentation } from '@/shared/lib/money/aggregate'
 import { authorLabel } from '@/entities/household'
 import { PLANS_COPY, PLANS_REGULARITY_PHRASES, PLAN_TYPE_VIEWS } from '../model/kind'
 import { isPlanOverdue, nextDueLabel, planRowTitle, plansSortedByNextDue } from '../model/selectors'
@@ -35,6 +36,8 @@ export interface PlansListSheetProps {
   categories: Category[]
   /** Authorship marker context (household-ux 2.4). */
   author?: { members: readonly HouseholdMember[]; currentUserId: string | null | undefined }
+  /** Money presentation (multi-currency D9): rows show the plan's account currency. */
+  presentation: MoneyPresentation
   /** Opens the keyed add form for this type (page composition). */
   onAdd: (type: PlannedPaymentType) => void
   onEdit: (plan: PlannedPayment) => void
@@ -47,6 +50,7 @@ export function PlansListSheet({
   type,
   plans,
   categories,
+  presentation,
   author,
   onAdd,
   onEdit,
@@ -90,6 +94,7 @@ export function PlansListSheet({
                 key={plan.id}
                 plan={plan}
                 categories={categories}
+                presentation={presentation}
                 author={author}
                 onPress={() => onEdit(plan)}
                 onConfirm={() => onConfirm(plan)}
@@ -105,12 +110,14 @@ export function PlansListSheet({
 function PlanRow({
   plan,
   categories,
+  presentation,
   author,
   onPress,
   onConfirm,
 }: {
   plan: PlannedPayment
   categories: Category[]
+  presentation: MoneyPresentation
   author?: { members: readonly HouseholdMember[]; currentUserId: string | null | undefined }
   onPress: () => void
   onConfirm: () => void
@@ -119,6 +126,7 @@ function PlanRow({
   const overdue = isPlanOverdue(plan, calendarDayKey(new Date()))
   const title = planRowTitle(plan, categories)
   const subtitle = `${PLANS_REGULARITY_PHRASES[plan.regularity]} · ${nextDueLabel(plan.nextDue)}`
+  const currency = nativeCurrencyOf(plan, presentation)
   const authorMarker = author
     ? authorLabel(plan.authorId, author.members, author.currentUserId)
     : null
@@ -126,8 +134,7 @@ function PlanRow({
   return (
     <Pressable
       testID={`plans-row-${plan.id}`}
-      accessibilityRole="button"
-      accessibilityLabel={`${title}, ${formatAmount(plan.amount)}, ${subtitle}`}
+      accessibilityLabel={`${title}, ${formatAmount(plan.amount, currency)}, ${subtitle}`}
       className="flex-row items-center gap-3 py-3 active:opacity-70"
       onPress={onPress}
     >
@@ -137,7 +144,7 @@ function PlanRow({
             {title}
           </Text>
           <Text variant="body" className="font-medium text-foreground">
-            {formatAmount(plan.amount)}
+            {formatAmount(plan.amount, currency)}
           </Text>
         </View>
         <View className="flex-row items-center gap-2">

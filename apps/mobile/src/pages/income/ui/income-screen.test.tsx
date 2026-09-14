@@ -12,14 +12,36 @@ import { createMockCategoryRepository } from '@/shared/lib/testing/mock-category
 import { TransactionRepositoryProvider } from '@/entities/transaction'
 import { createMockTransactionRepository } from '@/shared/lib/testing/mock-transaction-repository'
 import { BottomSheetProvider } from '@/shared/ui/bottom-sheet/bottom-sheet-provider'
-import { formatAmount } from '@/shared/lib/format/format'
+import { aggregateHeroText } from '@/shared/lib/money/aggregate'
+import type { MoneyPresentation } from '@/shared/lib/money/aggregate'
 import {
   cashflowInMonth,
   currentMonth,
   previousMonth,
-  totalCashflow,
+  cashflowTotal,
 } from '@/features/cashflow-overview'
 import { IncomeScreen } from './income-screen'
+
+// The suite pins the presentation context: anonymous fresh device - empty
+// account map (native = display RUB), no cached rates, exact figures only.
+jest.mock('@/features/cashflow-overview/model/presentation', () => ({
+  useCashflowPresentation: () => ({
+    currencyByAccountId: new Map(),
+    displayCurrency: 'RUB',
+    rates: null,
+  }),
+}))
+
+// Anonymous presentation: empty account map falls back to the display
+// currency (RUB); no rates are cached, so figures stay exact single-currency.
+const PRESENTATION: MoneyPresentation = {
+  currencyByAccountId: new Map(),
+  displayCurrency: 'RUB',
+  rates: null,
+}
+// The compact hero rendering of a single RUB figure (aggregate screens).
+const rubHero = (amount: number): string =>
+  aggregateHeroText({ totals: [{ currency: 'RUB', amount }], isMixed: false, converted: null })
 
 // Authorship markers (household-ux 2.4) resolve against the household cache;
 // these suites run anonymous with no members, so no marker ever renders.
@@ -179,8 +201,9 @@ describe('IncomeScreen', () => {
     // The total also appears in the category breakdown row - at least once.
     await waitFor(() =>
       expect(
-        screen.getAllByText(formatAmount(totalCashflow(TRANSACTIONS, currentMonth(), 'income')))
-          .length,
+        screen.getAllByText(
+          aggregateHeroText(cashflowTotal(TRANSACTIONS, currentMonth(), 'income', PRESENTATION)),
+        ).length,
       ).toBeGreaterThanOrEqual(1),
     )
 
@@ -190,7 +213,7 @@ describe('IncomeScreen', () => {
 
     // Expenses and transfers contribute to no figure on this screen: the
     // expense amount is not rendered anywhere.
-    expect(screen.queryByText(formatAmount(1_931_300))).toBeNull()
+    expect(screen.queryByText(rubHero(1_931_300))).toBeNull()
 
     // Income categories only in the breakdown.
     expect(screen.getByTestId('income-category-cat-salary')).toBeTruthy()
@@ -205,7 +228,9 @@ describe('IncomeScreen', () => {
     const prev = previousMonth(currentMonth())
     await waitFor(() =>
       expect(
-        screen.getAllByText(formatAmount(totalCashflow(TRANSACTIONS, prev, 'income'))).length,
+        screen.getAllByText(
+          aggregateHeroText(cashflowTotal(TRANSACTIONS, prev, 'income', PRESENTATION)),
+        ).length,
       ).toBeGreaterThanOrEqual(1),
     )
   })

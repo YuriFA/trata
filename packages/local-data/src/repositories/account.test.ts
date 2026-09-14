@@ -49,7 +49,7 @@ describe('local account repository', () => {
       accountRepo.create({ name: '  ', currency: 'RUB', openingBalance: 0 }),
     ).rejects.toBeInstanceOf(InvalidPayloadError)
     await expect(
-      accountRepo.create({ name: 'X', currency: 'GBP' as 'RUB', openingBalance: 0 }),
+      accountRepo.create({ name: 'X', currency: 'JPY' as 'RUB', openingBalance: 0 }),
     ).rejects.toBeInstanceOf(InvalidPayloadError)
     await expect(
       accountRepo.create({ name: 'X', currency: 'RUB', openingBalance: 10.5 }),

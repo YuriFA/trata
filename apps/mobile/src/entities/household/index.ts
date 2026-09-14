@@ -1,6 +1,7 @@
 export { householdApi } from './api/household-api'
 export { useHousehold } from './model/use-household'
 export { useHouseholdInvitations } from './model/use-household-invitations'
+export { useDisplayCurrency } from './model/use-display-currency'
 export { useHouseholdActions } from './model/use-household-actions'
 export { emailLocalPart, householdDisplayName, memberLabel } from '@trata/api'
 export { authorLabel } from '@trata/api'

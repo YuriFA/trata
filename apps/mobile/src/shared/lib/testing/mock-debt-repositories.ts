@@ -47,6 +47,9 @@ export function createMockDebtorRepository(initial: Debtor[] = []): MockDebtorRe
         id: payload.id ?? `debtor-${nextId++}`,
         name: payload.name,
         note: payload.note ?? '',
+        // The local repository's default (household base is unknown here;
+        // tests pass an explicit currency to exercise other currencies).
+        currency: payload.currency ?? 'RUB',
         version: 1,
       }
       items.push(debtor)

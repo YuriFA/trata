@@ -20,6 +20,8 @@ import { View } from 'react-native'
 import type { DebtDirection, DebtOperationRepository } from '@trata/api'
 import { AmountKeypad, applyKeypadInput, type KeypadKey } from '@/features/create-transaction'
 import { useCreateDebtor, useCreateDebtOperation } from '@/entities/debt'
+import { useAuth } from '@/entities/session'
+import { useHousehold } from '@/entities/household'
 import { getRepositoryErrorText } from '@/shared/lib/data/repository-errors-ru'
 import { parseMajorUnitsToMinor } from '@/shared/lib/money/parse'
 import {
@@ -126,6 +128,12 @@ export function NewDebtorDebtForm({
   })
   const createDebtor = useCreateDebtor()
   const createDebtOperation = useCreateDebtOperation()
+  // The debtor's immutable ledger currency defaults to the household's base
+  // currency - sent EXPLICITLY: the repository's RUB backstop is wrong for
+  // any non-RUB household (debts capability, design D7).
+  const { status } = useAuth()
+  const householdQuery = useHousehold({ enabled: status === 'authenticated' })
+  const baseCurrency = householdQuery.data?.currency
   const pending = createDebtor.isPending || createDebtOperation.isPending
 
   // Set when the contact was created but the operation failed; a retry
@@ -147,7 +155,10 @@ export function NewDebtorDebtForm({
   const handleSubmit = async (values: DebtorDebtFormValues) => {
     try {
       if (!createdDebtorIdRef.current) {
-        const debtor = await createDebtor.mutateAsync({ name: values.name })
+        const debtor = await createDebtor.mutateAsync({
+          name: values.name,
+          ...(baseCurrency !== undefined ? { currency: baseCurrency } : {}),
+        })
         createdDebtorIdRef.current = debtor.id
       }
       await createDebtOperation.mutateAsync(

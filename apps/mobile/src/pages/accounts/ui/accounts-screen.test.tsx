@@ -14,6 +14,23 @@ import { AccountsScreen } from './accounts-screen'
 // ScreenHeader's default back goes through the router.
 jest.mock('expo-router', () => ({ useRouter: () => ({ back: jest.fn() }) }))
 
+// Anonymous fresh device: no household base and no stored preference, so the
+// display-currency chain resolves to the RUB default without touching the db.
+jest.mock('@/entities/session', () => ({
+  ...(jest.requireActual('@/entities/session') as Record<string, unknown>),
+  useAuth: () => ({ status: 'anonymous', user: null }),
+}))
+jest.mock('@/entities/household', () => ({
+  ...(jest.requireActual('@/entities/household') as Record<string, unknown>),
+  useHousehold: () => ({ data: undefined }),
+  useDisplayCurrency: (householdCurrency?: string) => householdCurrency ?? 'RUB',
+}))
+// No cached rates on a fresh device: aggregates render exact native figures.
+jest.mock('@/shared/lib/db/rates', () => ({
+  ...(jest.requireActual('@/shared/lib/db/rates') as Record<string, unknown>),
+  useRates: () => ({ data: null }),
+}))
+
 const ZERO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 }
 
 const ACCOUNTS = [
@@ -69,7 +86,7 @@ describe('AccountsScreen', () => {
   it('creates an account from the form (major units -> minor)', async () => {
     const repository = renderAccounts()
 
-    fireEvent.press(screen.getByTestId('accounts-add'))
+    fireEvent.press(screen.getByTestId('accounts-new-button'))
     fireEvent.changeText(screen.getByTestId('accounts-create-name'), 'Наличные')
     fireEvent.changeText(screen.getByTestId('accounts-create-opening-balance'), '100,50')
     fireEvent.press(screen.getByTestId('accounts-create-submit'))

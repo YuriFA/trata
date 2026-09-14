@@ -24,6 +24,7 @@ const SIBLING_ID = '33333333-3333-4333-8333-333333333333'
 function household(overrides: Partial<Household> = {}): Household {
   return {
     id: 'hh-current',
+    currency: 'RUB',
     createdAt: '2026-08-01T00:00:00.000Z',
     name: 'Семья',
     members: [

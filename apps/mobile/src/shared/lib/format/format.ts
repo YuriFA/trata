@@ -4,14 +4,15 @@
 
 import { formatMoney, type CurrencyCode } from '@trata/money'
 
-export const DEFAULT_CURRENCY: CurrencyCode = 'RUB'
 const RU_LOCALE = 'ru'
 
 /**
  * Compact amount for the reference look: "26 813 ₽" instead of the money
- * package's always-two-digits "26 813,00 ₽".
+ * package's always-two-digits "26 813,00 ₽". The currency is the amount's
+ * NATIVE one (the account's, the debtor's, or the display currency for
+ * account-less figures) - never a hardcoded default.
  */
-export function formatAmount(amountMinor: number): string {
-  const formatted = formatMoney(amountMinor, DEFAULT_CURRENCY, RU_LOCALE)
+export function formatAmount(amountMinor: number, currency: CurrencyCode): string {
+  const formatted = formatMoney(amountMinor, currency, RU_LOCALE)
   return formatted.replace(/,00(?=\u00A0)/, '')
 }

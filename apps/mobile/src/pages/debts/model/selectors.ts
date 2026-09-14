@@ -13,11 +13,8 @@ import type {
 } from '@trata/api'
 import { calendarDayKey, fullDayLabel } from '@trata/dates'
 import { formatAmount } from '@/shared/lib/format/format'
-import { balancesByDebtor, totalsByDirection } from '@trata/local-data'
+import { balancesByDebtor } from '@trata/local-data'
 import { authorLabel } from '@/entities/household'
-
-export type { DirectionBalances } from '@trata/local-data'
-export { totalsByDirection } from '@trata/local-data'
 
 export interface DebtorBalanceView {
   debtor: Debtor
@@ -55,7 +52,9 @@ export function debtorSection(
   for (const debtor of debtors) {
     if (!debtorsInDirection.has(debtor.id)) continue
     const balance = balances.get(debtor.id)?.[direction] ?? 0
-    views.push({ debtor, balance, balanceText: formatAmount(balance) })
+    // The debtor's ledger is single-currency for life (debts capability):
+    // rows always present the balance in the debtor's own currency.
+    views.push({ debtor, balance, balanceText: formatAmount(balance, debtor.currency) })
   }
 
   const byBalanceDesc = (a: DebtorBalanceView, b: DebtorBalanceView) =>
@@ -104,6 +103,8 @@ export function debtorHistoryGroups(
   operations: DebtOperation[],
   debtorId: string,
   direction: DebtDirection,
+  /** The debtor's (immutable) ledger currency: every amount is native. */
+  currency: Debtor['currency'],
   author?: DebtAuthorContext,
 ): DebtHistoryDayGroup[] {
   const matching = operations
@@ -118,7 +119,7 @@ export function debtorHistoryGroups(
     const row: DebtHistoryRowView = {
       id: op.id,
       kind: op.kind,
-      amountText: `${op.kind === 'debt' ? '+' : '−'}\u00A0${formatAmount(op.amount)}`,
+      amountText: `${op.kind === 'debt' ? '+' : '−'}\u00A0${formatAmount(op.amount, currency)}`,
       note: op.note,
       authorLabel: author ? authorLabel(op.authorId, author.members, author.currentUserId) : null,
     }

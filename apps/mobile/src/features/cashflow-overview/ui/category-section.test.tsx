@@ -22,6 +22,16 @@ jest.mock('@/entities/household', () => ({
   ...(jest.requireActual('@/entities/household') as Record<string, unknown>),
   useHousehold: () => ({ data: undefined }),
 }))
+
+// The suite pins the presentation context: anonymous fresh device - empty
+// account map (native = display RUB), no cached rates, exact figures only.
+jest.mock('@/features/cashflow-overview/model/presentation', () => ({
+  useCashflowPresentation: () => ({
+    currencyByAccountId: new Map(),
+    displayCurrency: 'RUB',
+    rates: null,
+  }),
+}))
 const ZERO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 }
 
 // Empty category repository reaches the "no categories yet" branch.

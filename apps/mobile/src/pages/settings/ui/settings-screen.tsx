@@ -10,6 +10,7 @@ import { Screen } from '@/shared/ui/screen'
 import { Text } from '@/shared/ui/text'
 import { AccountSection } from './account-section'
 import { DevOfflineSection } from './dev-offline-section'
+import { DisplayCurrencySection } from './display-currency-section'
 import { HouseholdSection } from './household-section'
 import { ProfileSection } from './profile-section'
 import { SyncSection } from './sync-section'
@@ -25,6 +26,7 @@ export function SettingsScreen() {
           <AccountSection />
           <ProfileSection />
           <HouseholdSection />
+          <DisplayCurrencySection />
           <SyncSection />
           <DevOfflineSection />
         </View>

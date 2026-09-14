@@ -42,6 +42,7 @@ import {
   type SyncEngineState,
 } from '@trata/local-data'
 import { randomUUID } from 'expo-crypto'
+import { refreshRates } from '@/shared/lib/db/rates'
 import { SyncContext, type SyncController } from '@/shared/lib/sync/sync-context'
 import { ConflictCenter } from '@/features/sync-conflicts'
 import { useEnsureCurrentHousehold } from '@/features/household-join'
@@ -236,6 +237,13 @@ function SyncProvider({ children }: { children: React.ReactNode }) {
     registerBackgroundSync()
   }, [])
 
+  // Exchange-rates refresh at session boundaries (multi-currency design D5):
+  // app start here, foreground and regained connectivity below. Non-fatal
+  // by contract - a failed refresh keeps the cached snapshot in effect.
+  useEffect(() => {
+    void refreshRates(db)
+  }, [db])
+
   // The gate registers before any auth flip is carried into the policy (the
   // effect order is deliberate); auth flips resume the engine and kick a
   // gated cycle - on mount this is also the initial sync right after the
@@ -251,10 +259,16 @@ function SyncProvider({ children }: { children: React.ReactNode }) {
   // Reconnect / foreground session boundaries + the post-mutation source.
   useEffect(() => {
     const unsubscribeNetInfo = NetInfo.addEventListener((state) => {
-      if (state.isConnected) policy.notifySessionBoundary()
+      if (state.isConnected) {
+        policy.notifySessionBoundary()
+        void refreshRates(db)
+      }
     })
     const appStateSubscription = AppState.addEventListener('change', (status: AppStateStatus) => {
-      if (status === 'active') policy.notifySessionBoundary()
+      if (status === 'active') {
+        policy.notifySessionBoundary()
+        void refreshRates(db)
+      }
     })
     const unsubscribeMutations = queryClient.getMutationCache().subscribe((event) => {
       const action = (event as { action?: { type?: string } }).action
@@ -267,7 +281,7 @@ function SyncProvider({ children }: { children: React.ReactNode }) {
       appStateSubscription.remove()
       unsubscribeMutations()
     }
-  }, [policy, queryClient])
+  }, [policy, queryClient, db])
 
   useEffect(() => () => policy.dispose(), [policy])
 

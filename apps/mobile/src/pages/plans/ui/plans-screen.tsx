@@ -10,17 +10,17 @@
 // titles. The page owns ALL sheet refs and the `{type, session}` creation
 // context (invariant #15).
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ScrollView, View } from 'react-native'
 import type { PlannedPayment, PlannedPaymentType } from '@trata/api'
 import { useCategories } from '@/entities/category'
+import { useAccounts } from '@/entities/account'
 import { usePlannedPayments, reschedule } from '@/entities/planned-payment'
 import { useHousehold } from '@/entities/household'
+import { useCashflowPresentation } from '@/features/cashflow-overview'
 import { useAuth } from '@/entities/session'
 import { Screen } from '@/shared/ui/screen'
-import { Text } from '@/shared/ui/text'
 import type { BottomSheetRef } from '@/shared/ui/bottom-sheet'
-import { PLANS_COPY } from '../model/kind'
 import { plansFigures } from '../model/selectors'
 import { ConfirmSheet } from './confirm-sheet'
 import { PlanFormSheet } from './plan-form-sheet'
@@ -32,6 +32,9 @@ export function PlansScreen() {
   const categoriesQuery = useCategories()
   const plans = plansQuery.data ?? []
   const categories = categoriesQuery.data ?? []
+  // Money presentation (multi-currency D9): account currencies, the resolved
+  // display currency, and the cached rates feed the cards' aggregates.
+  const presentation = useCashflowPresentation()
 
   // Authorship markers context (household-ux 2.4): members cache + user id.
   const { status, user } = useAuth()
@@ -45,11 +48,17 @@ export function PlansScreen() {
   // plans or categories query data identity changes — that covers local
   // mutations and pull-driven invalidation alike. Categories changes
   // re-run an idempotent no-op (the copy derives from plans only).
+  const { data: accountsData } = useAccounts()
+  const accounts = useMemo(() => accountsData ?? [], [accountsData])
+  const currencyByAccountId = useMemo(
+    () => new Map(accounts.map((account) => [account.id, account.currency])),
+    [accounts],
+  )
   const plansData = plansQuery.data
   const categoriesData = categoriesQuery.data
   useEffect(() => {
-    void reschedule(plansData ?? [])
-  }, [plansData, categoriesData])
+    void reschedule(plansData ?? [], new Date(), currencyByAccountId)
+  }, [plansData, categoriesData, currencyByAccountId])
 
   // Sheet composition state (invariant #15): the page owns every ref and the
   // subject each sheet acts on. The create context starts as a placeholder -
@@ -77,15 +86,14 @@ export function PlansScreen() {
     <Screen testID="screen-plans">
       <ScrollView>
         <View className="gap-6 p-6">
-          <Text variant="display">{PLANS_COPY.screenTitle}</Text>
           <PlansTypeCard
             type="expense"
-            figures={plansFigures(plans, 'expense')}
+            figures={plansFigures(plans, 'expense', presentation)}
             onPress={() => openList('expense')}
           />
           <PlansTypeCard
             type="income"
-            figures={plansFigures(plans, 'income')}
+            figures={plansFigures(plans, 'income', presentation)}
             onPress={() => openList('income')}
           />
         </View>
@@ -98,6 +106,7 @@ export function PlansScreen() {
         categories={categories}
         author={author}
         onAdd={openCreate}
+        presentation={presentation}
         onEdit={openEdit}
         onConfirm={openConfirm}
       />

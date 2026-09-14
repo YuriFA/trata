@@ -3,8 +3,8 @@ import { Icon } from '@/shared/ui/icon'
 import { Pressable } from '@/shared/ui/pressable'
 import { Text } from '@/shared/ui/text'
 import type { Category, Transaction } from '@trata/api'
-import { formatAmount } from '@/shared/lib/format/format'
 import { categoryBreakdown, type CashflowKind, type MonthCursor } from '../model/selectors'
+import { useCashflowPresentation } from '../model/presentation'
 import { CASHFLOW_KIND_VIEWS } from './kind'
 import { NewCategorySheet } from './new-category-sheet'
 import { useRef, useState } from 'react'
@@ -42,7 +42,8 @@ export function CategorySection({
     ? categories.find((c) => c.id === categoryDetailId)
     : undefined
 
-  const rows = categoryBreakdown(transactions, categories, cursor, kind)
+  const presentation = useCashflowPresentation()
+  const rows = categoryBreakdown(transactions, categories, cursor, kind, presentation)
 
   const openNewCategory = () => {
     newCategorySheetRef.current?.present()
@@ -82,7 +83,7 @@ export function CategorySection({
           </Text>
         ) : (
           <View className="gap-4">
-            {rows.map(({ category, totalMinor }) => (
+            {rows.map(({ category, amountText }) => (
               <CategoryRow
                 key={category.id}
                 kind={kind}
@@ -90,7 +91,7 @@ export function CategorySection({
                 name={category.name}
                 icon={category.icon}
                 color={category.color}
-                amountText={formatAmount(totalMinor)}
+                amountText={amountText}
                 onPress={(categoryId) => {
                   setCategoryDetailId(categoryId)
                   categorySheetRef.current?.present()

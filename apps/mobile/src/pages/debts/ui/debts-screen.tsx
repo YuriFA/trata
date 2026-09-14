@@ -16,13 +16,15 @@ import { useRef, useState } from 'react'
 import { View } from 'react-native'
 import type { DebtDirection, DebtOperation, Debtor } from '@trata/api'
 import { useDebtOperations, useDebtors } from '@/entities/debt'
-import { useHousehold } from '@/entities/household'
+import { useDisplayCurrency, useHousehold } from '@/entities/household'
+import { useRates } from '@/shared/lib/db/rates'
+import { aggregateByCurrency, type CurrencyAggregate } from '@/shared/lib/money/aggregate'
 import { useAuth } from '@/entities/session'
 import { Screen } from '@/shared/ui/screen'
 import { ScreenHeader, ScreenScrollView } from '@/shared/ui/screen-header'
 import type { BottomSheetRef } from '@/shared/ui/bottom-sheet'
 import { DEBTS_COPY } from '../model/kind'
-import { debtorSection, totalsByDirection } from '../model/selectors'
+import { debtorSection } from '../model/selectors'
 import { DebtorFormSheet } from './debtor-form-sheet'
 import { DebtorHistorySheet } from './debtor-history-sheet'
 import { DebtorSection } from './debtor-section'
@@ -36,7 +38,6 @@ export function DebtsScreen() {
   const debtors = debtorsQuery.data ?? []
   const operations = operationsQuery.data ?? []
 
-  // Authorship markers context (household-ux 2.4): members cache + user id.
   const { status, user } = useAuth()
   const householdQuery = useHousehold({ enabled: status === 'authenticated' })
   const author =
@@ -64,7 +65,22 @@ export function DebtsScreen() {
   const editOperationRef = useRef<BottomSheetRef>(null)
   const [editingOperation, setEditingOperation] = useState<DebtOperation | undefined>(undefined)
 
-  const totals = totalsByDirection(operations)
+  // Multi-currency direction totals (6.4): each debtor's balance stays in
+  // the debtor's own (immutable) currency; the card presents the per-currency
+  // aggregate with the optional «≈» conversion into the display currency.
+  const displayCurrency = useDisplayCurrency(householdQuery.data?.currency)
+  const rates = useRates().data ?? null
+  const directionAggregate = (direction: DebtDirection): CurrencyAggregate =>
+    aggregateByCurrency(
+      debtorSection(debtors, operations, direction).visible.map(({ debtor, balance }) => ({
+        currency: debtor.currency,
+        amount: balance,
+      })),
+      displayCurrency,
+      rates,
+    )
+  const receivableAggregate = directionAggregate('receivable')
+  const payableAggregate = directionAggregate('payable')
   const receivableSection = debtorSection(debtors, operations, 'receivable')
   const payableSection = debtorSection(debtors, operations, 'payable')
 
@@ -106,7 +122,11 @@ export function DebtsScreen() {
 
       <ScreenScrollView>
         <View className="gap-6 px-6 pb-8">
-          <DebtsSummaryCard totals={totals} />
+          <DebtsSummaryCard
+            receivable={receivableAggregate}
+            payable={payableAggregate}
+            ratesAsOf={rates?.asOf}
+          />
           <DebtorSection
             direction="receivable"
             section={receivableSection}

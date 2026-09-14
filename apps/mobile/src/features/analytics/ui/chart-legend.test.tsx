@@ -4,9 +4,9 @@ import type { ChartEntry } from '../model/selectors'
 import { ChartLegend } from './chart-legend'
 
 const entries: ChartEntry[] = [
-  { id: 'taxi', label: 'Такси', color: '#6366f1', totalMinor: 20113 },
-  { id: 'cafe', label: 'Кафе', color: '#f97316', totalMinor: 3000 },
-  { id: 'other', label: 'Прочие', color: '#6e6b7c', totalMinor: 300 },
+  { id: 'taxi', label: 'Такси', color: '#6366f1', totalMinor: 20113, amountText: '20 113 ₽' },
+  { id: 'cafe', label: 'Кафе', color: '#f97316', totalMinor: 3000, amountText: '30,00 ₽' },
+  { id: 'other', label: 'Прочие', color: '#6e6b7c', totalMinor: 300, amountText: '3,00 ₽' },
 ]
 
 describe('ChartLegend', () => {

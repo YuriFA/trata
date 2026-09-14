@@ -2,18 +2,20 @@ import { Pressable, View } from 'react-native'
 import { Card } from '@/shared/ui/card'
 import { Icon } from '@/shared/ui/icon'
 import { Text } from '@/shared/ui/text'
+import { aggregateHeroText, nativeCurrencyOf } from '@/shared/lib/money/aggregate'
 import { formatAmount } from '@/shared/lib/format/format'
 import { monthRangeLabelShort, relativeDayLabel } from '@trata/dates'
 import type { Category, Transaction } from '@trata/api'
 import type { LatestCashflowView } from './all-cashflow-card.types'
 import {
   cashflowDayGroups,
+  cashflowTotal,
   latestCashflow,
-  totalCashflow,
   type CashflowKind,
   type MonthCursor,
 } from '../model/selectors'
 import { useCashflowAuthor } from '../model/use-cashflow-author'
+import { useCashflowPresentation } from '../model/presentation'
 import { CASHFLOW_KIND_VIEWS } from './kind'
 import { CashflowListSheet } from './cashflow-list-sheet'
 import { useRef } from 'react'
@@ -40,20 +42,31 @@ export function AllCashflowCard({
 }: AllCashflowCardProps) {
   const { copy, ids } = CASHFLOW_KIND_VIEWS[kind]
   const listSheetRef = useRef<BottomSheetRef>(null)
+  const presentation = useCashflowPresentation()
   const last = latestCashflow(transactions, cursor, kind)
   const lastCategory = last ? categories.find((c) => c.id === last.categoryId) : undefined
+  // Native currency (app-currency): the latest-row figure shows the record's
+  // own account currency; account-less amounts in the display currency.
+  const lastCurrency = last ? nativeCurrencyOf(last, presentation) : presentation.displayCurrency
   const latest: LatestCashflowView | null = last
     ? {
-        amountText: formatAmount(last.amount),
+        amountText: formatAmount(last.amount, lastCurrency),
         categoryName: lastCategory?.name ?? 'Без категории',
         dayLabel: relativeDayLabel(last.occurredAt),
       }
     : null
 
   const author = useCashflowAuthor()
-  const sheetGroups = cashflowDayGroups(transactions, categories, cursor, kind, author)
-  const sheetSubtitle = `${monthRangeLabelShort(cursor.year, cursor.month)}, ${formatAmount(
-    totalCashflow(transactions, cursor, kind),
+  const sheetGroups = cashflowDayGroups(
+    transactions,
+    categories,
+    cursor,
+    kind,
+    presentation,
+    author,
+  )
+  const sheetSubtitle = `${monthRangeLabelShort(cursor.year, cursor.month)}, ${aggregateHeroText(
+    cashflowTotal(transactions, cursor, kind, presentation),
   )}`
 
   return (

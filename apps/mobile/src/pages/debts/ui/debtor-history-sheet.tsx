@@ -55,7 +55,7 @@ export function DebtorHistorySheet({
 
   if (!debtor) return null
 
-  const groups = debtorHistoryGroups(operations, debtor.id, direction, author)
+  const groups = debtorHistoryGroups(operations, debtor.id, direction, debtor.currency, author)
 
   return (
     <BottomSheet
@@ -88,7 +88,10 @@ export function DebtorHistorySheet({
                 {DEBT_DIRECTION_VIEWS[direction].summaryLabel}
               </Text>
               <Text variant="h1" className="text-foreground" testID="debts-history-balance">
-                {formatAmount(balanceInDirection(operations, debtor.id, direction))}
+                {formatAmount(
+                  balanceInDirection(operations, debtor.id, direction),
+                  debtor.currency,
+                )}
               </Text>
             </View>
 

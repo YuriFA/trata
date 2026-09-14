@@ -9,6 +9,10 @@ export interface SummaryCardProps {
   title?: string
   /** Pre-formatted period total; the caller owns which figure it is. */
   amountText: string
+  /** Optional exact per-currency line under a converted hero. */
+  detailText?: string
+  /** Optional rate provenance line («Курс на …») under a converted hero. */
+  footnoteText?: string
   cursor: MonthCursor
   onPrevPeriod: () => void
   onNextPeriod: () => void
@@ -21,11 +25,14 @@ export interface SummaryCardProps {
 /**
  * Presentational period summary: title, amount, and month navigation. The
  * dashboard wraps it with its mode picker; the income screen mounts it with
- * a fixed title.
+ * a fixed title. Converted heroes carry the exact per-currency detail line
+ * and the rate's as-of footnote (multi-currency design D9).
  */
 export function SummaryCard({
   title,
   amountText,
+  detailText,
+  footnoteText,
   cursor,
   onPrevPeriod,
   onNextPeriod,
@@ -56,9 +63,29 @@ export function SummaryCard({
       )}
 
       <View className="flex-row items-center justify-between">
-        <Text variant="h1" className="text-foreground">
-          {amountText}
-        </Text>
+        <View className="gap-0.5">
+          <Text variant="h1" className="text-foreground">
+            {amountText}
+          </Text>
+          {detailText ? (
+            <Text
+              variant="caption"
+              className="text-muted-foreground"
+              testID={`${testIDPrefix}-summary-detail`}
+            >
+              {detailText}
+            </Text>
+          ) : null}
+          {footnoteText ? (
+            <Text
+              variant="caption"
+              className="text-muted-foreground"
+              testID={`${testIDPrefix}-summary-footnote`}
+            >
+              {footnoteText}
+            </Text>
+          ) : null}
+        </View>
         <View className="flex-row items-center gap-1">
           <IconButton
             testID={`${testIDPrefix}-period-prev`}

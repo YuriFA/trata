@@ -16,6 +16,13 @@ import { AccountRepositoryProvider } from '@/entities/account'
 import { createMockAccountRepository } from '@/shared/lib/testing/mock-account-repository'
 import { NewAccountForm } from './new-account-form'
 
+// Anonymous fresh device: no household base and no stored preference, so the
+// display-currency chain resolves to the RUB default without touching the db.
+jest.mock('@/entities/household', () => ({
+  ...(jest.requireActual('@/entities/household') as Record<string, unknown>),
+  useHousehold: () => ({ data: undefined }),
+  useDisplayCurrency: (householdCurrency?: string) => householdCurrency ?? 'RUB',
+}))
 type MockRepository = ReturnType<typeof createMockAccountRepository>
 
 const onSuccess = jest.fn()

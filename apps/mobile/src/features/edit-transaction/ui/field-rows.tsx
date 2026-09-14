@@ -1,17 +1,23 @@
-import { useMemo, useRef } from 'react'
-import { useController, useFormContext } from 'react-hook-form'
+import { useEffect, useMemo, useRef } from 'react'
+import { useController, useFormContext, useWatch } from 'react-hook-form'
+import { View } from 'react-native'
 import { fullDayLabel } from '@trata/dates'
+import { convert, currencySymbol, type CurrencyRates } from '@trata/money'
 import { useAccounts } from '@/entities/account'
 import { useCategories } from '@/entities/category'
-import { BottomSheetInput, type BottomSheetRef } from '@/shared/ui/bottom-sheet'
+import { FormError, FormLabel } from '@/shared/ui/form'
 import { Icon } from '@/shared/ui/icon'
 import { CategoryAvatar } from '@/shared/ui/category-avatar'
 import { Pressable } from '@/shared/ui/pressable'
 import { Text } from '@/shared/ui/text'
+import { BottomSheetInput, type BottomSheetRef } from '@/shared/ui/bottom-sheet'
 import { AccountPickerSheet } from '@/shared/ui/account-picker-sheet'
 import { CategoryPickerSheet } from '@/shared/ui/category-picker-sheet'
 import { DatePickerSheet } from '@/shared/ui/date-picker-sheet'
 import { SheetContentPortal } from '@/shared/ui/sheet-content-portal'
+import { useRates } from '@/shared/lib/db/rates'
+import { groupAmountInput, minorToInputValue } from '@/shared/lib/money/display'
+import { parseMajorUnitsToMinor, sanitizeAmountInput } from '@/shared/lib/money/parse'
 import { cn } from '@/shared/lib/utils'
 import type { EditTransactionFormValues } from '../model/schema'
 
@@ -110,8 +116,11 @@ export function CashflowAccountRow({ kind }: { kind: 'expense' | 'income' | 'adj
 
 /**
  * The transfer variant's source and destination rows: both pickers and the
- * same-currency candidate rule derived from the source (ported from the
- * create form's TransferFields).
+ * cross-currency bridge (ported from the create form's TransferFields).
+ * Multi-currency: the destination candidates are every OTHER account - the
+ * currencies may differ, and the schema's `crossCurrency` flag mirrors the
+ * effective pair so the destination-amount iff-rule validates like any
+ * field.
  */
 export function TransferAccountRows() {
   const { control, getValues, setValue } = useFormContext<EditTransactionFormValues>()
@@ -123,24 +132,19 @@ export function TransferAccountRows() {
   const fromPickerRef = useRef<BottomSheetRef>(null)
   const toPickerRef = useRef<BottomSheetRef>(null)
 
-  // Destinations stay a UI-level derivation: same currency as the source,
-  // distinct from it (the schema cannot see currencies and must not duplicate
-  // the rule).
-  const toCandidates = fromAccount
-    ? accounts.filter(
-        (account) => account.currency === fromAccount.currency && account.id !== fromAccount.id,
-      )
-    : []
+  const crossCurrency =
+    fromAccount !== undefined &&
+    toAccount !== undefined &&
+    fromAccount.currency !== toAccount.currency
+
+  useEffect(() => {
+    if (getValues('crossCurrency') !== crossCurrency) {
+      setValue('crossCurrency', crossCurrency, { shouldValidate: true })
+    }
+  }, [crossCurrency, getValues, setValue])
 
   const handleFromSelect = (id: string) => {
     setValue('fromAccountId', id, { shouldValidate: true })
-    // A destination that no longer matches the new source's currency is
-    // cleared - the candidate rule is re-derived from the new selection.
-    const from = accounts.find((account) => account.id === id)
-    const to = accounts.find((account) => account.id === getValues('toAccountId'))
-    if (from && to && to.currency !== from.currency) {
-      setValue('toAccountId', '')
-    }
   }
 
   return (
@@ -167,6 +171,7 @@ export function TransferAccountRows() {
         testID="edit-transaction-to"
         invalid={Boolean(toField.fieldState.error)}
       />
+      <DestinationAmountRow />
       <SheetContentPortal>
         <AccountPickerSheet
           ref={fromPickerRef}
@@ -181,13 +186,100 @@ export function TransferAccountRows() {
         <AccountPickerSheet
           ref={toPickerRef}
           title="Счёт пополнения"
-          accounts={toCandidates}
+          accounts={accounts.filter((account) => account.id !== fromAccount?.id)}
           selectedId={toField.field.value ?? ''}
           onSelect={(id) => setValue('toAccountId', id, { shouldValidate: true })}
           testIDPrefix="edit-transaction-to"
         />
       </SheetContentPortal>
     </>
+  )
+}
+
+/** "1.2345" -> "1,2345": display-grade rate with trailing zeros trimmed. */
+function formatRate(rate: number): string {
+  return rate.toFixed(4).replace(/0+$/, '').replace(/\.$/, '').replace('.', ',')
+}
+
+/** RU conversion hint from the cached snapshot: "Курс: 1 USD ≈ 90,5 RUB". */
+function conversionHint(from: string, to: string, rates: CurrencyRates): string | null {
+  const fromRate = rates.rates[from]
+  const toRate = rates.rates[to]
+  if (fromRate === undefined || toRate === undefined || fromRate === 0) return null
+  return `Курс: 1 ${from} \u2248 ${formatRate(toRate / fromRate)} ${to}`
+}
+
+/**
+ * The edit form's destination amount for cross-currency transfers
+ * (multi-currency 6.3): prefilled from the record's stored figure, editable,
+ * and re-suggested from the cached rate whenever the figure is empty (a
+ * fresh cross-currency pair after switching accounts). Same-currency
+ * transfers render nothing.
+ */
+function DestinationAmountRow() {
+  const { control, getValues, setValue } = useFormContext<EditTransactionFormValues>()
+  const { field, fieldState } = useController({ name: 'destinationAmount', control })
+  const crossCurrency = useWatch({ control, name: 'crossCurrency' })
+  const sourceAmount = useWatch({ control, name: 'amount' })
+  const fromId = useWatch({ control, name: 'fromAccountId' })
+  const toId = useWatch({ control, name: 'toAccountId' })
+  const accounts = useAccounts().data ?? []
+  const rates = useRates().data ?? null
+
+  const from = accounts.find((account) => account.id === fromId)
+  const to = accounts.find((account) => account.id === toId)
+  const touchedRef = useRef(false)
+  useEffect(() => {
+    touchedRef.current = false
+  }, [fromId, toId])
+
+  useEffect(() => {
+    if (!crossCurrency || touchedRef.current || !from || !to || !rates) return
+    const sourceMinor = parseMajorUnitsToMinor(sourceAmount)
+    if (sourceMinor === null || sourceMinor < 1) return
+    const converted = convert(sourceMinor, from.currency, to.currency, rates)
+    if (converted === null || converted < 1) return
+    if (getValues('destinationAmount') === '') {
+      setValue('destinationAmount', minorToInputValue(converted), { shouldValidate: true })
+    }
+  }, [crossCurrency, sourceAmount, from, to, rates, getValues, setValue])
+
+  if (!crossCurrency) return null
+
+  return (
+    <View className="gap-1 py-2">
+      <FormLabel>Сумма зачисления</FormLabel>
+      <View className="flex-row items-center gap-3 rounded-2xl bg-secondary px-4 py-3">
+        <View className="flex-1">
+          <BottomSheetInput
+            testID="edit-transaction-destination-amount"
+            className="border-0 bg-transparent px-0 py-1 text-xl font-bold"
+            accessibilityLabel="Сумма зачисления"
+            keyboardType="decimal-pad"
+            placeholder="0"
+            value={groupAmountInput(field.value ?? '')}
+            onChangeText={(text) => {
+              touchedRef.current = true
+              field.onChange(sanitizeAmountInput(text))
+            }}
+            invalid={Boolean(fieldState.error)}
+          />
+        </View>
+        {to ? (
+          <Text variant="h3" className="text-muted-foreground">
+            {currencySymbol(to.currency)}
+          </Text>
+        ) : null}
+      </View>
+      {from && to && rates ? (
+        <Text variant="caption" className="text-muted-foreground">
+          {conversionHint(from.currency, to.currency, rates)}
+        </Text>
+      ) : null}
+      <FormError testID="edit-transaction-destination-amount-error">
+        {fieldState.error?.message}
+      </FormError>
+    </View>
   )
 }
 

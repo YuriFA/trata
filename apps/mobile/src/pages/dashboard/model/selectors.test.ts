@@ -1,6 +1,17 @@
 import { describe, expect, it } from '@jest/globals'
 import type { AccountWithBalance, Transaction } from '@trata/api'
+import type { MoneyPresentation } from '@/shared/lib/money/aggregate'
 import { monthlyBalance, totalBalance } from './selectors'
+
+// RUB-only presentation, no cached rates: balances stay exact single-currency.
+const PRESENTATION: MoneyPresentation = {
+  currencyByAccountId: new Map([
+    ['a-card', 'RUB'],
+    ['a-cash', 'RUB'],
+  ]),
+  displayCurrency: 'RUB',
+  rates: null,
+}
 
 const CURSOR = { year: 2026, month: 7 } // August 2026
 const inAugust = (day: number) => `2026-08-${String(day).padStart(2, '0')}T12:00:00.000Z`
@@ -59,10 +70,14 @@ const txs: Transaction[] = [
 
 describe('dashboard selectors · balances', () => {
   it('monthlyBalance is income minus expenses; transfers do not contribute', () => {
-    expect(monthlyBalance(txs, CURSOR)).toBe(1_000_000 - 400_000)
+    const balance = monthlyBalance(txs, CURSOR, PRESENTATION)
+    expect(balance.totals).toEqual([{ currency: 'RUB', amount: 1_000_000 - 400_000 }])
+    expect(balance.converted).toBeNull()
   })
 
   it('totalBalance sums the computed account balances (incl. manualAdjustment)', () => {
-    expect(totalBalance(accounts)).toBe(400_000)
+    expect(totalBalance(accounts, PRESENTATION).totals).toEqual([
+      { currency: 'RUB', amount: 400_000 },
+    ])
   })
 })

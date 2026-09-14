@@ -29,8 +29,9 @@ function asCalendarDay(value: unknown): string | null {
   return typeof value === 'string' && CALENDAR_DAY_PATTERN.test(value) ? value : null
 }
 
-const ACCOUNT_CURRENCY_VALUES = new Set(["USD", "EUR", "RUB"])
+const ACCOUNT_CURRENCY_VALUES = new Set(["USD", "EUR", "RUB", "GBP", "CNY", "TRY", "PLN", "GEL", "KZT", "UAH", "AMD", "AZN", "UZS", "KGS", "RSD", "ILS", "AED", "THB"])
 const CATEGORY_TYPE_VALUES = new Set(["income", "expense"])
+const DEBTOR_CURRENCY_VALUES = new Set(["USD", "EUR", "RUB", "GBP", "CNY", "TRY", "PLN", "GEL", "KZT", "UAH", "AMD", "AZN", "UZS", "KGS", "RSD", "ILS", "AED", "THB"])
 const DEBT_OPERATION_DIRECTION_VALUES = new Set(["receivable", "payable"])
 const DEBT_OPERATION_KIND_VALUES = new Set(["debt", "repayment"])
 const PLANNED_PAYMENT_TYPE_VALUES = new Set(["expense", "income"])
@@ -87,7 +88,7 @@ export function rowToCatalogPayload(
     }
     case 'debtor': {
       const typedRow = row as DebtorRow
-      return { id: typedRow.id, name: typedRow.name, note: typedRow.note }
+      return { id: typedRow.id, name: typedRow.name, note: typedRow.note, currency: typedRow.currency }
     }
     case 'debt_operation': {
       const typedRow = row as DebtOperationRow
@@ -100,7 +101,7 @@ export function rowToCatalogPayload(
     case 'transaction': {
       const typedRow = row as TransactionRow
       if (typedRow.type === 'transfer') {
-        return { id: typedRow.id, type: typedRow.type, amount: typedRow.amount, description: typedRow.description, occurredAt: typedRow.occurredAt, fromAccountId: typedRow.fromAccountId, toAccountId: typedRow.toAccountId }
+        return { id: typedRow.id, type: typedRow.type, amount: typedRow.amount, description: typedRow.description, occurredAt: typedRow.occurredAt, fromAccountId: typedRow.fromAccountId, toAccountId: typedRow.toAccountId, destinationAmount: typedRow.destinationAmount }
       } else {
         return { id: typedRow.id, type: typedRow.type, amount: typedRow.amount, description: typedRow.description, occurredAt: typedRow.occurredAt, accountId: typedRow.accountId, categoryId: typedRow.categoryId }
       }
@@ -140,9 +141,12 @@ if (!type || !CATEGORY_TYPE_VALUES.has(type)) return null
       return data.name && data.icon && data.color ? data : null
     }
     case 'debtor': {
+      const currency = asString(payload.currency)
+if (!currency || !DEBTOR_CURRENCY_VALUES.has(currency)) return null
       const data: DebtorSyncData = {
         name: asString(payload.name) ?? "",
-        note: asString(payload.note) ?? ""
+        note: asString(payload.note) ?? "",
+        currency: currency as DebtorSyncData['currency']
       }
       return data.name ? data : null
     }
@@ -213,13 +217,16 @@ if (!type || !TRANSACTION_TYPE_VALUES.has(type)) return null
         if (!fromAccountId) return null
         const toAccountId = asString(payload.toAccountId)
         if (!toAccountId) return null
+        const destinationAmount = asInt(payload.destinationAmount)
+        if (destinationAmount !== null && destinationAmount <= 0) return null
         return {
           type: type as TransactionSyncData['type'],
           amount,
           description: asString(payload.description) ?? "",
           occurredAt,
           fromAccountId,
-          toAccountId
+          toAccountId,
+          ...(destinationAmount !== null ? { destinationAmount } : {})
         }
       } else if (type === 'adjustment') {
         const amount = asInt(payload.amount)
@@ -287,9 +294,12 @@ if (!type || !CATEGORY_TYPE_VALUES.has(type)) return null
       }
     }
     case 'debtor': {
+      const currency = asString(payload.currency)
+if (!currency || !DEBTOR_CURRENCY_VALUES.has(currency)) return null
       return {
         name: asString(payload.name) ?? "",
-        note: asString(payload.note) ?? ""
+        note: asString(payload.note) ?? "",
+        currency
       }
     }
     case 'debt_operation': {
@@ -357,6 +367,8 @@ if (!type || !TRANSACTION_TYPE_VALUES.has(type)) return null
         if (!fromAccountId) return null
         const toAccountId = asString(payload.toAccountId)
         if (!toAccountId) return null
+        const destinationAmount = asInt(payload.destinationAmount)
+        if (destinationAmount !== null && destinationAmount <= 0) return null
         return {
           type,
           amount,
@@ -364,6 +376,7 @@ if (!type || !TRANSACTION_TYPE_VALUES.has(type)) return null
           occurredAt,
           fromAccountId,
           toAccountId,
+          destinationAmount,
           accountId: null,
           categoryId: null
         }
@@ -382,6 +395,7 @@ if (!type || !TRANSACTION_TYPE_VALUES.has(type)) return null
           accountId,
           fromAccountId: null,
           toAccountId: null,
+          destinationAmount: null,
           categoryId: null
         }
       } else {
@@ -400,7 +414,8 @@ if (!type || !TRANSACTION_TYPE_VALUES.has(type)) return null
           accountId,
           categoryId,
           fromAccountId: null,
-          toAccountId: null
+          toAccountId: null,
+          destinationAmount: null
         }
       }
     }
@@ -446,9 +461,12 @@ if (!color) return fail('color')
       const name = asNonEmpty(state.name)
 if (!name) return fail('name')
       const note = asString(state.note) ?? undefined
+      const currency = asString(state.currency)
+if (!currency || !DEBTOR_CURRENCY_VALUES.has(currency)) return fail('currency')
       return ok({
         name,
-        ...(note !== undefined ? { note } : {})
+        ...(note !== undefined ? { note } : {}),
+        currency
       })
     }
     case 'debt_operation': {
@@ -517,13 +535,16 @@ if (!type || !TRANSACTION_TYPE_VALUES.has(type)) return fail('type')
         if (!fromAccountId) return fail('fromAccountId')
         const toAccountId = asNonEmpty(state.toAccountId)
         if (!toAccountId) return fail('toAccountId')
+        const destinationAmount = state.destinationAmount === undefined ? null : asInt(state.destinationAmount)
+        if (destinationAmount !== null && destinationAmount <= 0) return fail('destinationAmount')
         return ok({
           type,
           amount,
           description,
           occurredAt,
           fromAccountId,
-          toAccountId
+          toAccountId,
+          ...(destinationAmount !== null ? { destinationAmount } : {})
         })
       } else if (type === 'adjustment') {
         const amount = asInt(state.amount)

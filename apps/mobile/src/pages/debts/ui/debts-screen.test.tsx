@@ -37,6 +37,9 @@ jest.mock('@/entities/session', () => ({
 jest.mock('@/entities/household', () => ({
   ...(jest.requireActual('@/entities/household') as Record<string, unknown>),
   useHousehold: () => ({ data: mockMembers ? { members: mockMembers } : undefined }),
+  // Anonymous fresh device: no household base, so the display-currency
+  // chain resolves to the RUB default.
+  useDisplayCurrency: (householdCurrency?: string) => householdCurrency ?? 'RUB',
 }))
 
 beforeEach(() => {
@@ -46,12 +49,18 @@ beforeEach(() => {
 const mockBack = jest.fn()
 jest.mock('expo-router', () => ({ useRouter: () => ({ back: mockBack }) }))
 
+// No cached rates on a fresh device: aggregates render exact native figures.
+jest.mock('@/shared/lib/db/rates', () => ({
+  ...(jest.requireActual('@/shared/lib/db/rates') as Record<string, unknown>),
+  useRates: () => ({ data: null }),
+}))
+
 const ZERO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 }
 
 const DEBTORS: Debtor[] = [
-  { id: 'debtor-anna', name: 'Анна', note: '', version: 1 },
-  { id: 'debtor-sergey', name: 'Сергей', note: '', version: 1 },
-  { id: 'debtor-settled', name: 'Ольга', note: '', version: 1 },
+  { id: 'debtor-anna', name: 'Анна', note: '', currency: 'RUB', version: 1 },
+  { id: 'debtor-sergey', name: 'Сергей', note: '', currency: 'RUB', version: 1 },
+  { id: 'debtor-settled', name: 'Ольга', note: '', currency: 'RUB', version: 1 },
 ]
 
 const OPERATIONS: DebtOperation[] = [
@@ -147,10 +156,12 @@ describe('DebtsScreen', () => {
     await waitFor(() => expect(screen.getByTestId('debts-debtor-debtor-anna')).toBeTruthy())
     // receivable = 500 000 − 150 000 + (100 000 − 100 000) = 350 000
     expect(screen.getByTestId('debts-total-receivable')).toHaveTextContent(
-      `${formatAmount(350_000)}`,
+      `${formatAmount(350_000, 'RUB')}`,
     )
     // payable = 200 000
-    expect(screen.getByTestId('debts-total-payable')).toHaveTextContent(formatAmount(200_000))
+    expect(screen.getByTestId('debts-total-payable')).toHaveTextContent(
+      formatAmount(200_000, 'RUB'),
+    )
   })
 
   it('splits debtors into direction sections without netting', async () => {
@@ -159,11 +170,15 @@ describe('DebtsScreen', () => {
     await waitFor(() => expect(screen.getByTestId('debts-debtor-debtor-anna')).toBeTruthy())
     // Анна only in «Мне должны» with her receivable balance…
     expect(
-      within(screen.getByTestId('debts-debtor-debtor-anna')).getByText(formatAmount(350_000)),
+      within(screen.getByTestId('debts-debtor-debtor-anna')).getByText(
+        formatAmount(350_000, 'RUB'),
+      ),
     ).toBeTruthy()
     // …Сергей only in «Я должен» (not even behind the receivable reveal).
     expect(
-      within(screen.getByTestId('debts-debtor-debtor-sergey')).getByText(formatAmount(200_000)),
+      within(screen.getByTestId('debts-debtor-debtor-sergey')).getByText(
+        formatAmount(200_000, 'RUB'),
+      ),
     ).toBeTruthy()
     expect(
       within(screen.getByTestId('debts-section-receivable')).getByText('Мне должны'),
@@ -184,7 +199,7 @@ describe('DebtsScreen', () => {
     fireEvent.press(screen.getByTestId('debts-settled-reveal-receivable'))
     expect(screen.getByTestId('debts-debtor-debtor-settled')).toBeTruthy()
     expect(
-      within(screen.getByTestId('debts-debtor-debtor-settled')).getByText(formatAmount(0)),
+      within(screen.getByTestId('debts-debtor-debtor-settled')).getByText(formatAmount(0, 'RUB')),
     ).toBeTruthy()
   })
 

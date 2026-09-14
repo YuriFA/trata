@@ -46,7 +46,7 @@ export function PlansTypeCard({
         </Text>
         {/* The testID sits on the figure itself so flows assert the number. */}
         <Text variant="h3" className="text-foreground" testID={`plans-total-${type}`}>
-          {monthlyTotalText(figures.monthlyTotal)}
+          {monthlyTotalText(figures.monthly)}
         </Text>
       </Card>
     </Pressable>

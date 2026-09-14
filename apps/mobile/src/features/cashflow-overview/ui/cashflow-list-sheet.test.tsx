@@ -38,6 +38,15 @@ jest.mock('@/entities/household', () => ({
   useHousehold: () => ({ data: mockMembers ? { members: mockMembers } : undefined }),
 }))
 
+// The suite pins the presentation context: anonymous fresh device - empty
+// account map (native = display RUB), no cached rates, exact figures only.
+jest.mock('@/features/cashflow-overview/model/presentation', () => ({
+  useCashflowPresentation: () => ({
+    currencyByAccountId: new Map(),
+    displayCurrency: 'RUB',
+    rates: null,
+  }),
+}))
 beforeEach(() => {
   mockAuth = { status: 'anonymous', user: null }
   mockMembers = null

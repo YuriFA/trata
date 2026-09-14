@@ -17,7 +17,15 @@ import { createMockAccountRepository } from '@/shared/lib/testing/mock-account-r
 import { createMockCategoryRepository } from '@/shared/lib/testing/mock-category-repository'
 import { createMockPlannedPaymentRepository } from '@/shared/lib/testing/mock-planned-payment-repository'
 import { BottomSheetProvider } from '@/shared/ui/bottom-sheet/bottom-sheet-provider'
+import type { CurrencyAggregate } from '@/shared/lib/money/aggregate'
 import { monthlyTotalText } from '../model/selectors'
+
+// Single-RUB aggregate: the exact hero path of the plans card figure.
+const rubAggregate = (amount: number): CurrencyAggregate => ({
+  totals: [{ currency: 'RUB', amount }],
+  isMixed: false,
+  converted: null,
+})
 import { PlansScreen } from './plans-screen'
 
 // Authorship markers (household-ux 2.4) resolve against the household cache;
@@ -50,6 +58,16 @@ const ZERO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 }
 jest.mock('@/entities/planned-payment/model/reminders', () => ({
   reschedule: jest.fn(),
   requestNotificationPermissions: jest.fn(),
+}))
+
+// The suite pins the presentation context: anonymous fresh device - empty
+// account map (native = display RUB), no cached rates, exact figures only.
+jest.mock('@/features/cashflow-overview/model/presentation', () => ({
+  useCashflowPresentation: () => ({
+    currencyByAccountId: new Map(),
+    displayCurrency: 'RUB',
+    rates: null,
+  }),
 }))
 
 const ACCOUNTS: Account[] = [
@@ -142,9 +160,13 @@ describe('PlansScreen', () => {
     await waitFor(() =>
       expect(screen.getByTestId('plans-count-expense')).toHaveTextContent('2 плана'),
     )
-    expect(screen.getByTestId('plans-total-expense')).toHaveTextContent(monthlyTotalText(109_900))
+    expect(screen.getByTestId('plans-total-expense')).toHaveTextContent(
+      monthlyTotalText(rubAggregate(109_900)),
+    )
     expect(screen.getByTestId('plans-count-income')).toHaveTextContent('0 планов')
-    expect(screen.getByTestId('plans-total-income')).toHaveTextContent(monthlyTotalText(0))
+    expect(screen.getByTestId('plans-total-income')).toHaveTextContent(
+      monthlyTotalText(rubAggregate(0)),
+    )
     expect(screen.getByText('Подписки, платежи по кредитам и прочее')).toBeTruthy()
     expect(screen.getByText('Зарплата, премии и прочее')).toBeTruthy()
   })
@@ -155,7 +177,9 @@ describe('PlansScreen', () => {
     await waitFor(() =>
       expect(screen.getByTestId('plans-count-expense')).toHaveTextContent('0 планов'),
     )
-    expect(screen.getByTestId('plans-total-expense')).toHaveTextContent(monthlyTotalText(0))
+    expect(screen.getByTestId('plans-total-expense')).toHaveTextContent(
+      monthlyTotalText(rubAggregate(0)),
+    )
   })
 
   it('opens the per-type list sheet from a card', async () => {
@@ -189,7 +213,9 @@ describe('PlansScreen', () => {
     )
     fireEvent.press(screen.getByTestId('plans-card-expense'))
     await waitFor(() => expect(screen.getByTestId('plans-row-plan-netflix')).toBeTruthy())
-    expect(screen.getByTestId('plans-total-expense')).toHaveTextContent(monthlyTotalText(109_900))
+    expect(screen.getByTestId('plans-total-expense')).toHaveTextContent(
+      monthlyTotalText(rubAggregate(109_900)),
+    )
   })
 
   it('marks sibling-authored plan rows and stays clean in a single-member household', async () => {

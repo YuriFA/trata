@@ -41,14 +41,31 @@ export const editTransactionSchema = z.discriminatedUnion('type', [
     accountId: z.string().min(1, 'Выберите счёт'),
     categoryId: z.string().min(1, 'Выберите категорию'),
   }),
-  z.object({
-    type: z.literal('transfer'),
-    amount: amountField,
-    description: noteField,
-    occurredAt: occurredAtField,
-    fromAccountId: z.string().min(1, 'Выберите счёт списания'),
-    toAccountId: z.string().min(1, 'Выберите счёт зачисления'),
-  }),
+  z
+    .object({
+      type: z.literal('transfer'),
+      amount: amountField,
+      description: noteField,
+      occurredAt: occurredAtField,
+      fromAccountId: z.string().min(1, 'Выберите счёт списания'),
+      toAccountId: z.string().min(1, 'Выберите счёт зачисления'),
+      // The effective pair's currency comparison, carried as form data by the
+      // account rows (the schema cannot see currencies).
+      crossCurrency: z.boolean(),
+      destinationAmount: z.string(),
+    })
+    .superRefine((values, ctx) => {
+      if (!values.crossCurrency) return
+      const parsed =
+        values.destinationAmount === '' ? null : parseMajorUnitsToMinor(values.destinationAmount)
+      if (parsed === null || parsed < 1) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['destinationAmount'],
+          message: 'Введите сумму зачисления',
+        })
+      }
+    }),
   z.object({
     type: z.literal('adjustment'),
     amount: z
@@ -84,6 +101,14 @@ export function editTransactionDefaultValues(transaction: Transaction): EditTran
       ...base,
       fromAccountId: transaction.fromAccountId,
       toAccountId: transaction.toAccountId,
+      // The currency comparison arrives with the accounts (the reset
+      // effect's bridge); the stored figure round-trips through the
+      // keypad-format string.
+      crossCurrency: false,
+      destinationAmount:
+        transaction.destinationAmount !== undefined
+          ? minorToInputValue(transaction.destinationAmount)
+          : '',
     }
   }
   if (transaction.type === 'adjustment') {

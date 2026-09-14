@@ -995,7 +995,7 @@ describe('sync engine: debts', () => {
     server.records.set(`debtor:${debtorId}`, {
       version: 1,
       deleted: false,
-      data: { name: 'Сергей', note: '' },
+      data: { name: 'Сергей', note: '', currency: 'RUB' },
     })
     server.log.push({
       seq: 2,
@@ -1003,7 +1003,7 @@ describe('sync engine: debts', () => {
       id: debtorId,
       action: 'upsert',
       version: 1,
-      data: { name: 'Сергей', note: '' },
+      data: { name: 'Сергей', note: '', currency: 'RUB' },
     })
 
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
@@ -1057,7 +1057,7 @@ describe('sync engine: debts', () => {
     server.records.set(`debtor:${debtorId}`, {
       version: 1,
       deleted: false,
-      data: { name: 'Сергей', note: '' },
+      data: { name: 'Сергей', note: '', currency: 'RUB' },
     })
     server.log.push({
       seq: 2,
@@ -1065,7 +1065,7 @@ describe('sync engine: debts', () => {
       id: debtorId,
       action: 'upsert',
       version: 1,
-      data: { name: 'Сергей', note: '' },
+      data: { name: 'Сергей', note: '', currency: 'RUB' },
     })
 
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)

@@ -53,6 +53,11 @@ function toTransactionPayload(values: CreateTransactionFormValues): CreateTransa
       ...base,
       fromAccountId: values.fromAccountId,
       toAccountId: values.toAccountId,
+      // The iff-rule: the destination amount travels only across currencies
+      // (the schema validated its presence and magnitude).
+      ...(values.crossCurrency && values.destinationAmount !== ''
+        ? { destinationAmount: parseMajorUnitsToMinor(values.destinationAmount) ?? 0 }
+        : {}),
     }
   }
 

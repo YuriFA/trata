@@ -237,7 +237,7 @@ describe('restoreConflictAsNew - happy path', () => {
         kind: 'deleted',
         baseVersion: 1,
         serverVersion: 2,
-        localState: { id: oldId, name: 'Анна', note: 'colleague' },
+        localState: { id: oldId, name: 'Анна', note: 'colleague', currency: 'RUB' },
         serverState: { version: 2, deleted: true },
       }),
     )

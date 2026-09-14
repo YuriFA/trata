@@ -1,8 +1,9 @@
-// Accounts tab: the user's accounts with computed balances, a create form
+// Accounts tab: the user's accounts with computed balances, a per-currency
+// summary with the «≈» converted total (multi-currency 6.4), a create form
 // (name / currency / opening balance), and delete with in-use guard
 // messaging surfaced from the repository error codes.
 
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { formatMoney } from '@trata/money'
 import { Screen } from '@/shared/ui/screen'
@@ -13,15 +14,40 @@ import { IconButton } from '@/shared/ui/icon-button'
 import { Text } from '@/shared/ui/text'
 import { BottomSheetRef } from '@/shared/ui/bottom-sheet'
 import { getRepositoryErrorText } from '@/shared/lib/data/repository-errors-ru'
+import { useRates } from '@/shared/lib/db/rates'
+import {
+  aggregateByCurrency,
+  aggregateDetailText,
+  aggregateHeroText,
+  rateDateLabel,
+} from '@/shared/lib/money/aggregate'
 import { useAccounts, useDeleteAccount } from '@/entities/account'
+import { useDisplayCurrency, useHousehold } from '@/entities/household'
+import { useAuth } from '@/entities/session'
 import { NewAccountSheet } from './new-account-sheet'
 
 export function AccountsScreen() {
   const accountsQuery = useAccounts()
-  const accounts = accountsQuery.data ?? []
+  const accounts = useMemo(() => accountsQuery.data ?? [], [accountsQuery.data])
   const deleteAccount = useDeleteAccount()
   const newAccountSheetRef = useRef<BottomSheetRef>(null)
   const [error, setError] = useState<string | undefined>(undefined)
+
+  // Multi-currency summary (6.4): exact per-currency totals plus the «≈»
+  // converted total in the display currency with the rate's date.
+  const { status } = useAuth()
+  const householdQuery = useHousehold({ enabled: status === 'authenticated' })
+  const displayCurrency = useDisplayCurrency(householdQuery.data?.currency)
+  const rates = useRates().data ?? null
+  const aggregate = useMemo(
+    () =>
+      aggregateByCurrency(
+        accounts.map((account) => ({ currency: account.currency, amount: account.balance })),
+        displayCurrency,
+        rates,
+      ),
+    [accounts, displayCurrency, rates],
+  )
 
   const handleDelete = (id: string) => {
     setError(undefined)
@@ -38,15 +64,13 @@ export function AccountsScreen() {
         title="Счета"
         right={
           <Pressable
-            testID="accounts-add"
             accessibilityRole="button"
-            accessibilityLabel="Добавить счёт"
+            accessibilityLabel="Новый счёт"
             className="active:opacity-70"
             onPress={() => newAccountSheetRef.current?.present()}
+            testID="accounts-new-button"
           >
-            <View className="h-10 w-10 items-center justify-center rounded-full bg-primary">
-              <Icon name="add" size={24} colorClassName="accent-primary-foreground" />
-            </View>
+            <Icon name="add" size={26} colorClassName="accent-primary" />
           </Pressable>
         }
       />
@@ -70,6 +94,37 @@ export function AccountsScreen() {
             </Card>
           ) : (
             <View className="gap-4">
+              <Card variant="elevated" className="gap-1" testID="accounts-summary">
+                <Text variant="caption" className="uppercase text-muted-foreground">
+                  Всего
+                </Text>
+                <Text
+                  variant="h2"
+                  className="font-bold text-foreground"
+                  testID="accounts-summary-total"
+                >
+                  {aggregateHeroText(aggregate)}
+                </Text>
+                {aggregateDetailText(aggregate) ? (
+                  <Text
+                    variant="body-sm"
+                    className="text-muted-foreground"
+                    testID="accounts-summary-detail"
+                  >
+                    {aggregateDetailText(aggregate)}
+                  </Text>
+                ) : null}
+                {aggregate.converted ? (
+                  <Text
+                    variant="caption"
+                    className="text-muted-foreground"
+                    testID="accounts-summary-footnote"
+                  >
+                    {`Курс на ${rateDateLabel(rates?.asOf ?? '')}`}
+                  </Text>
+                ) : null}
+              </Card>
+
               {accounts.map((account) => (
                 <Card key={account.id} variant="elevated">
                   <View

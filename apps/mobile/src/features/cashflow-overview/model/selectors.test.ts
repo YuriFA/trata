@@ -2,16 +2,28 @@ import { describe, expect, it } from '@jest/globals'
 import type { Category, Transaction } from '@trata/api'
 import { isCurrentOrFutureMonth } from '@trata/dates'
 import { formatAmount } from '@/shared/lib/format/format'
+import type { MoneyPresentation } from '@/shared/lib/money/aggregate'
 import {
   cashflowDayGroups,
   cashflowInMonth,
+  cashflowTotal,
   categoryBreakdown,
   latestCashflow,
   nextMonth,
   previousMonth,
-  totalCashflow,
   transactionsInMonth,
 } from './selectors'
+
+// Every fixture account is RUB and no rates are cached: aggregates stay
+// exact single-currency (converted = null) and amounts render in RUB.
+const PRESENTATION: MoneyPresentation = {
+  currencyByAccountId: new Map([
+    ['a-card', 'RUB'],
+    ['a-cash', 'RUB'],
+  ]),
+  displayCurrency: 'RUB',
+  rates: null,
+}
 
 // Deterministic domain-shaped fixtures.
 const CURSOR = { year: 2026, month: 7 } // August 2026
@@ -134,9 +146,13 @@ describe('selectors · month filtering', () => {
 })
 
 describe('selectors · totals', () => {
-  it('totalCashflow sums only the kind of the month', () => {
-    expect(totalCashflow(txs, CURSOR, 'expense')).toBe(500_000)
-    expect(totalCashflow(txs, CURSOR, 'income')).toBe(1_000_000)
+  it('cashflowTotal sums only the kind of the month, exact when single-currency', () => {
+    const expenses = cashflowTotal(txs, CURSOR, 'expense', PRESENTATION)
+    expect(expenses.totals).toEqual([{ currency: 'RUB', amount: 500_000 }])
+    expect(expenses.converted).toBeNull()
+    expect(cashflowTotal(txs, CURSOR, 'income', PRESENTATION).totals).toEqual([
+      { currency: 'RUB', amount: 1_000_000 },
+    ])
   })
 
   it('cashflowInMonth never yields transfers', () => {
@@ -147,17 +163,17 @@ describe('selectors · totals', () => {
 
 describe('selectors · category breakdown', () => {
   it('orders expense categories by amount descending and omits the rest', () => {
-    const rows = categoryBreakdown(txs, categories, CURSOR, 'expense')
+    const rows = categoryBreakdown(txs, categories, CURSOR, 'expense', PRESENTATION)
     expect(rows.map((r) => r.category.id)).toEqual(['c-taxi', 'c-cafe'])
-    expect(rows[0].totalMinor).toBe(400_000)
+    expect(rows[0].sortMinor).toBe(400_000)
     // income category never appears even though its transaction is in month
     expect(rows.some((r) => r.category.type === 'income')).toBe(false)
   })
 
   it('breaks down income over income categories only', () => {
-    const rows = categoryBreakdown(txs, categories, CURSOR, 'income')
+    const rows = categoryBreakdown(txs, categories, CURSOR, 'income', PRESENTATION)
     expect(rows.map((r) => r.category.id)).toEqual(['c-salary'])
-    expect(rows[0].totalMinor).toBe(1_000_000)
+    expect(rows[0].sortMinor).toBe(1_000_000)
     expect(rows.some((r) => r.category.type === 'expense')).toBe(false)
   })
 
@@ -187,6 +203,7 @@ describe('selectors · cashflow day groups', () => {
       categories,
       CURSOR,
       'expense',
+      PRESENTATION,
     )
 
     // Days newest first; income/transfer/out-of-month never group.
@@ -194,21 +211,23 @@ describe('selectors · cashflow day groups', () => {
     // Within a day rows are newest first: 18:00 before 12:00.
     expect(groups[0].rows.map((r) => r.id)).toEqual(['t6', 't3'])
     expect(groups[0].title).toBe('20 августа')
-    expect(groups[0].totalText).toBe(formatAmount(100_000 + 250_000))
+    expect(groups[0].totalText).toBe(formatAmount(100_000 + 250_000, 'RUB'))
     expect(groups[1].rows.map((r) => r.id)).toEqual(['t2'])
-    expect(groups[1].totalText).toBe(formatAmount(400_000))
+    expect(groups[1].totalText).toBe(formatAmount(400_000, 'RUB'))
   })
 
   it('groups incomes without expenses and transfers', () => {
-    const groups = cashflowDayGroups(txs, categories, CURSOR, 'income')
+    const groups = cashflowDayGroups(txs, categories, CURSOR, 'income', PRESENTATION)
     expect(groups.map((g) => g.key)).toEqual(['2026-08-03'])
     expect(groups[0].rows.map((r) => r.id)).toEqual(['t1'])
-    expect(groups[0].totalText).toBe(formatAmount(1_000_000))
+    expect(groups[0].totalText).toBe(formatAmount(1_000_000, 'RUB'))
     expect(groups[0].rows[0].categoryName).toBe('Зарплата')
   })
 
   it('is empty for a month without expenses', () => {
-    expect(cashflowDayGroups(txs, categories, { year: 2026, month: 4 }, 'expense')).toEqual([])
+    expect(
+      cashflowDayGroups(txs, categories, { year: 2026, month: 4 }, 'expense', PRESENTATION),
+    ).toEqual([])
   })
 
   it('rows carry the category view fields with the uncategorized fallback', () => {
@@ -228,13 +247,14 @@ describe('selectors · cashflow day groups', () => {
       categories,
       CURSOR,
       'expense',
+      PRESENTATION,
     )
     expect(groups[0].rows[0]).toMatchObject({
       id: 't-uncat',
       categoryName: 'Без категории',
       categoryIcon: 'pricetag-outline',
       categoryColor: undefined,
-      amountText: formatAmount(50_000),
+      amountText: formatAmount(50_000, 'RUB'),
     })
   })
 })

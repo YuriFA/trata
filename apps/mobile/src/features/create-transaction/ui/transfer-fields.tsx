@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useController, useFormContext } from 'react-hook-form'
 import { View } from 'react-native'
 import { useAccounts } from '@/entities/account'
@@ -7,12 +7,16 @@ import type { CreateTransactionFormValues } from '../model/schema'
 import { AccountPickerSheet } from '@/shared/ui/account-picker-sheet'
 import { AccountSelectorRow } from '@/shared/ui/account-selector-row'
 import { SheetContentPortal } from '@/shared/ui/sheet-content-portal'
+import { DestinationAmountField } from './destination-amount-field'
 
 /**
  * The transfer variant's source and destination selectors: both rows, both
- * picker sheets, and the same-currency candidate rule derived from the source.
- * All fromAccountId/toAccountId subscriptions live here - the root form never
- * re-renders on transfer selection changes.
+ * picker sheets, and the cross-currency bridge. Multi-currency (6.3): the
+ * destination candidates are every OTHER account - currencies may differ,
+ * and the schema's `crossCurrency` flag mirrors the effective pair so the
+ * iff-rule for the destination amount becomes ordinary schema validation.
+ * All fromAccountId/toAccountId subscriptions live here - the root form
+ * never re-renders on transfer selection changes.
  */
 export function TransferFields() {
   const { control, getValues, setValue } = useFormContext<CreateTransactionFormValues>()
@@ -24,24 +28,20 @@ export function TransferFields() {
   const fromPickerRef = useRef<BottomSheetRef>(null)
   const toPickerRef = useRef<BottomSheetRef>(null)
 
-  // Destinations stay a UI-level derivation: same currency as the source,
-  // distinct from it (the schema cannot see currencies and must not duplicate
-  // the rule).
-  const toCandidates = fromAccount
-    ? accounts.filter(
-        (account) => account.currency === fromAccount.currency && account.id !== fromAccount.id,
-      )
-    : []
+  // The effective pair's currency comparison, carried as form data.
+  const crossCurrency =
+    fromAccount !== undefined &&
+    toAccount !== undefined &&
+    fromAccount.currency !== toAccount.currency
+
+  useEffect(() => {
+    if (getValues('crossCurrency') !== crossCurrency) {
+      setValue('crossCurrency', crossCurrency, { shouldValidate: true })
+    }
+  }, [crossCurrency, getValues, setValue])
 
   const handleFromSelect = (id: string) => {
     setValue('fromAccountId', id, { shouldValidate: true })
-    // A destination that no longer matches the new source's currency is
-    // cleared - the candidate rule is re-derived from the new selection.
-    const from = accounts.find((account) => account.id === id)
-    const to = accounts.find((account) => account.id === getValues('toAccountId'))
-    if (from && to && to.currency !== from.currency) {
-      setValue('toAccountId', '')
-    }
   }
   const handleToSelect = (id: string) => setValue('toAccountId', id, { shouldValidate: true })
 
@@ -60,6 +60,9 @@ export function TransferFields() {
         onPress={() => toPickerRef.current?.present()}
         testID="new-transaction-to"
       />
+
+      <DestinationAmountField />
+
       <SheetContentPortal>
         <AccountPickerSheet
           ref={fromPickerRef}
@@ -74,7 +77,9 @@ export function TransferFields() {
         <AccountPickerSheet
           ref={toPickerRef}
           title="Куда"
-          accounts={toCandidates}
+          // Multi-currency: every account except the source (the legacy
+          // same-currency-only rule is gone).
+          accounts={accounts.filter((account) => account.id !== fromAccount?.id)}
           selectedId={toField.value ?? ''}
           onSelect={handleToSelect}
           testIDPrefix="new-transaction-to"

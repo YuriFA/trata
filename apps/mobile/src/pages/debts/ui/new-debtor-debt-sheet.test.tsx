@@ -18,7 +18,18 @@ import {
 import { BottomSheetProvider } from '@/shared/ui/bottom-sheet/bottom-sheet-provider'
 import { NewDebtorDebtForm } from './new-debtor-debt-sheet'
 
-const ANNA: Debtor = { id: 'debtor-anna', name: 'Анна', note: '', version: 1 }
+// The form resolves the debtor currency from the household base (design D7);
+// these suites run anonymous - no base currency, the repository default applies.
+jest.mock('@/entities/session', () => ({
+  ...(jest.requireActual('@/entities/session') as Record<string, unknown>),
+  useAuth: () => ({ status: 'anonymous', user: null }),
+}))
+jest.mock('@/entities/household', () => ({
+  ...(jest.requireActual('@/entities/household') as Record<string, unknown>),
+  useHousehold: () => ({ data: undefined }),
+}))
+
+const ANNA: Debtor = { id: 'debtor-anna', name: 'Анна', note: '', currency: 'RUB', version: 1 }
 
 function renderForm(direction: DebtDirection = 'receivable', { debtors = [] as Debtor[] } = {}) {
   const debtorRepository = createMockDebtorRepository(debtors)

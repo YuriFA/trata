@@ -50,7 +50,7 @@ const contributions = sql`(select account_id, sum(signed) as total from (
   select from_account_id, -amount from transactions
   where deleted_at is null and type = 'transfer'
   union all
-  select to_account_id, amount from transactions
+  select to_account_id, coalesce(destination_amount, amount) as signed from transactions
   where deleted_at is null and type = 'transfer'
   union all
   select account_id, amount from transactions

@@ -43,6 +43,20 @@
       "when": 1788366412769,
       "tag": "0005_worthless_miss_america",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1789403800670,
+      "tag": "0006_modern_ink",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1789406274701,
+      "tag": "0007_melted_miss_america",
+      "breakpoints": true
     }
   ]
 }
