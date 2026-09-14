@@ -16,6 +16,7 @@ export {
   type CurrencyCode,
 } from './currencies'
 export { toMinorUnits, toMajorUnits } from './convert'
+export { fetchLatestRates, convert, type CurrencyRates, type FetchLike } from './rates'
 export {
   getTransactionImpactForAccount,
   sumTransactionsImpactForAccount,

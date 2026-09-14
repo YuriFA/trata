@@ -11,7 +11,20 @@ const CURRENCY_SYMBOLS: Partial<Record<CurrencyCode, string>> = {
   USD: '$',
   EUR: '€',
   RUB: '₽',
+  GBP: '£',
+  CNY: '¥',
+  TRY: '₺',
+  PLN: 'zł',
+  GEL: '₾',
+  KZT: '₸',
+  UAH: '₴',
+  AMD: '֏',
+  AZN: '₼',
+  ILS: '₪',
+  THB: '฿',
 }
+// UZS, KGS, RSD and AED have no narrow display symbol in common typographic
+// use - they fall back to their ISO code via the `?? currency` rule below.
 
 /** The two locales the app supports; anything else resolves to the `en` shape. */
 type SupportedShape = 'en' | 'ru'

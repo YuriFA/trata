@@ -16,7 +16,14 @@ export type TransactionImpact =
       readonly type: 'transfer'
       readonly fromAccountId: string
       readonly toAccountId: string
+      /** Debited from `fromAccountId` in the source account's currency. */
       readonly amount: number
+      /**
+       * Credited to `toAccountId` in the destination account's currency;
+       * present iff the two accounts' currencies differ, otherwise the
+       * transfer moves `amount` as is.
+       */
+      readonly destinationAmount?: number
     }
 
 const isTransfer = (
@@ -40,7 +47,7 @@ export const getTransactionImpactForAccount = (
   }
 
   if (transaction.toAccountId === accountId) {
-    return transaction.amount
+    return transaction.destinationAmount ?? transaction.amount
   }
 
   return 0
@@ -85,7 +92,8 @@ export const getAccountsBalances = <T extends BalanceAccount>(
     const toBalance = balancesByAccountId[transaction.toAccountId]
 
     if (toBalance !== undefined) {
-      balancesByAccountId[transaction.toAccountId] = toBalance + transaction.amount
+      balancesByAccountId[transaction.toAccountId] =
+        toBalance + (transaction.destinationAmount ?? transaction.amount)
     }
   }
 
