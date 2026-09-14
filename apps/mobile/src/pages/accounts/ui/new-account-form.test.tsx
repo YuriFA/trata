@@ -1,10 +1,11 @@
 // Create-account form behavior: submit-driven per-field validation (the
-// opening-balance field gains the error affordance), the ruble-only payload
-// (currency always RUB with no picker rendered), major->minor money
-// conversion through the payload mapper, server errors at the root slot
-// with values preserved, reset after success, and pending blocking
-// duplicates. The form renders standalone - under jest the @gorhom mock
-// degrades BottomSheetInput to a plain input (no sheet context needed).
+// opening-balance field gains the error affordance), the display-currency
+// chain preselect with the picker affordance (the chosen currency labels the
+// opening balance and rides the payload), major->minor money conversion
+// through the payload mapper, server errors at the root slot with values
+// preserved, reset after success, and pending blocking duplicates. The form
+// renders standalone - under jest the @gorhom mock degrades BottomSheetInput
+// to a plain input (no sheet context needed).
 
 import { describe, expect, it, beforeEach, jest } from '@jest/globals'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
@@ -51,10 +52,14 @@ describe('NewAccountForm', () => {
     jest.clearAllMocks()
   })
 
-  it('offers no currency choice and always submits RUB', async () => {
+  it('preselects the display-currency default, labels the balance with it, and submits it', async () => {
     const repository = renderForm()
 
-    expect(screen.queryByTestId('accounts-create-currencies')).toBeNull()
+    // Anonymous chain default: RUB, both on the picker affordance and the
+    // opening-balance label the user types against.
+    expect(screen.getByTestId('accounts-create-currency')).toHaveTextContent(/RUB/)
+    expect(screen.getByTestId('accounts-create-currency')).toHaveTextContent(/₽/)
+    expect(screen.getByTestId('accounts-create-balance-currency')).toHaveTextContent(/₽/)
 
     fillValid()
     fireEvent.press(screen.getByTestId('accounts-create-submit'))

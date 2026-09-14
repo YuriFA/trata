@@ -115,8 +115,11 @@ export function NewAccountForm({ onSuccess }: NewAccountFormProps) {
         name="openingBalance"
         render={({ field, fieldState }) => (
           <FormField>
-            <FormLabel className={fieldState.error ? 'text-destructive' : undefined}>
-              Начальный баланс
+            <FormLabel
+              className={fieldState.error ? 'text-destructive' : undefined}
+              testID="accounts-create-balance-currency"
+            >
+              {`Начальный баланс · ${currencySymbol(selectedCurrency)}`}
             </FormLabel>
             <BottomSheetInput
               placeholder="0,00"
