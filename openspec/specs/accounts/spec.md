@@ -108,18 +108,29 @@ refetch and retry. A successful update increments the version.
 
 ### Requirement: Deletion guard
 
-Deleting an account that is referenced by any transaction of the user
-(including as a transfer source or destination) or by any live planned
-payment of the user SHALL be rejected with an account-in-use error. An
-account with no such references SHALL be deletable. Deletion SHALL be
-soft: the account is marked as deleted (a tombstone) and excluded from
-listings; the tombstone is retained so synchronized devices learn of
-the deletion.
+Deleting an account that is referenced by any live cashflow transaction
+(income or expense) or transfer of the user (including as a transfer source
+or destination), or by any live planned payment of the user SHALL be
+rejected with an account-in-use error. Adjustments never block the
+deletion: they are the account's own reconciliation bookkeeping and SHALL
+be tombstoned together with the account (each with its own change-feed
+record). An account with no blocking references SHALL be deletable.
+Deletion SHALL be soft: the account is marked as deleted (a tombstone) and
+excluded from listings; the tombstone is retained so synchronized devices
+learn of the deletion.
 
-#### Scenario: Delete an account with history
+#### Scenario: Delete an account with cashflow history
 
-- **WHEN** the user deletes an account that has transactions
+- **WHEN** the user deletes an account that has live income, expense, or
+  transfer transactions
 - **THEN** the deletion is rejected with an account-in-use error and the account remains
+
+#### Scenario: Delete an account that only has adjustments
+
+- **WHEN** the user deletes an account whose only referencing transactions
+  are adjustments
+- **THEN** the deletion succeeds and every adjustment of the account is
+  tombstoned together with it
 
 #### Scenario: Delete an account referenced by a live plan
 
@@ -128,7 +139,7 @@ the deletion.
 
 #### Scenario: Deleted account disappears from summaries
 
-- **WHEN** the user deletes an account with no referencing transactions or live planned payments
+- **WHEN** the user deletes an account with no blocking references
 - **THEN** the account no longer appears in listings and other devices learn of the deletion via the change feed
 
 ### Requirement: Listing

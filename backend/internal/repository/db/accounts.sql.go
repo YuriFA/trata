@@ -248,6 +248,7 @@ SELECT EXISTS(
     FROM transactions
     WHERE household_id = $1
       AND deleted_at IS NULL
+      AND type <> 'adjustment'
       AND (account_id = $2 OR from_account_id = $2 OR to_account_id = $2)
 ) AS in_use
 `
@@ -257,8 +258,10 @@ type HasLiveTransactionsForAccountParams struct {
 	AccountID   *uuid.UUID
 }
 
-// In-use guard for deletion: any non-deleted transaction referencing the
-// account (as cashflow account or transfer endpoint) blocks the tombstone.
+// In-use guard for deletion: a non-deleted cashflow or transfer referencing
+// the account blocks the tombstone. Adjustments never block - they are the
+// account's own reconciliation bookkeeping and cascade with the delete
+// (SoftDeleteAdjustmentsForAccount).
 func (q *Queries) HasLiveTransactionsForAccount(ctx context.Context, arg HasLiveTransactionsForAccountParams) (bool, error) {
 	row := q.db.QueryRow(ctx, hasLiveTransactionsForAccount, arg.HouseholdID, arg.AccountID)
 	var in_use bool
@@ -284,6 +287,48 @@ func (q *Queries) SoftDeleteAccount(ctx context.Context, arg SoftDeleteAccountPa
 	var version int32
 	err := row.Scan(&version)
 	return version, err
+}
+
+const softDeleteAdjustmentsForAccount = `-- name: SoftDeleteAdjustmentsForAccount :many
+UPDATE transactions
+SET deleted_at = now(), version = version + 1, updated_at = now()
+WHERE household_id = $1 AND account_id = $2
+  AND type = 'adjustment' AND deleted_at IS NULL
+RETURNING id, version
+`
+
+type SoftDeleteAdjustmentsForAccountParams struct {
+	HouseholdID uuid.UUID
+	AccountID   *uuid.UUID
+}
+
+type SoftDeleteAdjustmentsForAccountRow struct {
+	ID      uuid.UUID
+	Version int32
+}
+
+// Cascade half of an account delete: tombstone the account's live
+// adjustments (they reference no category and no second account, so they
+// carry no meaning without it). Returns id+version per row for the
+// per-record change_log appends.
+func (q *Queries) SoftDeleteAdjustmentsForAccount(ctx context.Context, arg SoftDeleteAdjustmentsForAccountParams) ([]SoftDeleteAdjustmentsForAccountRow, error) {
+	rows, err := q.db.Query(ctx, softDeleteAdjustmentsForAccount, arg.HouseholdID, arg.AccountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SoftDeleteAdjustmentsForAccountRow
+	for rows.Next() {
+		var i SoftDeleteAdjustmentsForAccountRow
+		if err := rows.Scan(&i.ID, &i.Version); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const syncAccountsByIDs = `-- name: SyncAccountsByIDs :many

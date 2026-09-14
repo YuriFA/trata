@@ -8,7 +8,7 @@
 // outbox operation in one transaction (design D5/D6); deletes are guarded
 // against in-use and tombstone records only.
 
-import { and, eq, isNull, or, sql } from 'drizzle-orm'
+import { and, eq, isNull, ne, or, sql } from 'drizzle-orm'
 import { nowIso } from '@trata/dates'
 import { isCurrencyCode } from '@trata/money'
 import {
@@ -84,6 +84,9 @@ function toAccountWithBalance(row: AccountBalanceRow): AccountWithBalance {
   }
 }
 
+// Blocking references only: cashflow and transfer transactions. Adjustments
+// never block - they cascade with the delete (the local mirror of the
+// server's SoftDeleteAdjustmentsForAccount).
 function hasTransactionsForAccount(tx: LocalTx, accountId: string): boolean {
   return (
     tx
@@ -92,6 +95,7 @@ function hasTransactionsForAccount(tx: LocalTx, accountId: string): boolean {
       .where(
         and(
           isNull(transactions.deletedAt),
+          ne(transactions.type, 'adjustment'),
           or(
             eq(transactions.accountId, accountId),
             eq(transactions.fromAccountId, accountId),
@@ -233,6 +237,37 @@ export function createLocalAccountRepository(db: LocalDatabase): AccountReposito
           })
         }
 
+        // Cascade half (the local mirror of the server-side cascade): the
+        // account's live adjustments are absorbed by the delete - unborn
+        // ones vanish with their queued ops, born ones stay as tombstones
+        // for the pull to confirm. No per-adjustment delete ops: the plain
+        // account delete covers them server-side.
+        const liveAdjustments = tx
+          .select()
+          .from(transactions)
+          .where(
+            and(
+              eq(transactions.accountId, id),
+              eq(transactions.type, 'adjustment'),
+              isNull(transactions.deletedAt),
+            ),
+          )
+          .all()
+        const absorbAdjustment = (adjRow: (typeof liveAdjustments)[number]) => {
+          const unborn =
+            adjRow.serverVersion === 0 && !hasSentOperations(tx, 'transaction', adjRow.id)
+          if (unborn) {
+            tx.delete(transactions).where(eq(transactions.id, adjRow.id)).run()
+            removeOperationsFor(tx, 'transaction', adjRow.id)
+            return
+          }
+          tx.update(transactions)
+            .set({ ...adjRow, deletedAt: nowIso(), version: adjRow.version + 1 })
+            .where(eq(transactions.id, adjRow.id))
+            .run()
+          removeOperationsFor(tx, 'transaction', adjRow.id)
+        }
+
         if (row.serverVersion === 0 && !hasSentOperations(tx, 'account', id)) {
           // Unborn record (no operation ever left the device): it vanishes
           // together with its queued operations.
@@ -251,6 +286,9 @@ export function createLocalAccountRepository(db: LocalDatabase): AccountReposito
             payload: null,
             baseVersion: row.serverVersion,
           })
+        }
+        for (const adjRow of liveAdjustments) {
+          absorbAdjustment(adjRow)
         }
       })
     },

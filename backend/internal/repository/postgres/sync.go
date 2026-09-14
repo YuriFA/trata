@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -705,11 +706,15 @@ func tombstoneEntity[T any](
 	return build(version), nil
 }
 
+// TombstoneAccount deletes the account and absorbs its live adjustments:
+// each tombstoned adjustment gets its own change_log row on the batch
+// transaction (invariants #17-#18), mirroring the REST DeleteAccount.
 func (t *syncTx) TombstoneAccount(
 	ctx context.Context,
 	scope domain.Scope, id uuid.UUID,
 ) (*domain.Account, error) {
-	return tombstoneEntity(ctx, t.q, scope, id,
+	householdID, actorID := scope.HouseholdID, scope.ActorID
+	account, err := tombstoneEntity(ctx, t.q, scope, id,
 		"repository.postgres.syncTx.TombstoneAccount",
 		func() (int32, error) {
 			return t.q.SoftDeleteAccount(
@@ -730,6 +735,26 @@ func (t *syncTx) TombstoneAccount(
 			}
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
+	adjustments, err := t.q.SoftDeleteAdjustmentsForAccount(
+		ctx, db.SoftDeleteAdjustmentsForAccountParams{HouseholdID: householdID, AccountID: &id},
+	)
+	if err != nil {
+		const op = "repository.postgres.syncTx.TombstoneAccount"
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	for _, adj := range adjustments {
+		if err := appendChangeLog(
+			ctx, t.q, householdID, actorID, adj.ID,
+			domain.SyncEntityTransaction, domain.SyncChangeTombstone, int(adj.Version),
+		); err != nil {
+			const op = "repository.postgres.syncTx.TombstoneAccount"
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+	}
+	return account, nil
 }
 
 func (t *syncTx) CreateCategory(

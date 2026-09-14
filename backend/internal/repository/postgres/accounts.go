@@ -138,9 +138,29 @@ func (r *Repository) DeleteAccount(
 			}
 			return err
 		}
-		return appendChangeLog(
+		if err := appendChangeLog(
 			ctx, q, householdID, actorID, id, domain.SyncEntityAccount, domain.SyncChangeTombstone, int(version),
+		); err != nil {
+			return err
+		}
+		// The cascade half: the account's live adjustments are absorbed by
+		// the delete (each with its own change_log row, invariants #17-#18).
+		adjustments, err := q.SoftDeleteAdjustmentsForAccount(
+			ctx, db.SoftDeleteAdjustmentsForAccountParams{HouseholdID: householdID, AccountID: &id},
 		)
+		if err != nil {
+			return err
+		}
+		for _, adj := range adjustments {
+			err := appendChangeLog(
+				ctx, q, householdID, actorID, adj.ID,
+				domain.SyncEntityTransaction, domain.SyncChangeTombstone, int(adj.Version),
+			)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 	if err != nil {
 		return opWrap(op, err)

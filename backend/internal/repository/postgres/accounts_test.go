@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/yurifa/trata/backend/internal/domain"
+	"github.com/yurifa/trata/backend/internal/repository"
 )
 
 func TestAccountCRUDAndBalance(t *testing.T) {
@@ -133,4 +134,70 @@ func TestDeleteAccountInUseReturnsConflict(t *testing.T) {
 	// Deleting the referenced account must surface a domain error (-> 409).
 	err = testRepo.DeleteAccount(ctx, domain.Scope{HouseholdID: userHH, ActorID: user.ID}, acct.ID)
 	require.ErrorIs(t, err, domain.ErrAccountHasTransactions)
+}
+
+func TestDeleteAccountAbsorbsAdjustments(t *testing.T) {
+	if testing.Short() {
+		t.Skip("requires Docker for testcontainers")
+	}
+	user := seedUser(t, "adjdel")
+	userHH := householdOf(t, user.ID)
+	ctx := newCtx(t)
+	scope := domain.Scope{HouseholdID: userHH, ActorID: user.ID}
+
+	acct, err := testRepo.CreateAccount(ctx, domain.CreateAccountParams{
+		HouseholdID:    userHH,
+		UserID:         user.ID,
+		Name:           "Cash",
+		Currency:       "USD",
+		OpeningBalance: 0,
+	})
+	require.NoError(t, err)
+	acctID := acct.ID
+
+	// Two live adjustments reconcile the account; nothing else references it.
+	first, err := testRepo.CreateTransaction(ctx, domain.CreateTransactionParams{
+		HouseholdID: userHH,
+		UserID:      user.ID,
+		Type:        domain.TransactionTypeAdjustment,
+		Amount:      1500,
+		AccountID:   &acctID,
+	})
+	require.NoError(t, err)
+	second, err := testRepo.CreateTransaction(ctx, domain.CreateTransactionParams{
+		HouseholdID: userHH,
+		UserID:      user.ID,
+		Type:        domain.TransactionTypeAdjustment,
+		Amount:      -300,
+		AccountID:   &acctID,
+	})
+	require.NoError(t, err)
+
+	// Adjustments never block the delete: it succeeds and absorbs them.
+	require.NoError(t, testRepo.DeleteAccount(ctx, scope, acct.ID))
+
+	// The adjustments ride along as tombstones (sync tombstones, so other
+	// devices drop them through pull).
+	require.NoError(
+		t,
+		testRepo.WithinHouseholdTx(ctx, domain.Scope{HouseholdID: userHH}, func(tx repository.SyncTx) error {
+			for _, adj := range []*domain.Transaction{first, second} {
+				row, err := tx.GetTransactionAny(ctx, domain.Scope{HouseholdID: userHH}, adj.ID)
+				if err != nil {
+					return err
+				}
+				if row == nil || row.DeletedAt == nil {
+					t.Fatalf("adjustment %s was not tombstoned with the account", adj.ID)
+				}
+				if row.Version <= adj.Version {
+					t.Fatalf("adjustment %s version did not advance: %d", adj.ID, row.Version)
+				}
+			}
+			return nil
+		}),
+	)
+
+	// The account itself is tombstoned.
+	_, err = testRepo.GetAccount(ctx, domain.Scope{HouseholdID: userHH}, acct.ID)
+	require.ErrorIs(t, err, domain.ErrAccountNotFound)
 }

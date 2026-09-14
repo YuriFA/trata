@@ -8,7 +8,7 @@ import { InvalidPayloadError, NotFoundError, ReferentialIntegrityError } from '@
 import { createLocalTransactionRepository } from '../repositories/transaction'
 import { createLocalCategoryRepository } from '../repositories/category'
 import { createTestDatabase } from '../testing/test-database'
-import { accounts, syncOutbox } from '../schema'
+import { accounts, syncOutbox, transactions } from '../schema'
 import type { LocalDatabase } from '../types'
 import { createLocalAccountRepository } from './account'
 
@@ -235,5 +235,65 @@ describe('local account repository', () => {
     await expect(accountRepo.update(account.id, { version: 1 })).rejects.toBeInstanceOf(
       InvalidPayloadError,
     )
+  })
+})
+
+describe('local account repository · adjustments cascade', () => {
+  it('lets an account with only adjustments delete and absorbs them', async () => {
+    const account = await accountRepo.create({ name: 'Кошелёк', currency: 'RUB', openingBalance: 0 })
+    // Confirm the account (serverVersion > 0): the delete travels as a
+    // tombstone and the adjustments must ride along as tombstones.
+    db.update(accounts).set({ serverVersion: 2, version: 2 }).where(eq(accounts.id, account.id)).run()
+    db.delete(syncOutbox).run()
+
+    const first = await transactionRepo.create({
+      type: 'adjustment',
+      amount: 1_500,
+      description: '',
+      occurredAt: OCCURRED_AT,
+      accountId: account.id,
+    } as any)
+    const second = await transactionRepo.create({
+      type: 'adjustment',
+      amount: -300,
+      description: '',
+      occurredAt: OCCURRED_AT,
+      accountId: account.id,
+    } as any)
+
+    await accountRepo.remove(account.id)
+
+    expect(await accountRepo.getById(account.id)).toBeNull()
+    for (const adj of [first, second]) {
+      const row = db.select().from(transactions).where(eq(transactions.id, adj.id)).get()
+      expect(row?.deletedAt).not.toBeNull()
+    }
+    // A single delete op travels: the server cascade covers the adjustments.
+    const outbox = db.select().from(syncOutbox).all()
+    expect(outbox).toHaveLength(1)
+    expect(outbox[0]).toMatchObject({ entity: 'account', entityId: account.id, op: 'delete' })
+  })
+
+  it('still blocks when a cashflow transaction references the account', async () => {
+    const account = await accountRepo.create({ name: 'Карта', currency: 'RUB', openingBalance: 0 })
+    const category = await categoryRepo.create({
+      name: 'Еда',
+      type: 'expense',
+      icon: 'fast-food',
+      color: '#f97316',
+    })
+
+    await transactionRepo.create({
+      type: 'expense',
+      amount: 400,
+      description: '',
+      occurredAt: OCCURRED_AT,
+      accountId: account.id,
+      categoryId: category.id,
+    })
+
+    const error = await accountRepo.remove(account.id).catch((e) => e)
+    expect(error).toBeInstanceOf(ReferentialIntegrityError)
+    expect((error as ReferentialIntegrityError).apiCode).toBe('ACCOUNT_IN_USE')
   })
 })

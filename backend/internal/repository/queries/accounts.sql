@@ -111,15 +111,29 @@ WHERE household_id = $1 AND deleted_at IS NULL
 ORDER BY created_at, id;
 
 -- name: HasLiveTransactionsForAccount :one
--- In-use guard for deletion: any non-deleted transaction referencing the
--- account (as cashflow account or transfer endpoint) blocks the tombstone.
+-- In-use guard for deletion: a non-deleted cashflow or transfer referencing
+-- the account blocks the tombstone. Adjustments never block - they are the
+-- account's own reconciliation bookkeeping and cascade with the delete
+-- (SoftDeleteAdjustmentsForAccount).
 SELECT EXISTS(
     SELECT 1
     FROM transactions
     WHERE household_id = @household_id
       AND deleted_at IS NULL
+      AND type <> 'adjustment'
       AND (account_id = @account_id OR from_account_id = @account_id OR to_account_id = @account_id)
 ) AS in_use;
+
+-- name: SoftDeleteAdjustmentsForAccount :many
+-- Cascade half of an account delete: tombstone the account's live
+-- adjustments (they reference no category and no second account, so they
+-- carry no meaning without it). Returns id+version per row for the
+-- per-record change_log appends.
+UPDATE transactions
+SET deleted_at = now(), version = version + 1, updated_at = now()
+WHERE household_id = @household_id AND account_id = @account_id
+  AND type = 'adjustment' AND deleted_at IS NULL
+RETURNING id, version;
 
 -- name: SyncReplaceAccount :one
 -- Full-state CAS upsert from a sync push: applies only on the exact base
