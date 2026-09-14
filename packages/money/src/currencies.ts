@@ -2,6 +2,7 @@ import {
   AED,
   AMD,
   AZN,
+  BYN,
   CNY,
   EUR,
   GBP,
@@ -21,7 +22,7 @@ import {
 import type { DineroCurrency } from 'dinero.js'
 
 /**
- * The supported currency catalog: 18 ISO currencies, all two-decimal, so a
+ * The supported currency catalog: 19 ISO currencies, all two-decimal, so a
  * single minor-unit divisor (100) holds at every storage/transport/sync
  * boundary. The catalog is a fixed list - expanding it must land together
  * with the DB check constraint and the OpenAPI enum in the same coordinated
@@ -40,6 +41,7 @@ export const CURRENCY_MAP = {
   UAH,
   AMD,
   AZN,
+  BYN,
   UZS,
   KGS,
   RSD,

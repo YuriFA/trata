@@ -12,8 +12,8 @@ describe('currencies', () => {
     // The coordinated catalog (ADR-0008): every entry has two decimals so
     // the single minor-unit divisor (100) holds at every boundary. Zero-
     // and three-decimal currencies (JPY, KWD) are deliberately excluded.
-    expect(AVAILABLE_CURRENCIES).toHaveLength(18)
-    for (const code of ['USD', 'EUR', 'RUB', 'GBP', 'CNY', 'TRY', 'PLN', 'GEL']) {
+    expect(AVAILABLE_CURRENCIES).toHaveLength(19)
+    for (const code of ['USD', 'EUR', 'RUB', 'GBP', 'CNY', 'TRY', 'PLN', 'GEL', 'BYN']) {
       expect(AVAILABLE_CURRENCIES).toContain(code)
     }
     for (const code of ['JPY', 'KRW', 'KWD', 'BHD']) {

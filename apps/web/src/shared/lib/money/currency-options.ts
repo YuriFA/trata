@@ -33,6 +33,8 @@ function currencyName(code: CurrencyCode): string {
       return t('currencyNames.AMD')
     case 'AZN':
       return t('currencyNames.AZN')
+    case 'BYN':
+      return t('currencyNames.BYN')
     case 'UZS':
       return t('currencyNames.UZS')
     case 'KGS':

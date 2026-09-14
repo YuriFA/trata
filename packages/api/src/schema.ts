@@ -1299,12 +1299,12 @@ export interface components {
             isCurrent: boolean;
         };
         /**
-         * @description Каталог поддерживаемых валют: 18 ISO-кодов, все двухзнаковые
+         * @description Каталог поддерживаемых валют: 19 ISO-кодов, все двухзнаковые
          *     (divisor 100). Каталог фиксированный и расширяется только
          *     координированным изменением (DB CHECK + контракт + пакеты).
          * @enum {string}
          */
-        Currency: "USD" | "EUR" | "RUB" | "GBP" | "CNY" | "TRY" | "PLN" | "GEL" | "KZT" | "UAH" | "AMD" | "AZN" | "UZS" | "KGS" | "RSD" | "ILS" | "AED" | "THB";
+        Currency: "USD" | "EUR" | "RUB" | "GBP" | "CNY" | "TRY" | "PLN" | "GEL" | "KZT" | "UAH" | "AMD" | "AZN" | "BYN" | "UZS" | "KGS" | "RSD" | "ILS" | "AED" | "THB";
         Account: {
             /** Format: uuid */
             id: string;
@@ -1447,7 +1447,7 @@ export interface components {
              *     409 `DEBTOR_ALREADY_EXISTS`.
              */
             id?: string;
-            name?: string;
+            name: string;
             /** @default  */
             note: string;
             currency?: components["schemas"]["Currency"];

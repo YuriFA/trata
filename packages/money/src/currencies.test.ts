@@ -3,10 +3,10 @@ import { AVAILABLE_CURRENCIES, DEFAULT_CURRENCY, isCurrencyCode } from './curren
 import { formatMoney } from './format'
 
 describe('currency catalog', () => {
-  it('exposes the 18-currency catalog, all two-decimal', () => {
+  it('exposes the 19-currency catalog, all two-decimal', () => {
     expect(AVAILABLE_CURRENCIES).toEqual([
       'USD', 'EUR', 'RUB', 'GBP', 'CNY', 'TRY', 'PLN', 'GEL', 'KZT',
-      'UAH', 'AMD', 'AZN', 'UZS', 'KGS', 'RSD', 'ILS', 'AED', 'THB',
+      'UAH', 'AMD', 'AZN', 'BYN', 'UZS', 'KGS', 'RSD', 'ILS', 'AED', 'THB',
     ])
     for (const code of AVAILABLE_CURRENCIES) {
       expect(isCurrencyCode(code)).toBe(true)
@@ -28,5 +28,6 @@ describe('currency catalog', () => {
     expect(formatMoney(100_000, 'PLN', 'en')).toBe('zł1,000.00')
     // No narrow symbol in common use: falls back to the ISO code.
     expect(formatMoney(500_000, 'UZS', ru)).toBe('5\u202F000,00\u00A0UZS')
+    expect(formatMoney(100_000, 'BYN', ru)).toBe('1\u202F000,00\u00A0Br')
   })
 })

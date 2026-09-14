@@ -3002,10 +3002,10 @@ components:
     Currency:
       type: string
       description: |
-        Каталог поддерживаемых валют: 18 ISO-кодов, все двухзнаковые
+        Каталог поддерживаемых валют: 19 ISO-кодов, все двухзнаковые
         (divisor 100). Каталог фиксированный и расширяется только
         координированным изменением (DB CHECK + контракт + пакеты).
-      enum: [USD, EUR, RUB, GBP, CNY, TRY, PLN, GEL, KZT, UAH, AMD, AZN, UZS, KGS, RSD, ILS, AED, THB]
+      enum: [USD, EUR, RUB, GBP, CNY, TRY, PLN, GEL, KZT, UAH, AMD, AZN, BYN, UZS, KGS, RSD, ILS, AED, THB]
 
     Account:
       type: object

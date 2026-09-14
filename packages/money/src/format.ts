@@ -20,6 +20,7 @@ const CURRENCY_SYMBOLS: Partial<Record<CurrencyCode, string>> = {
   UAH: '₴',
   AMD: '֏',
   AZN: '₼',
+  BYN: 'Br',
   ILS: '₪',
   THB: '฿',
 }

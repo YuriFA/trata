@@ -29,9 +29,9 @@ function asCalendarDay(value: unknown): string | null {
   return typeof value === 'string' && CALENDAR_DAY_PATTERN.test(value) ? value : null
 }
 
-const ACCOUNT_CURRENCY_VALUES = new Set(["USD", "EUR", "RUB", "GBP", "CNY", "TRY", "PLN", "GEL", "KZT", "UAH", "AMD", "AZN", "UZS", "KGS", "RSD", "ILS", "AED", "THB"])
+const ACCOUNT_CURRENCY_VALUES = new Set(["USD", "EUR", "RUB", "GBP", "CNY", "TRY", "PLN", "GEL", "KZT", "UAH", "AMD", "AZN", "BYN", "UZS", "KGS", "RSD", "ILS", "AED", "THB"])
 const CATEGORY_TYPE_VALUES = new Set(["income", "expense"])
-const DEBTOR_CURRENCY_VALUES = new Set(["USD", "EUR", "RUB", "GBP", "CNY", "TRY", "PLN", "GEL", "KZT", "UAH", "AMD", "AZN", "UZS", "KGS", "RSD", "ILS", "AED", "THB"])
+const DEBTOR_CURRENCY_VALUES = new Set(["USD", "EUR", "RUB", "GBP", "CNY", "TRY", "PLN", "GEL", "KZT", "UAH", "AMD", "AZN", "BYN", "UZS", "KGS", "RSD", "ILS", "AED", "THB"])
 const DEBT_OPERATION_DIRECTION_VALUES = new Set(["receivable", "payable"])
 const DEBT_OPERATION_KIND_VALUES = new Set(["debt", "repayment"])
 const PLANNED_PAYMENT_TYPE_VALUES = new Set(["expense", "income"])
