@@ -140,7 +140,7 @@ export {
 // --- Household endpoint client ----------------------------------------------
 export {
   fetchHousehold,
-  updateHouseholdName,
+  updateHousehold,
   updateDisplayName,
   createHouseholdInvitation,
   listHouseholdInvitations,

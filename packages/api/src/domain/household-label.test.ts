@@ -21,7 +21,14 @@ function me(overrides: Partial<HouseholdMember> = {}): HouseholdMember {
 }
 
 function household(overrides: Partial<Household> = {}): Household {
-  return { id: 'hh-1', createdAt: '2026-08-01T00:00:00.000Z', name: null, members: [me()], ...overrides }
+  return {
+    id: 'hh-1',
+    createdAt: '2026-08-01T00:00:00.000Z',
+    name: null,
+    currency: 'RUB',
+    members: [me()],
+    ...overrides,
+  }
 }
 
 describe('emailLocalPart', () => {

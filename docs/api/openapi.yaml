@@ -2638,11 +2638,13 @@ components:
           description: |
             Отображаемое имя household (editor: owner). null — не задано;
             потребители выводят производную подпись от аккаунта owner.
+        currency:
+          $ref: "#/components/schemas/Currency"
         members:
           type: array
           items:
             $ref: "#/components/schemas/HouseholdMember"
-      required: [id, createdAt, members]
+      required: [id, createdAt, members, currency]
 
     HouseholdMember:
       type: object
@@ -2668,13 +2670,17 @@ components:
     UpdateHouseholdRequest:
       type: object
       description: |
-        `name = null` сбрасывает имя; непустая строка — задаёт (1-100 символов).
+        `name = null` сбрасывает имя; непустая строка — задаёт (1-100
+        символов). `currency` — новая базовая валюта (owner only),
+        отсутствует = не менять; смена не переписывает хранимые суммы.
       properties:
         name:
           type: string
           nullable: true
           minLength: 1
           maxLength: 100
+        currency:
+          $ref: "#/components/schemas/Currency"
       required: [name]
 
     CreateHouseholdInvitationRequest:
@@ -2807,10 +2813,10 @@ components:
           type: integer
           format: int64
           description: |
-            Минорные единицы (divisor 100 для USD/EUR/RUB). Положительный для
-            income/expense/transfer; для adjustment — ненулевое знаковое
-            значение (отрицательное уменьшает баланс, положительное
-            увеличивает).
+            Минорные единицы (divisor 100 — у всех валют каталога).
+            Положительный для income/expense/transfer; для adjustment —
+            ненулевое знаковое значение (отрицательное уменьшает баланс,
+            положительное увеличивает).
         description:
           type: string
         occurredAt:
@@ -2838,6 +2844,14 @@ components:
           type: string
           format: uuid
           nullable: true
+        destinationAmount:
+          type: integer
+          format: int64
+          description: |
+            Только для transfer при разных валютах счетов: сумма зачисления
+            в валюте `toAccountId` (positive). Отсутствует, когда валюты
+            совпадают (тогда `amount` списывается и зачисляется как есть).
+            Эффективный курс восстановим как destinationAmount / amount.
         version:
           type: integer
           format: int
@@ -2902,6 +2916,13 @@ components:
           type: string
           format: uuid
           description: Required для transfer. Forbidden для income/expense/adjustment.
+        destinationAmount:
+          type: integer
+          format: int64
+          description: |
+            Transfer при разных валютах `fromAccountId`/`toAccountId`:
+            required, positive, в валюте `toAccountId`. При одинаковых
+            валютах forbidden.
 
     TransactionUpdateRequest:
       type: object
@@ -2938,6 +2959,14 @@ components:
         toAccountId:
           type: string
           format: uuid
+        destinationAmount:
+          type: integer
+          format: int64
+          description: |
+            Для cross-currency transfer — сумма зачисления (positive,
+            в валюте `toAccountId`); правило валидируется против
+            эффективных ссылок после обновления. Для same-currency —
+            forbidden.
       required: [version]
 
     ErrorResponse:
@@ -2970,6 +2999,14 @@ components:
           type: boolean
       required: [createdAt, updatedAt, expiresAt, isCurrent]
 
+    Currency:
+      type: string
+      description: |
+        Каталог поддерживаемых валют: 18 ISO-кодов, все двухзнаковые
+        (divisor 100). Каталог фиксированный и расширяется только
+        координированным изменением (DB CHECK + контракт + пакеты).
+      enum: [USD, EUR, RUB, GBP, CNY, TRY, PLN, GEL, KZT, UAH, AMD, AZN, UZS, KGS, RSD, ILS, AED, THB]
+
     Account:
       type: object
       properties:
@@ -2982,8 +3019,7 @@ components:
         name:
           type: string
         currency:
-          type: string
-          enum: [USD, EUR, RUB]
+          $ref: "#/components/schemas/Currency"
         openingBalance:
           type: integer
           format: int64
@@ -2992,7 +3028,8 @@ components:
           format: int64
           description: |
             Вычисляется сервером (opening + Σ транзакций: income +, expense −,
-            transfer −from/+to, adjustment — знаковое значение).
+            transfer −amount/+destinationAmount (при одинаковых валютах
+            −amount/+amount), adjustment — знаковое значение).
         createdAt:
           type: string
           format: date-time
@@ -3018,8 +3055,7 @@ components:
         name:
           type: string
         currency:
-          type: string
-          enum: [USD, EUR, RUB]
+          $ref: "#/components/schemas/Currency"
         openingBalance:
           type: integer
           format: int64
@@ -3133,6 +3169,9 @@ components:
       description: |
         Человек, с которым user отслеживает долги. Балансы не хранятся:
         они производны от debt operations (по направлениям, без неттинга).
+        `currency` — валюта леджера: суммы операций интерпретируются в ней,
+        при создании без валюты берётся базовая валюта household,
+        после создания неизменяема.
       properties:
         id:
           type: string
@@ -3144,6 +3183,8 @@ components:
           type: string
         note:
           type: string
+        currency:
+          $ref: "#/components/schemas/Currency"
         createdAt:
           type: string
           format: date-time
@@ -3154,10 +3195,13 @@ components:
           type: integer
           format: int
           description: Версия должника (optimistic concurrency).
-      required: [id, userId, name, note, createdAt, updatedAt, version]
+      required: [id, userId, name, note, currency, createdAt, updatedAt, version]
 
     DebtorCreateRequest:
       type: object
+      description: |
+        `currency` опционален: отсутствие = базовая валюта household.
+        После создания валюта должника неизменяема.
       required: [name]
       properties:
         id:
@@ -3172,6 +3216,8 @@ components:
         note:
           type: string
           default: ""
+        currency:
+          $ref: "#/components/schemas/Currency"
 
     DebtorUpdateRequest:
       type: object
@@ -3179,6 +3225,7 @@ components:
         Все поля кроме `version` optional. `version` — optimistic concurrency:
         при параллельном изменении → 409 `DEBTOR_VERSION_CONFLICT`.
         `note`: отсутствует = не менять, `""` = очистить; `null` невалиден.
+        `currency` изменению не подлежит (попытка — invalid payload).
       properties:
         version:
           type: integer
@@ -3487,8 +3534,7 @@ components:
         name:
           type: string
         currency:
-          type: string
-          enum: [USD, EUR, RUB]
+          $ref: "#/components/schemas/Currency"
         openingBalance:
           type: integer
           format: int64
@@ -3569,17 +3615,26 @@ components:
           type: string
           format: uuid
           nullable: true
+        destinationAmount:
+          type: integer
+          format: int64
+          description: |
+            Cross-currency transfer: сумма зачисления в валюте
+            `toAccountId` (positive). Отсутствует при одинаковых валютах;
+            наличие/отсутствие валидируется против эффективных счетов.
 
     DebtorSyncData:
       type: object
       additionalProperties: false
       description: Полное состояние должника в sync-операции (upsert).
-      required: [name, note]
+      required: [name, note, currency]
       properties:
         name:
           type: string
         note:
           type: string
+        currency:
+          $ref: "#/components/schemas/Currency"
 
     DebtOperationSyncData:
       type: object

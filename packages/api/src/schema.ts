@@ -1052,6 +1052,7 @@ export interface components {
              *     потребители выводят производную подпись от аккаунта owner.
              */
             name?: string | null;
+            currency: components["schemas"]["Currency"];
             members: components["schemas"]["HouseholdMember"][];
         };
         HouseholdMember: {
@@ -1066,9 +1067,14 @@ export interface components {
             /** Format: date-time */
             joinedAt: string;
         };
-        /** @description `name = null` сбрасывает имя; непустая строка — задаёт (1-100 символов). */
+        /**
+         * @description `name = null` сбрасывает имя; непустая строка — задаёт (1-100
+         *     символов). `currency` — новая базовая валюта (owner only),
+         *     отсутствует = не менять; смена не переписывает хранимые суммы.
+         */
         UpdateHouseholdRequest: {
             name: string | null;
+            currency?: components["schemas"]["Currency"];
         };
         CreateHouseholdInvitationRequest: {
             /**
@@ -1149,10 +1155,10 @@ export interface components {
             type: "income" | "expense" | "transfer" | "adjustment";
             /**
              * Format: int64
-             * @description Минорные единицы (divisor 100 для USD/EUR/RUB). Положительный для
-             *     income/expense/transfer; для adjustment — ненулевое знаковое
-             *     значение (отрицательное уменьшает баланс, положительное
-             *     увеличивает).
+             * @description Минорные единицы (divisor 100 — у всех валют каталога).
+             *     Положительный для income/expense/transfer; для adjustment —
+             *     ненулевое знаковое значение (отрицательное уменьшает баланс,
+             *     положительное увеличивает).
              */
             amount: number;
             description: string;
@@ -1170,6 +1176,14 @@ export interface components {
             fromAccountId?: string | null;
             /** Format: uuid */
             toAccountId?: string | null;
+            /**
+             * Format: int64
+             * @description Только для transfer при разных валютах счетов: сумма зачисления
+             *     в валюте `toAccountId` (positive). Отсутствует, когда валюты
+             *     совпадают (тогда `amount` списывается и зачисляется как есть).
+             *     Эффективный курс восстановим как destinationAmount / amount.
+             */
+            destinationAmount?: number;
             /**
              * Format: int
              * @description Версия транзакции
@@ -1219,6 +1233,13 @@ export interface components {
              * @description Required для transfer. Forbidden для income/expense/adjustment.
              */
             toAccountId?: string;
+            /**
+             * Format: int64
+             * @description Transfer при разных валютах `fromAccountId`/`toAccountId`:
+             *     required, positive, в валюте `toAccountId`. При одинаковых
+             *     валютах forbidden.
+             */
+            destinationAmount?: number;
         };
         /** @description Все поля кроме `version` optional. Поле `type` менять нельзя. */
         TransactionUpdateRequest: {
@@ -1246,6 +1267,14 @@ export interface components {
             fromAccountId?: string;
             /** Format: uuid */
             toAccountId?: string;
+            /**
+             * Format: int64
+             * @description Для cross-currency transfer — сумма зачисления (positive,
+             *     в валюте `toAccountId`); правило валидируется против
+             *     эффективных ссылок после обновления. Для same-currency —
+             *     forbidden.
+             */
+            destinationAmount?: number;
         };
         ErrorResponse: {
             /**
@@ -1269,20 +1298,27 @@ export interface components {
             expiresAt: string;
             isCurrent: boolean;
         };
+        /**
+         * @description Каталог поддерживаемых валют: 18 ISO-кодов, все двухзнаковые
+         *     (divisor 100). Каталог фиксированный и расширяется только
+         *     координированным изменением (DB CHECK + контракт + пакеты).
+         * @enum {string}
+         */
+        Currency: "USD" | "EUR" | "RUB" | "GBP" | "CNY" | "TRY" | "PLN" | "GEL" | "KZT" | "UAH" | "AMD" | "AZN" | "UZS" | "KGS" | "RSD" | "ILS" | "AED" | "THB";
         Account: {
             /** Format: uuid */
             id: string;
             /** Format: uuid */
             userId: string;
             name: string;
-            /** @enum {string} */
-            currency: "USD" | "EUR" | "RUB";
+            currency: components["schemas"]["Currency"];
             /** Format: int64 */
             openingBalance: number;
             /**
              * Format: int64
              * @description Вычисляется сервером (opening + Σ транзакций: income +, expense −,
-             *     transfer −from/+to, adjustment — знаковое значение).
+             *     transfer −amount/+destinationAmount (при одинаковых валютах
+             *     −amount/+amount), adjustment — знаковое значение).
              */
             balance: number;
             /** Format: date-time */
@@ -1303,8 +1339,7 @@ export interface components {
              */
             id?: string;
             name: string;
-            /** @enum {string} */
-            currency: "USD" | "EUR" | "RUB";
+            currency: components["schemas"]["Currency"];
             /** Format: int64 */
             openingBalance: number;
         };
@@ -1379,6 +1414,9 @@ export interface components {
         /**
          * @description Человек, с которым user отслеживает долги. Балансы не хранятся:
          *     они производны от debt operations (по направлениям, без неттинга).
+         *     `currency` — валюта леджера: суммы операций интерпретируются в ней,
+         *     при создании без валюты берётся базовая валюта household,
+         *     после создания неизменяема.
          */
         Debtor: {
             /** Format: uuid */
@@ -1387,6 +1425,7 @@ export interface components {
             userId: string;
             name: string;
             note: string;
+            currency: components["schemas"]["Currency"];
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -1397,6 +1436,10 @@ export interface components {
              */
             version: number;
         };
+        /**
+         * @description `currency` опционален: отсутствие = базовая валюта household.
+         *     После создания валюта должника неизменяема.
+         */
         DebtorCreateRequest: {
             /**
              * Format: uuid
@@ -1404,14 +1447,16 @@ export interface components {
              *     409 `DEBTOR_ALREADY_EXISTS`.
              */
             id?: string;
-            name: string;
+            name?: string;
             /** @default  */
             note: string;
+            currency?: components["schemas"]["Currency"];
         };
         /**
          * @description Все поля кроме `version` optional. `version` — optimistic concurrency:
          *     при параллельном изменении → 409 `DEBTOR_VERSION_CONFLICT`.
          *     `note`: отсутствует = не менять, `""` = очистить; `null` невалиден.
+         *     `currency` изменению не подлежит (попытка — invalid payload).
          */
         DebtorUpdateRequest: {
             /** Format: int */
@@ -1627,8 +1672,7 @@ export interface components {
         /** @description Полное состояние счёта в sync-операции (upsert). */
         AccountSyncData: {
             name: string;
-            /** @enum {string} */
-            currency: "USD" | "EUR" | "RUB";
+            currency: components["schemas"]["Currency"];
             /** Format: int64 */
             openingBalance: number;
         };
@@ -1683,11 +1727,19 @@ export interface components {
             fromAccountId?: string | null;
             /** Format: uuid */
             toAccountId?: string | null;
+            /**
+             * Format: int64
+             * @description Cross-currency transfer: сумма зачисления в валюте
+             *     `toAccountId` (positive). Отсутствует при одинаковых валютах;
+             *     наличие/отсутствие валидируется против эффективных счетов.
+             */
+            destinationAmount?: number;
         };
         /** @description Полное состояние должника в sync-операции (upsert). */
         DebtorSyncData: {
             name: string;
             note: string;
+            currency: components["schemas"]["Currency"];
         };
         /** @description Полное состояние долговой операции в sync-операции (upsert). */
         DebtOperationSyncData: {

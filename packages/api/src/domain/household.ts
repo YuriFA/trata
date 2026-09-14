@@ -1,3 +1,4 @@
+import { isCurrencyCode, type CurrencyCode } from '@trata/money'
 import { asDateTimeString, asNonEmptyString, asString, isRecord } from '../lib/normalize'
 
 export type HouseholdRole = 'owner' | 'member'
@@ -16,6 +17,11 @@ export interface Household {
   createdAt: string
   /** Owner-set display name; null = never set (consumers derive a label). */
   name: string | null
+  /**
+   * Base currency: the conversion target for household-wide presentation.
+   * Owner-editable; changing it never rewrites stored amounts.
+   */
+  currency: CurrencyCode
   members: HouseholdMember[]
 }
 
@@ -89,7 +95,8 @@ export const normalizeHousehold = (value: unknown): Household | null => {
   const id = asNonEmptyString(value.id)
   const createdAt = asDateTimeString(value.createdAt)
   const name = asNullableString(value.name)
-  if (!id || !createdAt) {
+  const currency = isCurrencyCode(value.currency) ? value.currency : null
+  if (!id || !createdAt || !currency) {
     return null
   }
 
@@ -102,7 +109,7 @@ export const normalizeHousehold = (value: unknown): Household | null => {
     members.push(member)
   }
 
-  return { id, createdAt, name, members }
+  return { id, createdAt, name, currency, members }
 }
 
 export const normalizeHouseholdInvitation = (value: unknown): HouseholdInvitation | null => {

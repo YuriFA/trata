@@ -103,6 +103,8 @@ function renderSyncFieldPrelude(entity, sourceName, field) {
         return `const ${field.name} = asInt(${sourceName}.${field.name})\nif (${field.name} === null || ${field.name} < ${field.min}) return null`
       }
       return `const ${field.name} = asInt(${sourceName}.${field.name})\nif (${field.name} === null) return null`
+    case 'optionalInt':
+      return `const ${field.name} = asInt(${sourceName}.${field.name})\nif (${field.name} !== null && ${field.name} <= 0) return null`
     case 'optionalString':
       return `const ${field.name} = asString(${sourceName}.${field.name})`
     case 'calendarDay':
@@ -123,6 +125,8 @@ function renderSyncFieldAssignment(entity, sourceName, field) {
       return `${field.name}: ${field.name} as ${entity.syncData.type}['${field.name}']`
     case 'int':
       return field.name
+    case 'optionalInt':
+      return `...(${field.name} !== null ? { ${field.name} } : {})`
     case 'optionalString':
       return `...(${field.name} ? { ${field.name} } : {})`
     case 'calendarDay':
@@ -142,6 +146,8 @@ function renderRowPatchAssignment(sourceName, field) {
     case 'enum':
       return `${field.name}`
     case 'int':
+      return field.name
+    case 'optionalInt':
       return field.name
     case 'optionalString':
       return `${field.name}: asString(${sourceName}.${field.name})`
@@ -174,6 +180,8 @@ function renderRestorePrelude(entity, field) {
         return `const ${field.name} = asInt(state.${field.name})\nif (${field.name} === null || ${field.name} < ${field.min}) return fail('${field.name}')`
       }
       return `const ${field.name} = asInt(state.${field.name})\nif (${field.name} === null) return fail('${field.name}')`
+    case 'optionalInt':
+      return `const ${field.name} = state.${field.name} === undefined ? null : asInt(state.${field.name})\nif (${field.name} !== null && ${field.name} <= 0) return fail('${field.name}')`
     case 'calendarDay':
       return `const ${field.name} = asString(state.${field.name})\nif (!${field.name} || !CALENDAR_DAY_PATTERN.test(${field.name})) return fail('${field.name}')`
     default:
@@ -185,9 +193,11 @@ function renderRestorePayloadField(field) {
   if (field.kind === 'optionalString') {
     return `...(${field.name} !== undefined ? { ${field.name} } : {})`
   }
+  if (field.kind === 'optionalInt') {
+    return `...(${field.name} !== null ? { ${field.name} } : {})`
+  }
   return field.name
 }
-
 /** One `if / else if / ... / else` chain over a discriminator. The LAST
  * variant is the else branch. `subject` is the expression the variant
  * values are compared against (a local const, or `typedRow.field`). */

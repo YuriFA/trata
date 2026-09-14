@@ -62,7 +62,11 @@ for (const entity of manifest.entities) {
   }
   for (const { name, values } of enumFields) {
     checkedEnums += 1
-    const specValues = schema.properties?.[name]?.enum
+    const property = schema.properties?.[name]
+    // Properties reference the shared catalog enum via `$ref` (OAS 3.0
+    // forbids siblings on `$ref`, so the enum lives only on the target).
+    const target = property?.$ref ? spec.components.schemas[property.$ref.split('/').pop()] : property
+    const specValues = target?.enum
     if (!specValues) {
       problems.push(`${entity.id}.${name}: no enum on ${schemaName}.${name}`)
     } else if (!sameSet(specValues, values)) {

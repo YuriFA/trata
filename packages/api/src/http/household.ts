@@ -6,6 +6,7 @@
 // backend `ErrorResponse.code` (e.g. HOUSEHOLD_INVITATION_EXPIRED).
 
 import type { ApiClient } from '../api-client'
+import type { CurrencyCode } from '@trata/money'
 import {
   normalizeHousehold,
   normalizeHouseholdCode,
@@ -42,11 +43,15 @@ export async function fetchHousehold(client: ApiClient): Promise<Household> {
 }
 
 /**
- * Sets or clears the household display name (owner only; null resets it).
- * Resolves with the updated household.
+ * Updates the household (owner only): sets or clears the display name
+ * (`null` resets it) and optionally changes the base currency. Resolves
+ * with the updated household.
  */
-export async function updateHouseholdName(client: ApiClient, name: string | null): Promise<Household> {
-  const { data } = await client.PATCH('/api/household', { body: { name } })
+export async function updateHousehold(
+  client: ApiClient,
+  patch: { name: string | null; currency?: CurrencyCode },
+): Promise<Household> {
+  const { data } = await client.PATCH('/api/household', { body: patch })
   return requireHousehold(requireData(data))
 }
 

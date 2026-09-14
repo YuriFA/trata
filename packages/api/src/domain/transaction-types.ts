@@ -32,6 +32,12 @@ export type TransferTransaction = BaseTransaction & {
   type: 'transfer'
   fromAccountId: string
   toAccountId: string
+  /**
+   * Amount credited to `toAccountId` in the destination account's currency
+   * (positive minor units). Present iff the two accounts' currencies differ;
+   * the effective rate is derivable as destinationAmount / amount.
+   */
+  destinationAmount?: number
   categoryId?: never
 }
 

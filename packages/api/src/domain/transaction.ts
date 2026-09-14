@@ -130,11 +130,23 @@ const normalizeTransferTransaction = (
     return null
   }
 
+  // Cross-currency credit: present iff the two accounts' currencies differ.
+  // The iff-rule itself is validated against the real accounts server-side;
+  // here it rides along as an optional positive integer.
+  const rawDestinationAmount = value.destinationAmount
+  const destinationAmount =
+    typeof rawDestinationAmount === 'number' &&
+    Number.isInteger(rawDestinationAmount) &&
+    rawDestinationAmount > 0
+      ? rawDestinationAmount
+      : undefined
+
   return {
     ...baseTransaction,
     type: 'transfer',
     fromAccountId,
     toAccountId,
+    destinationAmount,
   }
 }
 
