@@ -27,6 +27,13 @@ const props = withDefaults(
 
 const { t } = useI18n()
 const options = computed(() => getCurrencyOptions())
+// The trigger slot must resolve the selected label itself: reka's SelectValue
+// fallback renders the option's textContent, which concatenates the label and
+// name spans with no whitespace («RUB · ₽Российский рубль»). Same constraint
+// as CategorySelect/AccountSelect.
+const selectedOption = computed(() =>
+  options.value.find((option) => option.value === modelValue.value),
+)
 </script>
 
 <template>
@@ -37,7 +44,13 @@ const options = computed(() => getCurrencyOptions())
       :aria-label="t('fields.currency')"
       :aria-invalid="!!props.errors?.length"
     >
-      <SelectValue :placeholder="props.placeholder ?? t('fields.currency')" />
+      <SelectValue :placeholder="props.placeholder ?? t('fields.currency')">
+        <template v-if="selectedOption">
+          <span class="font-semibold">{{ selectedOption.label }}</span>
+          <span class="text-muted-foreground">{{ selectedOption.name }}</span>
+        </template>
+        <template v-else>{{ props.placeholder ?? t('fields.currency') }}</template>
+      </SelectValue>
     </SelectTrigger>
     <SelectContent>
       <SelectItem v-for="option in options" :key="option.value" :value="option.value">
