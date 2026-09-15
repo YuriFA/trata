@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useForm, useFieldValue, Field as VeeField } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
@@ -52,6 +52,21 @@ const {
     currency: defaultCurrency.value,
   },
 })
+// Fresh form on every open: the dialog content unmount makes vee-validate
+// drop the field state (and its initial value), so a reopen must reseed
+// explicitly instead of trusting whatever survived the close. Same mechanics
+// as the accounts-page AddAccountForm.
+watch(open, (isOpen) => {
+  if (isOpen) {
+    resetForm({
+      values: {
+        name: '',
+        openingBalance: 0,
+        currency: defaultCurrency.value,
+      },
+    })
+  }
+})
 
 const handleSubmit = handleFormSubmit(async (data) => {
   try {
@@ -62,7 +77,6 @@ const handleSubmit = handleFormSubmit(async (data) => {
     })
     notification.success(t('addAccount.success'))
     emit('created', account)
-    resetForm()
     open.value = false
   } catch (error) {
     notification.mutationError(error, {

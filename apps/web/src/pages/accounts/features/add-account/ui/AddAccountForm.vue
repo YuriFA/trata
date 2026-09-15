@@ -5,6 +5,7 @@ import {
   useCreateAccount,
   type AddAccountFormValues,
 } from '@/entities/account'
+import { watch } from 'vue'
 import { toTypedSchema } from '@vee-validate/zod'
 import { Button } from '@/shared/ui/button'
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
@@ -40,6 +41,7 @@ const {
   handleSubmit: handleFormSubmit,
   setFieldValue,
   isSubmitting,
+  resetForm,
 } = useForm<AddAccountFormValues>({
   validationSchema: toTypedSchema(createAddAccountSchema()),
   initialValues: {
@@ -47,6 +49,20 @@ const {
     openingBalance: 0,
     currency: defaultCurrency.value,
   },
+})
+// Fresh form on every open: the dialog content unmount makes vee-validate
+// drop the field state (and its initial value), so a reopen must reseed
+// explicitly instead of trusting whatever survived the close.
+watch(open, (isOpen) => {
+  if (isOpen) {
+    resetForm({
+      values: {
+        name: '',
+        openingBalance: 0,
+        currency: defaultCurrency.value,
+      },
+    })
+  }
 })
 // The live field value: the amount suffix and payload follow the picker.
 // Must be read AFTER useForm - without the form context the value never

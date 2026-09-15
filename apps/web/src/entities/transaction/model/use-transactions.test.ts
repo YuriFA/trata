@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { defineComponent, h } from 'vue'
+import { createPinia } from 'pinia'
 import { flushPromises } from '@vue/test-utils'
 import { useQueryCache } from '@pinia/colada'
 import type { CashflowTransaction, Transaction, TransferTransaction } from './types'
@@ -153,6 +154,32 @@ describe('useUpdateTransaction', () => {
     const payload = { version: 1, amount: 200 }
     await result.mutateAsync({ id: 't1', payload })
     expect(repo.update).toHaveBeenCalledWith('t1', payload)
+  })
+
+  it('refetches list queries after mutate so updated data is visible', async () => {
+    const repo = createMockTransactionRepository()
+    const updated: CashflowTransaction = { ...incomeTransaction, accountId: 'a2', version: 2 }
+    repo.query.mockResolvedValueOnce([incomeTransaction]).mockResolvedValueOnce([updated])
+    repo.update.mockResolvedValue(updated)
+    const pinia = createPinia()
+
+    const { result: list } = mountWithComposable(() => useTransactions({ limit: 5 }), {
+      pinia,
+      repositories: { transactions: repo },
+    })
+    const { result: update } = mountWithComposable(
+      () => useUpdateTransaction<CashflowTransaction>(),
+      { pinia, repositories: { transactions: repo } },
+    )
+    await flushPromises()
+    expect(list.data.value).toEqual([incomeTransaction])
+
+    await update.mutateAsync({ id: 't1', payload: { version: 1, accountId: 'a2' } })
+    await flushPromises()
+
+    // A stale list keeps showing the old row AND feeds the old `version`
+    // back into the edit dialog -> TRANSACTION_VERSION_CONFLICT on retry.
+    expect(list.data.value).toEqual([updated])
   })
 })
 

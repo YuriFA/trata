@@ -59,8 +59,8 @@ export const useUpdateTransaction = <T extends Transaction>() => {
     mutation: ({ id, payload }: { id: string; payload: UpdateTransactionPayload<T> }) => {
       return transactions.update(id, payload)
     },
-    onSettled: (_data, _errors, { id }) => {
-      queryCache.invalidateQueries({ key: ['transactions', id] })
+    onSettled: () => {
+      queryCache.invalidateQueries({ key: SYNC_QUERY_KEY_ROOTS.transactions })
       queryCache.invalidateQueries({ key: SYNC_QUERY_KEY_ROOTS.accounts })
     },
   })
