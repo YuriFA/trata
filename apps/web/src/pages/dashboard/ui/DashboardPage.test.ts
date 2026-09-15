@@ -8,6 +8,7 @@ import {
   shiftPeriod,
 } from '@trata/dates'
 import DashboardPage from './DashboardPage.vue'
+import { formatMoneyCompact } from '@/shared/lib/money'
 import type { PlannedPayment } from '@/entities/planned-payment'
 import {
   createMockAccountRepository,
@@ -239,6 +240,79 @@ describe('DashboardPage stat card links', () => {
       .findAll('a')
       .find((a) => (a.attributes('href') ?? '').startsWith('/debts'))
     expect(debtsLink?.text()).toContain('1M')
+  })
+})
+
+// The income/expense tiles must each sum their own direction's query result.
+// Regression: the expenses tile computed from the income query's data and
+// rendered 0 no matter what expenses the month held.
+describe('DashboardPage stat amounts', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('sums current-month expenses into the expenses tile and incomes into the income tile', async () => {
+    const occurredAt = new Date().toISOString()
+    const expenses = [
+      {
+        id: 'e1',
+        type: 'expense',
+        amount: 4250,
+        description: '',
+        occurredAt,
+        accountId: 'a1',
+        categoryId: 'c1',
+      },
+      {
+        id: 'e2',
+        type: 'expense',
+        amount: 10_000,
+        description: '',
+        occurredAt,
+        accountId: 'a1',
+        categoryId: 'c1',
+      },
+    ]
+    const incomes = [
+      {
+        id: 'i1',
+        type: 'income',
+        amount: 90_000,
+        description: '',
+        occurredAt,
+        accountId: 'a1',
+        categoryId: null,
+      },
+    ]
+    const transactionsRepo = createMockTransactionRepository()
+    transactionsRepo.query.mockImplementation(((options: { type?: string }) =>
+      options.type === 'expense' ? expenses : options.type === 'income' ? incomes : []) as never)
+    const accountsRepo = createMockAccountRepository()
+    accountsRepo.getAll.mockResolvedValue([
+      { id: 'a1', name: 'Card', currency: 'RUB', openingBalance: 0, balance: 0, version: 1 },
+    ])
+    const wrapper = mountWithProviders(DashboardPage, {
+      repositories: {
+        transactions: transactionsRepo,
+        accounts: accountsRepo,
+        categories: createMockCategoryRepository(),
+        debtors: createMockDebtorRepository(),
+        debtOperations: createMockDebtOperationRepository(),
+      },
+    })
+    await flushPromises()
+
+    const tileAmount = (type: 'income' | 'expense') =>
+      wrapper
+        .find('[data-testid="dashboard-stats"]')
+        .findAll('a')
+        .find((a) => (a.attributes('href') ?? '').includes(`type=${type}`))
+        ?.find('[data-testid="stat-card-amount"]')
+        .text()
+
+    // Single-currency (RUB) month: exact per-currency figures, no «≈» mark.
+    expect(tileAmount('expense')).toBe(formatMoneyCompact(14_250, 'RUB', 'en'))
+    expect(tileAmount('income')).toBe(formatMoneyCompact(90_000, 'RUB', 'en'))
   })
 })
 

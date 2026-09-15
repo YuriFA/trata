@@ -12,7 +12,7 @@ import {
   shiftPeriod,
   type PeriodCursor,
 } from '@trata/dates'
-import { periodBuckets, type AnalyticsDirection } from '@/entities/analytics'
+import { periodBuckets } from '@/entities/analytics'
 import { useAccounts } from '@/entities/account'
 import { useTransactions } from '@/entities/transaction'
 import { useDebtors } from '@/entities/debtor'
@@ -62,6 +62,7 @@ const {
   refetch: refetchAccounts,
 } = useAccounts()
 const {
+  data: expenses,
   isPending: expensesPending,
   error: expensesError,
   refetch: refetchExpenses,
@@ -124,18 +125,27 @@ const accountBuckets = computed(() =>
     amount: account.balance ?? 0,
   })),
 )
-const directionLabel = (direction: AnalyticsDirection) =>
-  aggregateLabel(
-    statFor(
-      periodBuckets(
-        incomes.value ?? [],
-        accounts.value ?? [],
-        cursor.value,
-        direction,
-        displayCurrency.value,
-      ),
-    ),
-  )
+// One buckets computation per direction, fed by that direction's own query
+// result: the selector takes the direction, so a source/direction mix-up
+// cannot recur.
+const incomeBuckets = computed(() =>
+  periodBuckets(
+    incomes.value ?? [],
+    accounts.value ?? [],
+    cursor.value,
+    'income',
+    displayCurrency.value,
+  ),
+)
+const expenseBuckets = computed(() =>
+  periodBuckets(
+    expenses.value ?? [],
+    accounts.value ?? [],
+    cursor.value,
+    'expense',
+    displayCurrency.value,
+  ),
+)
 
 const debtBuckets = computed(() =>
   netBucketsByCurrency(debtors.value ?? [], debtOperations.value ?? []),
@@ -160,7 +170,7 @@ const stats = computed(() => [
   },
   {
     label: t('analytics.income'),
-    amount: directionLabel('income'),
+    amount: aggregateLabel(statFor(incomeBuckets.value)),
     icon: TrendingUp,
     tone: 'success' as const,
     to: {
@@ -170,7 +180,7 @@ const stats = computed(() => [
   },
   {
     label: t('analytics.expenses'),
-    amount: directionLabel('expense'),
+    amount: aggregateLabel(statFor(expenseBuckets.value)),
     icon: TrendingDown,
     tone: 'warning' as const,
     to: {
