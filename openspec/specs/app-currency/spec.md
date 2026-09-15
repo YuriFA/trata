@@ -2,57 +2,84 @@
 
 ## Purpose
 
-Defines the product's currency policy: both apps present money exclusively
-in rubles (account creation fixed to RUB, currency-less aggregates
-displayed in RUB) while the API contract remains multi-currency-ready, so
-a future multi-currency change extends the product rather than reworking
-it.
+Defines the apps' currency presentation policy: amounts render in their
+native currency (account, debtor), aggregates spanning currencies gain
+per-currency totals plus an approximate conversion into a per-device
+display currency, and the household's base currency anchors defaults -
+the display-currency preference, account-creation preselection, and the
+locale-based base-currency proposal.
 
 ## Requirements
 
-### Requirement: Ruble-only account creation in the apps
+### Requirement: Display currency preference
 
-The web and mobile apps SHALL create accounts only in RUB. The account
-creation forms SHALL NOT offer a currency choice and SHALL submit RUB as
-the account currency without user action.
+Each app SHALL offer a local, per-device display-currency setting
+selectable from the supported catalog. It SHALL default to the
+household's base currency and SHALL affect presentation only - never
+stored amounts. The setting SHALL live in the app's local settings (web
+settings store, mobile settings screen) and SHALL NOT be synchronized.
 
-#### Scenario: New account in the web app
+#### Scenario: Defaults to the household's base currency
 
-- **WHEN** the user creates an account in the web app, providing a name and an opening balance
-- **THEN** the created account has currency RUB and no currency picker was shown
+- **WHEN** a fresh device of a household whose base currency is EUR opens its settings
+- **THEN** the display currency shows EUR without user action
 
-#### Scenario: New account in the mobile app
+#### Scenario: Changing the display currency re-renders aggregates
 
-- **WHEN** the user creates an account in the mobile app, providing a name and an opening balance
-- **THEN** the created account has currency RUB and no currency picker was shown
+- **WHEN** the user switches the display currency from EUR to USD
+- **THEN** aggregates present converted into USD immediately and no stored record changes
 
-### Requirement: Currency-less aggregates display in rubles
+### Requirement: Account creation offers the catalog
 
-Amounts that carry no currency of their own - debts and debt operations,
-planned payments, analytics totals - SHALL be formatted in RUB in both
-apps. The web settings screen SHALL NOT offer a currency setting.
+The account creation forms of both apps SHALL offer every currency of
+the supported catalog, preselecting the household's base currency. The
+form SHALL submit the chosen currency with the created account.
 
-#### Scenario: Debts summary
+#### Scenario: Picker with the household default
 
-- **WHEN** the user views the debts screen
-- **THEN** every debt amount is formatted as rubles
+- **WHEN** the user opens account creation in a household with base currency RUB
+- **THEN** the picker shows the full catalog with RUB preselected, and the created account carries the chosen currency
 
-#### Scenario: Analytics totals
+### Requirement: Per-currency aggregates with approximate conversion
 
-- **WHEN** the user views the analytics overview
-- **THEN** the totals are formatted as rubles
+Aggregates spanning more than one currency SHALL be presented as
+per-currency totals plus a converted total in the display currency.
+Every converted figure SHALL be visibly marked as approximate («≈»), and
+aggregates screens SHALL show the rate's as-of date. Single-currency
+aggregates SHALL be presented exactly, with no approximation mark.
 
-#### Scenario: Settings screen has no currency option
+#### Scenario: Mixed accounts summary
 
-- **WHEN** the user opens the web settings screen
-- **THEN** no currency selector is offered
+- **WHEN** the user views the accounts summary holding RUB and USD accounts with display currency RUB
+- **THEN** each currency shows its own total and an additional «≈» converted total in RUB with the rate date
 
-### Requirement: Default currency is rubles across apps
+#### Scenario: Single-currency exactness
 
-The shared money package SHALL define RUB as the default currency used by
-both apps as the single display-currency source.
+- **WHEN** every account shares the display currency
+- **THEN** totals are shown without an approximation mark and without conversion
 
-#### Scenario: Fresh install
+### Requirement: Native currency visibility
 
-- **WHEN** a user opens either app with no prior local state
-- **THEN** money that carries no account currency (aggregates, empty-state figures) is formatted in rubles
+Transaction rows, account rows, and debtor balances SHALL present
+amounts in their native currency: the account's currency, the debtor's
+currency, or - for account-less amounts - the display currency. Native
+amounts SHALL NOT be replaced by converted ones; conversion appears only
+in aggregates.
+
+#### Scenario: Transaction in a foreign-currency account
+
+- **WHEN** the user views a transaction of a USD account with display currency RUB
+- **THEN** the row shows the USD amount, and conversion appears only in aggregates
+
+### Requirement: Locale-based proposal of the base currency
+
+When a device encounters its household still on the server-default base
+currency (RUB) while the device locale maps to a different catalog
+currency, the app SHALL suggest switching the household's base currency
+to the locale-derived one. The suggestion SHALL be shown once per device
+until acted on or dismissed, and SHALL NOT block any flow.
+
+#### Scenario: Turkish device after registration
+
+- **WHEN** a user with a tr-TR device locale registers and their household was created with the default RUB
+- **THEN** the app suggests switching the base currency to TRY, once, and proceeds normally if dismissed
