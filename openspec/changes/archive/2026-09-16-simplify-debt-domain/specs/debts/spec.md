@@ -1,39 +1,4 @@
-# Debts Specification
-
-## Purpose
-
-Tracks money lent to and borrowed from people: per-user debtors and debt
-operations in two independent directions (money owed to the user and money
-the user owes), with balances derived from the operation history rather
-than stored.
-
-## Requirements
-
-### Requirement: Debt ownership and scoping
-
-Every debtor and every debt operation SHALL belong to exactly one
-household. Reading, updating, or deleting a debtor or debt operation of a
-household the requester does not belong to SHALL behave as if it does not
-exist (not-found). Debtor names SHALL be unique per household among
-non-deleted debtors; a duplicate name within the same household SHALL be
-rejected with an already-exists error.
-
-#### Scenario: Duplicate debtor name for the same user
-
-- **WHEN** any member creates a debtor named "Анна" and the household
-  already has a non-deleted debtor named "Анна"
-- **THEN** the request is rejected with an already-exists error
-
-#### Scenario: Same debtor name for different users
-
-- **WHEN** two users from different households each create a debtor named
-  "Анна"
-- **THEN** both debtors are created independently
-
-#### Scenario: Another user's debtor is invisible
-
-- **WHEN** a request addresses a debtor id owned by a different household
-- **THEN** the request is rejected as not-found and no data leaks
+## MODIFIED Requirements
 
 ### Requirement: Debtor shape
 
@@ -104,79 +69,6 @@ the contract, storage, or sync payloads.
 - **WHEN** a debt operation references a debtor id that does not exist, belongs to another user, or has been deleted
 - **THEN** the request is rejected with a debtor-not-found error
 
-### Requirement: Two independent directions
-
-Balances SHALL be tracked per direction independently: the receivable and
-payable ledgers of the same debtor SHALL NOT be netted against each other,
-and a debtor MAY have a nonzero balance in both directions at once. The
-direction totals (money owed to the user overall, money the user owes
-overall) SHALL each be the sum of that direction's per-debtor balances.
-
-#### Scenario: The same person in both directions
-
-- **WHEN** Анна owes the user 5 000,00 ₽ (receivable) and the user owes Анна 2 000,00 ₽ (payable)
-- **THEN** both balances are reported separately — 5 000,00 ₽ receivable and 2 000,00 ₽ payable — and neither reduces the other
-
-### Requirement: Derived balances
-
-No debtor balance SHALL be stored. The balance of a debtor in a direction
-SHALL be the sum of that direction's `debt` operations minus the sum of its
-`repayment` operations, computed from the live (non-deleted) operation
-history. Creating, updating, or deleting an operation SHALL automatically
-recalculate every derived figure. A balance MAY be negative when repayments
-exceed the recorded debt (over-repayment); the system SHALL record such an
-operation rather than reject it.
-
-#### Scenario: Deleting an operation recalculates the balance
-
-- **WHEN** the user deletes a 1 500,00 ₽ repayment and the debtor's balance was 3 500,00 ₽
-- **THEN** the debtor's balance becomes 5 000,00 ₽ without any stored value being edited
-
-#### Scenario: Over-repayment is data, not an error
-
-- **WHEN** the user records a 6 000,00 ₽ repayment against a 5 000,00 ₽ debt
-- **THEN** the operation is recorded and the direction balance becomes −1 000,00 ₽
-
-### Requirement: Client-generated identifier on creation
-
-Debtor and debt operation create requests MAY carry a client-generated UUID
-v4 identifier, and the system SHALL use it as the record's identifier; this
-lets offline-created records later synchronize under their local
-identifiers. A create whose identifier already exists for the user SHALL be
-rejected with an already-exists error and SHALL NOT overwrite the existing
-record.
-
-The record identifier identifies the debtor or debt operation itself; a
-sync mutation is identified separately by its operation id (`opId`). These
-are distinct mechanisms: entity-id uniqueness governs which records may
-exist; sync operation idempotency governs redelivery of the same mutation.
-A replayed sync operation (same `opId`) SHALL be answered by the existing
-sync idempotency mechanism — the stored applied result is returned, no
-second record is created, and the replay SHALL NOT be reported as
-already-exists. A new mutation with a different `opId` claiming an existing
-entity id is NOT a replay and SHALL follow the duplicate-entity conflict
-semantics.
-
-#### Scenario: Offline-created debtor keeps its id
-
-- **WHEN** a debtor is created offline with client-generated identifier X and later synchronized
-- **THEN** the debtor exists on the server under identifier X
-
-#### Scenario: Duplicate client identifier
-
-- **WHEN** a create request arrives with an identifier that already exists for the user
-- **THEN** the request is rejected with an already-exists error and the existing record is unchanged
-
-#### Scenario: Replayed sync operation is idempotent
-
-- **WHEN** a sync push delivers the same `opId` for a debtor create that the server already applied
-- **THEN** the stored applied result is replayed, no second debtor is created, and the result is not already-exists
-
-#### Scenario: Different operation id claiming an existing entity id
-
-- **WHEN** a sync push delivers a create with a new `opId` but an entity id that already exists for the user
-- **THEN** the item is reported as an already-exists conflict carrying the server's current state, and the stored record is not overwritten
-
 ### Requirement: Updating a debtor
 
 A user SHALL be able to update a debtor's name, and the name SHALL be the
@@ -199,20 +91,6 @@ same household already has SHALL be rejected with an already-exists error.
 - **WHEN** an update request carries the name the debtor already has
 - **THEN** the request is rejected as a no-op update
 
-### Requirement: Optimistic concurrency on update
-
-Updating a debtor or a debt operation SHALL require the client to send the
-`version` it previously read (REST PATCH bodies and sync upserts alike;
-sync upserts carry it as the base version). If the record was modified
-concurrently, the update SHALL be rejected with a version-conflict error
-and the client SHALL refetch and retry. A successful update increments the
-version.
-
-#### Scenario: Concurrent debtor edit
-
-- **WHEN** two devices update the same debtor, both sending the version they read before either write landed
-- **THEN** the first update succeeds and the second is rejected with a version conflict
-
 ### Requirement: Debt operation update constraints
 
 A debt operation's amount and occurred-at date SHALL be updatable. Its
@@ -229,41 +107,6 @@ rejected.
 
 - **WHEN** the user edits a debt operation's amount from 5 000,00 ₽ to 4 000,00 ₽
 - **THEN** every derived figure involving that operation reflects 4 000,00 ₽
-
-### Requirement: Cascade deletion rules
-
-Deleting a debtor SHALL delete the debtor together with all of its live
-(non-deleted) debt operations in one atomic action: every live operation
-of the debtor is tombstoned and the debtor is tombstoned in the same
-transaction. There is no debtor-in-use rejection: a debtor with live
-operations, with only tombstoned operations, or with no operations at all
-is deleted the same way. Other debtors and their operations SHALL NOT be
-affected. Deleting a single debt operation SHALL always be allowed and
-SHALL NOT touch its debtor. Both deletions SHALL be soft: the records are
-marked deleted (tombstones), excluded from listings, and the tombstones
-SHALL be retained so synchronized devices learn of the deletions.
-Deleting operations SHALL recalculate the derived balances. A freed
-debtor name MAY be reused.
-
-#### Scenario: Delete a debtor with live operations
-
-- **WHEN** the user deletes a debtor that has live debt operations
-- **THEN** the debtor and all of its live operations are tombstoned in one atomic action, disappear from listings, and the freed name may be reused
-
-#### Scenario: Delete a debtor with no operations
-
-- **WHEN** the user deletes a debtor with no live debt operations
-- **THEN** the debtor no longer appears in listings, other devices learn of the deletion via the change feed, and the freed name may be reused
-
-#### Scenario: Cascade does not touch other debtors
-
-- **WHEN** a household has two debtors and the user deletes one of them
-- **THEN** the other debtor and all of its operations remain live and unchanged
-
-#### Scenario: Delete an operation recalculates
-
-- **WHEN** the user deletes a debt operation
-- **THEN** the operation is tombstoned, excluded from listings, and the debtor's derived balance changes accordingly
 
 ### Requirement: Versioned delete and tombstone semantics
 
@@ -312,23 +155,6 @@ These semantics inherit the existing synced-entity behavior verbatim:
 
 - **WHEN** a REST delete targets an already-deleted debtor, and a sync delete is delivered for the same debtor
 - **THEN** the REST delete is rejected as not-found, while the sync delete is reported as applied with the tombstone's current version
-
-### Requirement: Listing
-
-Listing debtors SHALL return the requesting user's non-deleted debtors.
-Listing debt operations SHALL return the requesting user's non-deleted
-operations and MAY be filtered by debtor. Tombstoned records SHALL NOT be
-returned.
-
-#### Scenario: List operations of one debtor
-
-- **WHEN** the user requests debt operations filtered to a specific debtor
-- **THEN** only that debtor's non-deleted operations are returned
-
-#### Scenario: Deleted records are not listed
-
-- **WHEN** the user requests either list after a deletion
-- **THEN** the tombstoned record does not appear in the response
 
 ### Requirement: Sync participation
 
@@ -381,3 +207,55 @@ referencing a remotely deleted account or category receives today.
 
 - **WHEN** a device records a debt operation offline for debtor X, debtor X is deleted and synchronized by another device, and the offline device then pushes the operation
 - **THEN** the push yields a per-item debtor-not-found error, the operation is not applied but remains queued and retried per the sync protocol's backoff without entering conflict resolution, and no data is lost silently
+
+## ADDED Requirements
+
+### Requirement: Cascade deletion rules
+
+Deleting a debtor SHALL delete the debtor together with all of its live
+(non-deleted) debt operations in one atomic action: every live operation
+of the debtor is tombstoned and the debtor is tombstoned in the same
+transaction. There is no debtor-in-use rejection: a debtor with live
+operations, with only tombstoned operations, or with no operations at all
+is deleted the same way. Other debtors and their operations SHALL NOT be
+affected. Deleting a single debt operation SHALL always be allowed and
+SHALL NOT touch its debtor. Both deletions SHALL be soft: the records are
+marked deleted (tombstones), excluded from listings, and the tombstones
+SHALL be retained so synchronized devices learn of the deletions.
+Deleting operations SHALL recalculate the derived balances. A freed
+debtor name MAY be reused.
+
+#### Scenario: Delete a debtor with live operations
+
+- **WHEN** the user deletes a debtor that has live debt operations
+- **THEN** the debtor and all of its live operations are tombstoned in one atomic action, disappear from listings, and the freed name may be reused
+
+#### Scenario: Delete a debtor with no operations
+
+- **WHEN** the user deletes a debtor with no live debt operations
+- **THEN** the debtor no longer appears in listings, other devices learn of the deletion via the change feed, and the freed name may be reused
+
+#### Scenario: Cascade does not touch other debtors
+
+- **WHEN** a household has two debtors and the user deletes one of them
+- **THEN** the other debtor and all of its operations remain live and unchanged
+
+#### Scenario: Delete an operation recalculates
+
+- **WHEN** the user deletes a debt operation
+- **THEN** the operation is tombstoned, excluded from listings, and the debtor's derived balance changes accordingly
+
+## REMOVED Requirements
+
+### Requirement: Deletion rules
+
+**Reason**: The debtor-in-use guard semantics are replaced outright by
+cascade deletion; the behavior now lives in the "Cascade deletion rules"
+requirement.
+
+### Requirement: Optional note semantics
+
+**Reason**: Debtors and debt operations no longer carry a free-text note.
+The field is removed from the contract, storage, sync payloads, and UI.
+The shared optional-note convention remains in force where it still
+applies (transactions, planned payments).

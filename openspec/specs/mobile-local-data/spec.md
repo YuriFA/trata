@@ -248,7 +248,7 @@ choice remains available).
 - **WHEN** the user taps the «Доходы» quick action on the home screen
 - **THEN** the income screen opens showing the selected month's income total
 
-### Requirement: Debts screen data behavior
+### Requirement: Debts screen behavior
 
 The debts screen SHALL derive entirely from local data: the two direction
 totals («Мне должны» / «Я должен»), the per-debtor balances, and the
@@ -265,10 +265,10 @@ reveal affordance, and visible debtors SHALL be sorted by balance
 descending. The two direction sections SHALL always render — an empty
 section shows its hint («Вам никто не должен» / «Вы никому не должны»)
 together with the section's creation affordance; there is no separate
-empty-state placeholder. Creating a new contact together with their initial
+empty-state placeholder. Creating a new debtor together with their initial
 debt SHALL be a single per-section flow whose direction comes from the
 section («Кто должен» / «Кому должен»); debt operations for an existing
-contact SHALL be recorded from that contact's history sheet. The screen
+debtor SHALL be recorded from that debtor's history sheet. The screen
 SHALL NOT offer period switching (debts are not month-scoped) and SHALL
 NOT include an all-operations card.
 
@@ -292,35 +292,30 @@ NOT include an all-operations card.
 - **WHEN** the user taps the «Долги» quick action on the home screen
 - **THEN** the debts screen opens showing the two direction totals and the two debtor sections
 
-#### Scenario: Contact created with an initial debt
+#### Scenario: Debtor created with an initial debt
 
 - **WHEN** the user taps the «+» affordance in a direction section («Мне должны» / «Я должен»)
-- **THEN** a single form titled by the direction («Кто должен» / «Кому должен») creates the contact and their initial debt in that direction in one submit: a name, a positive amount entered as digits, a date, and an optional note
+- **THEN** a single form titled by the direction («Кто должен» / «Кому должен») creates the debtor and their initial debt in that direction in one submit: a name, a positive amount entered as digits, and a date
 
 #### Scenario: Debtor history sheet
 
 - **WHEN** the user taps a debtor row
-- **THEN** a sheet opens showing the debtor's remaining balance in that direction and the day-grouped operation history labeled by kind («Долг» / «Списание»), with a «Новая операция» action that opens the operation form for that debtor and direction
+- **THEN** a sheet opens showing the debtor's remaining balance in that direction and the day-grouped operation history labeled by kind («Долг» / «Списание»), with a «Новая операция» action that opens the operation form for that debtor and direction, a rename affordance, and a destructive delete-debtor action
 
 #### Scenario: Operation form
 
-- **WHEN** the user records a debt operation from a contact's history sheet
-- **THEN** the form fixes the contact and direction as static context rows, offers a Долг ↔ Списание kind switch (Долг by default), a positive amount entered as digits, and a date and an optional note entered through a one-row action toolbar with expandable quick dates and note input
+- **WHEN** the user records a debt operation from a debtor's history sheet
+- **THEN** the form fixes the debtor and direction as static context rows, offers a Долг ↔ Списание kind switch (Долг by default), and offers a positive amount entered as digits and a date through a one-row action toolbar with expandable quick dates
 
 #### Scenario: Over-repayment is warned, not blocked
 
 - **WHEN** the user records a repayment larger than the debtor's remaining balance in that direction
 - **THEN** the form shows a warning but accepts the operation, and the resulting balance reflects the over-repayment
 
-#### Scenario: Debtor deletion guard works offline
+#### Scenario: Debtor deletion cascades offline
 
 - **WHEN** the user deletes a debtor that has live (non-deleted) debt operations in the local repository
-- **THEN** the deletion is rejected locally with a debtor-in-use error
-
-#### Scenario: Debtor with only deleted operations is deletable offline
-
-- **WHEN** every debt operation of a debtor has been deleted locally (tombstoned) and the user deletes the debtor
-- **THEN** the deletion succeeds offline and later synchronizes as a tombstone, matching the debts capability's deletion rules
+- **THEN** a confirmation shows the number of operations and warns when the balance is non-zero, and confirming tombstones the debtor and its live operations offline in one local transaction that later synchronizes per the debts capability's deletion rules
 
 ### Requirement: Plans screen data behavior
 
