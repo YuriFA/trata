@@ -45,7 +45,15 @@ function householdFixture(withSibling: boolean) {
       joinedAt: '2026-08-02T00:00:00Z',
     })
   }
-  return { id: HOUSEHOLD_ID, createdAt: '2026-08-01T00:00:00Z', name: 'Family', members }
+  // `currency` is a required household field (base-currency conversion
+  // target); normalizeHousehold rejects the fixture without it.
+  return {
+    id: HOUSEHOLD_ID,
+    createdAt: '2026-08-01T00:00:00Z',
+    currency: 'RUB',
+    name: 'Family',
+    members,
+  }
 }
 
 /** The first pull page: account + category + one sibling-authored expense. */

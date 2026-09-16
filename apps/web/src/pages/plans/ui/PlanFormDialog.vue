@@ -16,16 +16,7 @@ import { usePushReminders } from '@/features/push-reminders'
 import { createPlanSchema, type PlanFormValues } from '../model/plan-schema'
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
 import { DateField } from '@/shared/ui/date-field'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/shared/ui/alert-dialog'
+import { ResponsiveAlertDialog } from '@/shared/ui/responsive-alert-dialog'
 import { Button } from '@/shared/ui/button'
 import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
@@ -364,21 +355,14 @@ const handleDelete = async () => {
       </Button>
     </template>
 
-    <AlertDialog v-model:open="deleteOpen">
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{{ t('plans.deleteTitle') }}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {{ t('deleteTransaction.confirmDeleteDescription') }}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{{ t('plans.cancel') }}</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" :loading="isDeleting" @click="handleDelete">
-            {{ t('plans.delete') }}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ResponsiveAlertDialog
+      v-model:open="deleteOpen"
+      :title="t('plans.deleteTitle')"
+      :description="t('deleteTransaction.confirmDeleteDescription')"
+      :confirm-label="t('plans.delete')"
+      :cancel-label="t('plans.cancel')"
+      :loading="isDeleting"
+      @confirm="handleDelete"
+    />
   </ResponsiveDialog>
 </template>

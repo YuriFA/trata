@@ -15,21 +15,11 @@ import {
 } from '@/entities/debt-operation'
 import { createOperationSchema, type OperationFormValues } from '../model/schemas'
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/shared/ui/alert-dialog'
+import { ResponsiveAlertDialog } from '@/shared/ui/responsive-alert-dialog'
 import { Button } from '@/shared/ui/button'
 import { SegmentedControl, type SegmentedControlOption } from '@/shared/ui/segmented-control'
 import { Field, FieldError, FieldLabel } from '@/shared/ui/field'
 import { DateField } from '@/shared/ui/date-field'
-import { Input } from '@/shared/ui/input'
 import { AmountField } from '@/shared/ui/amount-field'
 import { Trash2 } from '@lucide/vue'
 import { notification } from '@/shared/services/notification'
@@ -262,21 +252,16 @@ const handleDelete = async () => {
       </Button>
     </template>
 
-    <AlertDialog v-model:open="deleteOpen">
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{{ t('debts.deleteOperationTitle') }}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {{ t('deleteTransaction.confirmDeleteDescription') }}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{{ t('debts.cancel') }}</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" :loading="isDeleting" @click="handleDelete">
-            {{ t('debts.delete') }}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ResponsiveAlertDialog
+      v-model:open="deleteOpen"
+      :title="t('debts.deleteOperationTitle')"
+      :description="t('deleteTransaction.confirmDeleteDescription')"
+      :confirm-label="t('debts.delete')"
+      :cancel-label="t('debts.cancel')"
+      :loading="isDeleting"
+      confirm-test-id="debts-operation-delete-confirm"
+      cancel-test-id="debts-operation-delete-cancel"
+      @confirm="handleDelete"
+    />
   </ResponsiveDialog>
 </template>

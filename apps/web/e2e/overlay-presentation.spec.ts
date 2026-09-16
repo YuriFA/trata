@@ -145,19 +145,49 @@ test.describe('mobile overlay presentation', () => {
     await expect(page.getByLabel('Note')).toBeVisible()
   })
 
-  test('destructive confirms stay centered instead of becoming drawers', async ({ page }) => {
+  test('destructive confirms render as bottom sheets and stay clickable', async ({ page }) => {
     await seedAccount(page, 'Cash')
 
     await page.goto('/accounts')
     await page.getByRole('button', { name: 'Actions' }).first().click()
     await page.getByRole('menuitem', { name: 'Delete account' }).click()
 
-    const confirmDialog = page.getByRole('alertdialog')
-    await expect(confirmDialog).toBeVisible()
-    const confirmBox = await dialogBounds(confirmDialog)
-    expect(confirmBox.height).toBeLessThan(320)
-    // Centered, not bottom-anchored like a drawer.
-    await expectVerticallyCentered(page, confirmBox)
+    // Mobile confirm rule: confirms are bottom sheets, matching every other
+    // overlay. A centered alert would bury under the open drawer's z-[60]
+    // sheet and stay modal while invisible (frozen page).
+    const confirmButton = page.getByTestId('delete-account-confirm')
+    await expect(confirmButton).toBeVisible()
+    const sheet = page.getByRole('dialog').last()
+    const sheetBox = (await sheet.boundingBox())!
+    const viewport = page.viewportSize()!
+    expect(viewport.height - (sheetBox.y + sheetBox.height)).toBeLessThan(24)
+
+    // Clickability is the regression: a buried modal swallows the tap.
+    await confirmButton.click()
+    await expect(page.getByText('Account deleted')).toBeVisible()
+  })
+
+  test('a confirm opened from stacked dialog sheets stays clickable', async ({ page }) => {
+    // The reported freeze: debts -> debtor history sheet -> operation sheet
+    // -> delete confirm. The confirm must surface above the stack.
+    await page.goto('/debts')
+    await page.getByTestId('debts-section-add-receivable').click()
+    const newDebtDialog = page.getByTestId('debts-new-debtor-dialog')
+    await newDebtDialog.getByLabel('Name').fill('Vasya')
+    await newDebtDialog.getByLabel('Amount').fill('100')
+    await page.getByTestId('debts-new-debt-submit').click()
+    await expect(page.getByText('Debt added')).toBeVisible()
+
+    await page.locator('[data-testid^="debts-debtor-"]').first().click()
+    await expect(page.getByTestId('debts-history-dialog')).toBeVisible()
+    await page.locator('[data-testid^="debts-history-op-"]').first().click()
+    await expect(page.getByTestId('debts-operation-dialog')).toBeVisible()
+    await page.getByTestId('debts-operation-delete').click()
+
+    const confirm = page.getByTestId('debts-operation-delete-confirm')
+    await expect(confirm).toBeVisible()
+    await confirm.click()
+    await expect(page.getByText('Operation deleted')).toBeVisible()
   })
 })
 
@@ -174,5 +204,19 @@ test.describe('desktop overlay presentation', () => {
     expect(dialogBox.height).toBeGreaterThan(350)
     // Centered on the viewport, not bottom-anchored or top-anchored.
     await expectVerticallyCentered(page, dialogBox)
+  })
+
+  test('destructive confirms stay centered compact alert dialogs', async ({ page }) => {
+    await seedAccount(page, 'Cash')
+
+    await page.goto('/accounts')
+    await page.getByRole('button', { name: 'Actions' }).first().click()
+    await page.getByRole('menuitem', { name: 'Delete account' }).click()
+
+    const confirmDialog = page.getByRole('alertdialog')
+    await expect(confirmDialog).toBeVisible()
+    const confirmBox = await dialogBounds(confirmDialog)
+    expect(confirmBox.height).toBeLessThan(320)
+    await expectVerticallyCentered(page, confirmBox)
   })
 })

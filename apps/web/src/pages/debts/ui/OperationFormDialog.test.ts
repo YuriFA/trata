@@ -121,7 +121,10 @@ describe('OperationFormDialog', () => {
     ;(inDialog('[data-testid="debts-operation-delete"]') as HTMLElement).click()
     await flushPromises()
 
-    const confirm = allInDialog('[role="alertdialog"] button').at(-1) as HTMLElement
+    // The confirm renders as the shared responsive confirm (a sheet under
+    // the jsdom/mobile presentation).
+    const confirm = inDialog('[data-testid="debts-operation-delete-confirm"]') as HTMLElement
+    expect(confirm).not.toBeNull()
     confirm.click()
     await flushPromises()
 

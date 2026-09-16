@@ -1,16 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/shared/ui/alert-dialog'
+import { ResponsiveAlertDialog } from '@/shared/ui/responsive-alert-dialog'
 import { Button } from '@/shared/ui/button'
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
 import { getHouseholdErrorMessage, useHouseholdActions } from '@/entities/household'
@@ -121,27 +112,16 @@ async function handleRevoke(): Promise<void> {
       </div>
     </template>
 
-    <AlertDialog v-model:open="rotateConfirmOpen">
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{{ t('household.codeRotateConfirmTitle') }}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {{ t('household.codeRotateConfirmDescription') }}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel data-testid="household-code-rotate-cancel">
-            {{ t('household.cancel') }}
-          </AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            data-testid="household-code-rotate-confirm"
-            @click="handleGenerate"
-          >
-            {{ t('household.codeRotate') }}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ResponsiveAlertDialog
+      v-model:open="rotateConfirmOpen"
+      :title="t('household.codeRotateConfirmTitle')"
+      :description="t('household.codeRotateConfirmDescription')"
+      :confirm-label="t('household.codeRotate')"
+      :cancel-label="t('household.cancel')"
+      :loading="actions.generateCode.isLoading.value"
+      confirm-test-id="household-code-rotate-confirm"
+      cancel-test-id="household-code-rotate-cancel"
+      @confirm="handleGenerate"
+    />
   </ResponsiveDialog>
 </template>

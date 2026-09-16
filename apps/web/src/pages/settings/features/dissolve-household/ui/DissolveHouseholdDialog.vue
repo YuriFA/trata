@@ -1,18 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/shared/ui/alert-dialog'
 import { Button } from '@/shared/ui/button'
+import { ResponsiveAlertDialog } from '@/shared/ui/responsive-alert-dialog'
 import { useTransactionRepository } from '@/entities/transaction'
 import { useDebtOperationRepository } from '@/entities/debt-operation'
 import { usePlannedPaymentRepository } from '@/entities/planned-payment'
@@ -85,35 +75,28 @@ async function handleConfirm(): Promise<void> {
 </script>
 
 <template>
-  <AlertDialog :open="open" @update:open="handleOpenChange">
-    <AlertDialogTrigger as-child>
-      <Button variant="destructive" data-testid="household-dissolve-button">
-        {{ t('household.dissolve') }}
-      </Button>
-    </AlertDialogTrigger>
-    <AlertDialogContent>
-      <AlertDialogHeader>
-        <AlertDialogTitle>{{ t('household.dissolveTitle') }}</AlertDialogTitle>
-        <AlertDialogDescription>
-          {{ t('household.dissolveDescription') }}
-          <span v-if="countsText" class="block" data-testid="household-dissolve-counts">
-            {{ countsText }}
-          </span>
-        </AlertDialogDescription>
-      </AlertDialogHeader>
-      <AlertDialogFooter>
-        <AlertDialogCancel data-testid="household-dissolve-cancel">
-          {{ t('household.cancel') }}
-        </AlertDialogCancel>
-        <AlertDialogAction
-          variant="destructive"
-          data-testid="household-dissolve-confirm"
-          :loading="dissolving"
-          @click="handleConfirm"
-        >
-          {{ t('household.dissolveConfirm') }}
-        </AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
-  </AlertDialog>
+  <Button
+    variant="destructive"
+    data-testid="household-dissolve-button"
+    @click="handleOpenChange(true)"
+  >
+    {{ t('household.dissolve') }}
+  </Button>
+
+  <ResponsiveAlertDialog
+    :open="open"
+    :title="t('household.dissolveTitle')"
+    :description="t('household.dissolveDescription')"
+    :confirm-label="t('household.dissolveConfirm')"
+    :cancel-label="t('household.cancel')"
+    :loading="dissolving"
+    confirm-test-id="household-dissolve-confirm"
+    cancel-test-id="household-dissolve-cancel"
+    @update:open="handleOpenChange"
+    @confirm="handleConfirm"
+  >
+    <span v-if="countsText" class="mt-1 block" data-testid="household-dissolve-counts">
+      {{ countsText }}
+    </span>
+  </ResponsiveAlertDialog>
 </template>

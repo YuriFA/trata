@@ -59,6 +59,9 @@ onBeforeUnmount(() => {
 
 <template>
   <DrawerPortal>
+    <!-- z-scale (see shared/ui/alert-dialog/AlertDialogContent.vue): the
+         sheet's z-[60] sits above plain dialogs (z-50); alert dialogs
+         out-rank it at z-[70]. -->
     <DrawerOverlay />
     <DrawerContent
       data-slot="drawer-content"

@@ -1,15 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/shared/ui/alert-dialog'
+import { ResponsiveAlertDialog } from '@/shared/ui/responsive-alert-dialog'
 import { getHouseholdErrorMessage, useHouseholdActions } from '@/entities/household'
 import { notification } from '@/shared/services/notification'
 import type { HouseholdMember } from '@trata/api'
@@ -44,31 +35,19 @@ async function handleConfirm(): Promise<void> {
 </script>
 
 <template>
-  <AlertDialog v-model:open="open">
-    <AlertDialogContent>
-      <AlertDialogHeader>
-        <AlertDialogTitle>{{ t('household.removeMemberTitle') }}</AlertDialogTitle>
-        <AlertDialogDescription>
-          {{
-            t('household.removeMemberDescription', {
-              name: member ? (member.displayName ?? member.email) : '',
-            })
-          }}
-        </AlertDialogDescription>
-      </AlertDialogHeader>
-      <AlertDialogFooter>
-        <AlertDialogCancel data-testid="household-remove-member-cancel">
-          {{ t('household.cancel') }}
-        </AlertDialogCancel>
-        <AlertDialogAction
-          variant="destructive"
-          data-testid="household-remove-member-confirm"
-          :loading="actions.removeMember.isLoading.value"
-          @click="handleConfirm"
-        >
-          {{ t('household.removeMemberConfirm') }}
-        </AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
-  </AlertDialog>
+  <ResponsiveAlertDialog
+    v-model:open="open"
+    :title="t('household.removeMemberTitle')"
+    :description="
+      t('household.removeMemberDescription', {
+        name: member ? (member.displayName ?? member.email) : '',
+      })
+    "
+    :confirm-label="t('household.removeMemberConfirm')"
+    :cancel-label="t('household.cancel')"
+    :loading="actions.removeMember.isLoading.value"
+    confirm-test-id="household-remove-member-confirm"
+    cancel-test-id="household-remove-member-cancel"
+    @confirm="handleConfirm"
+  />
 </template>

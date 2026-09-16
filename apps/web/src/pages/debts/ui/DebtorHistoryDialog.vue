@@ -13,16 +13,7 @@ import OperationFormDialog from './OperationFormDialog.vue'
 import RenameDebtorDialog from './RenameDebtorDialog.vue'
 import { ResponsiveDialog } from '@/shared/ui/responsive-dialog'
 import { Button } from '@/shared/ui/button'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/shared/ui/alert-dialog'
+import { ResponsiveAlertDialog } from '@/shared/ui/responsive-alert-dialog'
 import { EmptyState } from '@/shared/ui/empty-state'
 import { Pencil, Trash2 } from '@lucide/vue'
 import { formatMoney } from '@/shared/lib/money'
@@ -243,38 +234,21 @@ const handleDeleteDebtor = async () => {
       :debtor="debtor"
     />
 
-    <AlertDialog v-model:open="deleteOpen">
-      <AlertDialogContent class="max-w-[320px]">
-        <AlertDialogHeader class="items-center text-center sm:text-center">
-          <span
-            class="mx-auto mb-1 flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive"
-            aria-hidden="true"
-          >
-            <Trash2 class="size-6" />
-          </span>
-          <AlertDialogTitle>{{ t('debts.deleteDebtorTitle') }}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {{ t('debts.deleteDebtorMessage', { count: liveOperationCount }) }}
-            <span v-if="netBalance !== 0" class="mt-1 block font-semibold text-destructive">
-              {{ t('debts.deleteDebtorBalanceWarning', { balance: netBalanceText }) }}
-            </span>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter class="flex-col-reverse gap-3 sm:flex-row">
-          <AlertDialogCancel class="w-full sm:flex-1" data-testid="debts-delete-debtor-cancel">
-            {{ t('debts.cancel') }}
-          </AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            class="w-full sm:flex-1"
-            :loading="isDeleting"
-            data-testid="debts-delete-debtor-confirm"
-            @click="handleDeleteDebtor"
-          >
-            {{ t('debts.delete') }}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ResponsiveAlertDialog
+      v-model:open="deleteOpen"
+      :icon="Trash2"
+      :title="t('debts.deleteDebtorTitle')"
+      :description="t('debts.deleteDebtorMessage', { count: liveOperationCount })"
+      :confirm-label="t('debts.delete')"
+      :cancel-label="t('debts.cancel')"
+      :loading="isDeleting"
+      confirm-test-id="debts-delete-debtor-confirm"
+      cancel-test-id="debts-delete-debtor-cancel"
+      @confirm="handleDeleteDebtor"
+    >
+      <span v-if="netBalance !== 0" class="mt-1 block font-semibold text-destructive">
+        {{ t('debts.deleteDebtorBalanceWarning', { balance: netBalanceText }) }}
+      </span>
+    </ResponsiveAlertDialog>
   </ResponsiveDialog>
 </template>

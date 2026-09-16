@@ -82,9 +82,6 @@ const titleLabel = computed(() =>
 const submitLabel = computed(() =>
   isCreate.value ? t('editCategory.createSubmit') : t('editCategory.submit'),
 )
-const hintLabel = computed(() =>
-  isCreate.value ? t('editCategory.autoColorHint') : t('editCategory.typeImmutableHint'),
-)
 const typeLabel = computed(() =>
   (isCreate.value ? type.value : props.category?.type) === 'income'
     ? t('transactions.types.income')
@@ -222,7 +219,11 @@ async function submit(): Promise<void> {
         </div>
       </Field>
 
-      <p class="text-xs text-muted-foreground">{{ hintLabel }}</p>
+      <!-- Edit-only hint: the type is immutable by contract (create mode
+           offers it as a control, so no hint is needed). -->
+      <p v-if="!isCreate" class="text-xs text-muted-foreground">
+        {{ t('editCategory.typeImmutableHint') }}
+      </p>
     </form>
 
     <template #footer>

@@ -2,18 +2,8 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/shared/ui/alert-dialog'
 import { Button } from '@/shared/ui/button'
+import { ResponsiveAlertDialog } from '@/shared/ui/responsive-alert-dialog'
 import { getHouseholdErrorMessage, householdApi } from '@/entities/household'
 import { useHouseholdJoinStore } from '@/features/household-join'
 import { notification } from '@/shared/services/notification'
@@ -57,30 +47,19 @@ async function handleConfirm(): Promise<void> {
 </script>
 
 <template>
-  <AlertDialog v-model:open="open">
-    <AlertDialogTrigger as-child>
-      <Button variant="destructive" data-testid="household-leave-button">
-        {{ t('household.leave') }}
-      </Button>
-    </AlertDialogTrigger>
-    <AlertDialogContent>
-      <AlertDialogHeader>
-        <AlertDialogTitle>{{ t('household.leaveTitle') }}</AlertDialogTitle>
-        <AlertDialogDescription>{{ t('household.leaveDescription') }}</AlertDialogDescription>
-      </AlertDialogHeader>
-      <AlertDialogFooter>
-        <AlertDialogCancel data-testid="household-leave-cancel">
-          {{ t('household.cancel') }}
-        </AlertDialogCancel>
-        <AlertDialogAction
-          variant="destructive"
-          data-testid="household-leave-confirm"
-          :loading="leaving"
-          @click="handleConfirm"
-        >
-          {{ t('household.leave') }}
-        </AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
-  </AlertDialog>
+  <Button variant="destructive" data-testid="household-leave-button" @click="open = true">
+    {{ t('household.leave') }}
+  </Button>
+
+  <ResponsiveAlertDialog
+    v-model:open="open"
+    :title="t('household.leaveTitle')"
+    :description="t('household.leaveDescription')"
+    :confirm-label="t('household.leave')"
+    :cancel-label="t('household.cancel')"
+    :loading="leaving"
+    confirm-test-id="household-leave-confirm"
+    cancel-test-id="household-leave-cancel"
+    @confirm="handleConfirm"
+  />
 </template>

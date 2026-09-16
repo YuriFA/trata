@@ -1,16 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/shared/ui/alert-dialog'
+import { ResponsiveAlertDialog } from '@/shared/ui/responsive-alert-dialog'
 import { useAuthStore } from '../model/use-auth-store'
 
 // The ownership gate's decision dialog (design D5): a different account
@@ -22,26 +13,16 @@ const { pendingGate } = storeToRefs(auth)
 </script>
 
 <template>
-  <AlertDialog :open="pendingGate !== null">
-    <AlertDialogContent data-testid="ownership-gate-dialog">
-      <AlertDialogHeader>
-        <AlertDialogTitle>{{ t('auth.ownershipGate.title') }}</AlertDialogTitle>
-        <AlertDialogDescription>
-          {{ t('auth.ownershipGate.description') }}
-        </AlertDialogDescription>
-      </AlertDialogHeader>
-      <AlertDialogFooter>
-        <AlertDialogCancel data-testid="ownership-gate-cancel" @click="auth.cancelOwnershipGate()">
-          {{ t('auth.ownershipGate.cancel') }}
-        </AlertDialogCancel>
-        <AlertDialogAction
-          variant="destructive"
-          data-testid="ownership-gate-delete"
-          @click="auth.confirmOwnershipGateDelete()"
-        >
-          {{ t('auth.ownershipGate.delete') }}
-        </AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
-  </AlertDialog>
+  <ResponsiveAlertDialog
+    :open="pendingGate !== null"
+    :title="t('auth.ownershipGate.title')"
+    :description="t('auth.ownershipGate.description')"
+    :confirm-label="t('auth.ownershipGate.delete')"
+    :cancel-label="t('auth.ownershipGate.cancel')"
+    content-test-id="ownership-gate-dialog"
+    confirm-test-id="ownership-gate-delete"
+    cancel-test-id="ownership-gate-cancel"
+    @cancel="auth.cancelOwnershipGate()"
+    @confirm="auth.confirmOwnershipGateDelete()"
+  />
 </template>
