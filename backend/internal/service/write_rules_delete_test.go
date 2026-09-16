@@ -111,24 +111,3 @@ func TestValidateCategoryDelete(t *testing.T) {
 			domain.ErrCategoryHasPlannedPayments)
 	})
 }
-
-type stubDebtorDeleteReads struct {
-	operations bool
-}
-
-func (s stubDebtorDeleteReads) HasLiveDebtOperationsForDebtor(
-	_ context.Context, _ domain.Scope, _ uuid.UUID,
-) (bool, error) {
-	return s.operations, nil
-}
-
-func TestValidateDebtorDelete(t *testing.T) {
-	t.Parallel()
-
-	hh, id := uuid.New(), uuid.New()
-	require.NoError(t, service.ValidateDebtorDelete(
-		context.Background(), stubDebtorDeleteReads{}, domain.Scope{HouseholdID: hh}, id))
-	require.ErrorIs(t, service.ValidateDebtorDelete(
-		context.Background(), stubDebtorDeleteReads{operations: true}, domain.Scope{HouseholdID: hh}, id),
-		domain.ErrDebtorHasOperations)
-}

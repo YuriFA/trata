@@ -43,7 +43,17 @@ func (s *DebtorService) Update(
 	params domain.UpdateDebtorParams,
 ) (*domain.Debtor, error) {
 	const op = "service.debtor.Update"
-	if params.Name == nil && params.Note == nil {
+	// Rename-only: the name is the only updatable debtor field. Nil means
+	// nothing to change; a name equal to the current one changes nothing
+	// either - both are the same no-fields rejection.
+	if params.Name == nil {
+		return nil, ErrNoFieldsToUpdate
+	}
+	current, err := s.debtors.GetDebtor(ctx, scope, id)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	if *params.Name == current.Name {
 		return nil, ErrNoFieldsToUpdate
 	}
 	d, err := s.debtors.UpdateDebtor(ctx, scope, id, params)

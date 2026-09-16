@@ -926,13 +926,12 @@ describe('sync engine: debts', () => {
   })
 
   async function seedDebt() {
-    const debtor = await debtorRepo.create({ name: 'Анна', note: '' })
+    const debtor = await debtorRepo.create({ name: 'Анна' })
     const debt = await operationRepo.create({
       debtorId: debtor.id,
       direction: 'receivable',
       kind: 'debt',
       amount: 500_000,
-      note: '',
       occurredAt: '2026-08-20T10:00:00.000Z',
     })
     return { debtor, debt }
@@ -945,7 +944,6 @@ describe('sync engine: debts', () => {
       direction: 'receivable',
       kind: 'repayment',
       amount: 150_000,
-      note: '',
       occurredAt: '2026-08-21T10:00:00.000Z',
     })
 
@@ -995,7 +993,7 @@ describe('sync engine: debts', () => {
     server.records.set(`debtor:${debtorId}`, {
       version: 1,
       deleted: false,
-      data: { name: 'Сергей', note: '', currency: 'RUB' },
+      data: { name: 'Сергей', currency: 'RUB' },
     })
     server.log.push({
       seq: 2,
@@ -1003,7 +1001,7 @@ describe('sync engine: debts', () => {
       id: debtorId,
       action: 'upsert',
       version: 1,
-      data: { name: 'Сергей', note: '', currency: 'RUB' },
+      data: { name: 'Сергей', currency: 'RUB' },
     })
 
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
@@ -1057,7 +1055,7 @@ describe('sync engine: debts', () => {
     server.records.set(`debtor:${debtorId}`, {
       version: 1,
       deleted: false,
-      data: { name: 'Сергей', note: '', currency: 'RUB' },
+      data: { name: 'Сергей', currency: 'RUB' },
     })
     server.log.push({
       seq: 2,
@@ -1065,7 +1063,7 @@ describe('sync engine: debts', () => {
       id: debtorId,
       action: 'upsert',
       version: 1,
-      data: { name: 'Сергей', note: '', currency: 'RUB' },
+      data: { name: 'Сергей', currency: 'RUB' },
     })
 
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
@@ -1097,7 +1095,6 @@ describe('sync engine: debts', () => {
       direction: 'receivable',
       kind: 'repayment',
       amount: 50_000,
-      note: '',
       occurredAt: '2026-08-22T10:00:00.000Z',
     })
     // The server's reference validation rejects the pushed operation.

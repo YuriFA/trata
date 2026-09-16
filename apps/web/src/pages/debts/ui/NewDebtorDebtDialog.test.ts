@@ -15,7 +15,6 @@ import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'
 const createdDebtor: Debtor = {
   id: 'd1',
   name: 'Анна',
-  note: '',
   currency: 'RUB',
   version: 1,
 }
@@ -53,7 +52,6 @@ describe('NewDebtorDebtDialog', () => {
       direction: 'receivable',
       kind: 'debt',
       amount: 500000,
-      note: '',
       occurredAt: '2026-08-20T12:00:00.000Z',
       version: 1,
     })

@@ -8,7 +8,7 @@ import {
 } from '@/__tests__/helpers/mock-repositories'
 import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'
 
-const debtor: Debtor = { id: 'd1', name: 'Анна', note: '', currency: 'RUB', version: 1 }
+const debtor: Debtor = { id: 'd1', name: 'Анна', currency: 'RUB', version: 1 }
 
 const debtOperation: DebtOperation = {
   id: 'o1',
@@ -16,7 +16,6 @@ const debtOperation: DebtOperation = {
   direction: 'receivable',
   kind: 'debt',
   amount: 500000,
-  note: 'Займ',
   occurredAt: '2026-08-20T12:00:00.000Z',
   version: 3,
 }
@@ -98,7 +97,6 @@ describe('OperationFormDialog', () => {
     ).toBe('₽5,000.00')
     // DateField renders the picked day as its button label (long en format).
     expect(inDialog('#debts-operation-date')!.textContent).toBe('August 20, 2026')
-    expect((inDialog('#debts-operation-note') as HTMLInputElement).value).toBe('Займ')
   })
 
   it('warns (without blocking) when a repayment exceeds the remaining balance', async () => {

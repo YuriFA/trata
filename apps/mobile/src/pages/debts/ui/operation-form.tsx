@@ -1,7 +1,7 @@
 // The debt-operation form (edit + fixed-context create variants, conventions
 // forms.md §2/§3): static «Контакт» / «Направление» context rows, the Долг ↔
 // Списание kind switch (create mode), keypad-only amount, and the one-row
-// action toolbar with expandable quick dates and note (design D9). The create
+// action toolbar with expandable quick dates (design D9). The create
 // entry point is a contact's history sheet, so the contact and direction are
 // always fixed context. The amount stays a digit string in form values; the
 // named mappers convert to int64 minor units exactly once at the submission
@@ -66,7 +66,6 @@ function toCreatePayload(
     // The schema's refine guarantees parseability; the fallback only
     // satisfies the parser's `number | null` return type.
     amount: parseMajorUnitsToMinor(values.amount) ?? 0,
-    note: values.note.trim(),
     occurredAt: values.occurredAt,
   }
 }
@@ -78,7 +77,6 @@ function toUpdatePayload(
   return {
     version,
     amount: parseMajorUnitsToMinor(values.amount) ?? 0,
-    note: values.note.trim(),
     occurredAt: values.occurredAt,
   }
 }
@@ -214,7 +212,6 @@ export function OperationForm(props: OperationFormProps) {
         debtorId: operation.debtorId,
         amount: minorToInputValue(operation.amount),
         occurredAt: operation.occurredAt,
-        note: operation.note,
       }
     }
     return operationDefaultValues({

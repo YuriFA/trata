@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Debts e2e: REST CRUD semantics (ownership, uniqueness, version CAS, note
-// PATCH rules, live-only in-use guard) and the sync edge cases recorded in
+// Debts e2e: REST CRUD semantics (ownership, uniqueness, version CAS,
+// rename-only update, cascading delete) and the sync edge cases recorded in
 // the add-debts design D8: opId replay vs entity-id claims, delete idempotency
 // and delete-wins, deleted-conflict on tombstones, name-taken per-item errors,
 // and an operation pushed for a server-deleted debtor.
@@ -32,11 +32,10 @@ func TestE2E_DebtorsRestFlows(t *testing.T) {
 	created := c.do(
 		"POST",
 		"/api/debtors",
-		map[string]any{"id": debtorID, "name": "Анна", "note": "colleague"},
+		map[string]any{"id": debtorID, "name": "Анна"},
 	)
 	require.Equal(t, 201, created["__status"], created["__body"])
 	assert.Equal(t, "Анна", created["name"])
-	assert.Equal(t, "colleague", created["note"])
 	assert.InDelta(t, float64(1), created["version"], 0)
 
 	// --- Duplicate name -> 409 DEBTOR_ALREADY_EXISTS ---
@@ -48,34 +47,32 @@ func TestE2E_DebtorsRestFlows(t *testing.T) {
 	bad := c.do("POST", "/api/debtors", map[string]any{"name": ""})
 	require.Equal(t, 400, bad["__status"])
 
-	// --- PATCH: absent note keeps, empty string clears, null rejected ---
+	// --- PATCH: rename-only ---
 	updated := c.do(
 		"PATCH",
 		"/api/debtors/"+debtorID,
 		map[string]any{"version": 1, "name": "Анна П."},
 	)
 	require.Equal(t, 200, updated["__status"], updated["__body"])
-	assert.Equal(t, "colleague", updated["note"], "absent note keeps the value")
+	assert.Equal(t, "Анна П.", updated["name"])
 	assert.InDelta(t, float64(2), updated["version"], 0)
 
-	updated = c.do("PATCH", "/api/debtors/"+debtorID, map[string]any{"version": 2, "note": ""})
-	require.Equal(t, 200, updated["__status"], updated["__body"])
-	assert.Empty(t, updated["note"], "empty string clears the note")
+	// Renaming to the current name changes nothing: rejected as a no-op.
+	noOp := c.do("PATCH", "/api/debtors/"+debtorID, map[string]any{"version": 2, "name": "Анна П."})
+	require.Equal(t, 400, noOp["__status"], noOp["__body"])
+	assert.Equal(t, "VALIDATION_FAILED", noOp["code"])
 
-	nullNote := c.do("PATCH", "/api/debtors/"+debtorID, map[string]any{"version": 3, "note": nil})
-	require.Equal(t, 400, nullNote["__status"], nullNote["__body"])
-
-	stale := c.do("PATCH", "/api/debtors/"+debtorID, map[string]any{"version": 1, "note": "stale"})
+	stale := c.do("PATCH", "/api/debtors/"+debtorID, map[string]any{"version": 1, "name": "stale"})
 	require.Equal(t, 409, stale["__status"])
 	assert.Equal(t, "DEBTOR_VERSION_CONFLICT", stale["code"])
 
-	empty := c.do("PATCH", "/api/debtors/"+debtorID, map[string]any{"version": 3})
+	empty := c.do("PATCH", "/api/debtors/"+debtorID, map[string]any{"version": 2})
 	require.Equal(t, 400, empty["__status"], empty["__body"])
 
 	// --- Operations: create, unknown debtor 422, amount validation ---
 	op := c.do("POST", "/api/debt-operations", map[string]any{
 		"debtorId": debtorID, "direction": "receivable", "kind": "debt",
-		"amount": 500000, "occurredAt": "2026-08-20T10:00:00Z", "note": "дал в долг",
+		"amount": 500000, "occurredAt": "2026-08-20T10:00:00Z",
 	})
 	require.Equal(t, 201, op["__status"], op["__body"])
 	opID, _ := op["id"].(string)
@@ -120,28 +117,22 @@ func TestE2E_DebtorsRestFlows(t *testing.T) {
 	require.Equal(t, 409, conflict["__status"])
 	assert.Equal(t, "DEBT_OPERATION_VERSION_CONFLICT", conflict["code"])
 
-	// --- In-use guard counts LIVE operations only ---
-	inUse := c.do("DELETE", "/api/debtors/"+debtorID, nil)
-	require.Equal(t, 409, inUse["__status"], inUse["__body"])
-	assert.Equal(t, "DEBTOR_IN_USE", inUse["code"])
-
-	del := c.do("DELETE", "/api/debt-operations/"+opID, nil)
-	require.Equal(t, 204, del["__status"])
-	del = c.do("DELETE", "/api/debt-operations/"+overID, nil)
-	require.Equal(t, 204, del["__status"])
-
-	// REST delete of an already-deleted record reads as not-found.
-	del = c.do("DELETE", "/api/debt-operations/"+opID, nil)
-	require.Equal(t, 404, del["__status"])
-
-	// All operations tombstoned -> the debtor is deletable; the name frees up.
+	// --- Deleting the debtor cascades over its LIVE operations ---
 	ok := c.do("DELETE", "/api/debtors/"+debtorID, nil)
 	require.Equal(t, 204, ok["__status"])
+
 	gone := c.do("GET", "/api/debtors/"+debtorID, nil)
 	require.Equal(t, 404, gone["__status"])
+	for _, id := range []string{opID, overID} {
+		goneOp := c.do("GET", "/api/debt-operations/"+id, nil)
+		require.Equal(t, 404, goneOp["__status"], "live operation must be cascaded")
+	}
+
+	// REST delete of an already-deleted debtor reads as not-found.
 	gone = c.do("DELETE", "/api/debtors/"+debtorID, nil)
 	require.Equal(t, 404, gone["__status"])
 
+	// The freed name can be reused.
 	recreated := c.do("POST", "/api/debtors", map[string]any{"name": "Анна"})
 	require.Equal(t, 201, recreated["__status"], recreated["__body"])
 
@@ -178,13 +169,13 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 	results := push(t, c, []map[string]any{
 		{
 			"opId": debtorCreateOp, "entity": "debtor", "action": "upsert", "id": debtorID, "baseVersion": 0,
-			"data": map[string]any{"name": "Михаил", "note": "", "currency": "RUB"},
+			"data": map[string]any{"name": "Михаил", "currency": "RUB"},
 		},
 		{
 			"opId": opCreateOp, "entity": "debt_operation", "action": "upsert", "id": opID, "baseVersion": 0,
 			"data": map[string]any{
 				"debtorId": debtorID, "direction": "receivable", "kind": "debt",
-				"amount": 200000, "note": "", "occurredAt": "2026-08-20T10:00:00Z",
+				"amount": 200000, "occurredAt": "2026-08-20T10:00:00Z",
 			},
 		},
 	})
@@ -198,7 +189,7 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 	results = push(t, c, []map[string]any{
 		{
 			"opId": debtorCreateOp, "entity": "debtor", "action": "upsert", "id": debtorID, "baseVersion": 0,
-			"data": map[string]any{"name": "Михаил", "note": "", "currency": "RUB"},
+			"data": map[string]any{"name": "Михаил", "currency": "RUB"},
 		},
 	})
 	require.Len(t, results, 1)
@@ -216,7 +207,7 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 		{
 			"opId": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", "entity": "debtor", "action": "upsert",
 			"id": debtorID, "baseVersion": 0,
-			"data": map[string]any{"name": "Другой", "note": "", "currency": "RUB"},
+			"data": map[string]any{"name": "Другой", "currency": "RUB"},
 		},
 	})
 	require.Len(t, results, 1)
@@ -233,7 +224,7 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 			"opId": updateOp, "entity": "debt_operation", "action": "upsert", "id": opID, "baseVersion": 1,
 			"data": map[string]any{
 				"debtorId": debtorID, "direction": "receivable", "kind": "debt",
-				"amount": 300000, "note": "", "occurredAt": "2026-08-20T10:00:00Z",
+				"amount": 300000, "occurredAt": "2026-08-20T10:00:00Z",
 			},
 		},
 	})
@@ -279,7 +270,7 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 			"id": opID, "baseVersion": 3,
 			"data": map[string]any{
 				"debtorId": debtorID, "direction": "receivable", "kind": "debt",
-				"amount": 1, "note": "", "occurredAt": "2026-08-20T10:00:00Z",
+				"amount": 1, "occurredAt": "2026-08-20T10:00:00Z",
 			},
 		},
 	})
@@ -290,9 +281,46 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, true, serverState["deleted"])
 
+	// --- Sync delete of a debtor cascades over LIVE operations ---
+	// Create a second debtor with a live operation, then sync-delete the
+	// debtor: the item reports applied and the cascade tombstones the
+	// operation on the same transaction.
+	veraID := "aaaaaaaa-eeee-4eee-8eee-cccccccccccc"
+	veraOpID := "bbbbbbbb-aaaa-4aaa-8aaa-dddddddddddd"
+	results = push(t, c, []map[string]any{
+		{
+			"opId": "11111111-9000-4999-8999-999999999991", "entity": "debtor", "action": "upsert",
+			"id": veraID, "baseVersion": 0,
+			"data": map[string]any{"name": "Вера", "currency": "RUB"},
+		},
+		{
+			"opId": "11111111-9000-4999-8999-999999999992", "entity": "debt_operation", "action": "upsert",
+			"id": veraOpID, "baseVersion": 0,
+			"data": map[string]any{
+				"debtorId": veraID, "direction": "payable", "kind": "debt",
+				"amount": 70000, "occurredAt": "2026-08-22T10:00:00Z",
+			},
+		},
+	})
+	require.Len(t, results, 2)
+	for _, r := range results {
+		assert.Equal(t, "applied", r["status"], "%v", r)
+	}
+	results = push(t, c, []map[string]any{
+		{
+			"opId":        "11111111-9000-4999-8999-999999999993",
+			"entity":      "debtor",
+			"action":      "delete",
+			"id":          veraID,
+			"baseVersion": 1,
+		},
+	})
+	require.Len(t, results, 1)
+	assert.Equal(t, "applied", results[0]["status"], "a pushed debtor delete is applied, not in-use-blocked")
+	assert.InDelta(t, float64(2), results[0]["version"], 0, "the delete reports the debtor's new version")
+
 	// --- Operation for a server-deleted debtor: per-item error, batch intact ---
-	// Delete the debtor via sync (its only operation is tombstoned, so the
-	// guard passes), then push a new operation referencing it.
+	// Push a new operation referencing the sync-deleted debtor.
 	debtorDeleteOp := "11111111-5555-4555-8555-555555555555"
 	results = push(t, c, []map[string]any{
 		{
@@ -312,14 +340,14 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 		{
 			"opId": "11111111-7777-4777-8777-777777777777", "entity": "debtor", "action": "upsert",
 			"id": healthyDebtor, "baseVersion": 0,
-			"data": map[string]any{"name": "Ольга", "note": "", "currency": "RUB"},
+			"data": map[string]any{"name": "Ольга", "currency": "RUB"},
 		},
 		{
 			"opId": orphanOp, "entity": "debt_operation", "action": "upsert",
 			"id": "aaaaaaaa-cccc-4ccc-8ccc-dddddddddddd", "baseVersion": 0,
 			"data": map[string]any{
 				"debtorId": debtorID, "direction": "receivable", "kind": "debt",
-				"amount": 50000, "note": "", "occurredAt": "2026-08-20T10:00:00Z",
+				"amount": 50000, "occurredAt": "2026-08-20T10:00:00Z",
 			},
 		},
 	})
@@ -333,7 +361,7 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 		{
 			"opId": "11111111-8888-4888-8888-888888888888", "entity": "debtor", "action": "upsert",
 			"id": "aaaaaaaa-dddd-4ddd-8ddd-eeeeeeeeeeee", "baseVersion": 0,
-			"data": map[string]any{"name": "Ольга", "note": "", "currency": "RUB"},
+			"data": map[string]any{"name": "Ольга", "currency": "RUB"},
 		},
 	})
 	require.Len(t, results, 1)
@@ -343,7 +371,7 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 	// --- REST against the sync-tombstoned debtor reads as not-found ---
 	gone := c.do("GET", "/api/debtors/"+debtorID, nil)
 	require.Equal(t, 404, gone["__status"])
-	gone = c.do("PATCH", "/api/debtors/"+debtorID, map[string]any{"version": 1, "note": "x"})
+	gone = c.do("PATCH", "/api/debtors/"+debtorID, map[string]any{"version": 1, "name": "x"})
 	require.Equal(t, 404, gone["__status"])
 
 	// --- Pull: debt entities ride the change feed with their tombstones ---
@@ -354,8 +382,12 @@ func TestE2E_DebtsSyncFlows(t *testing.T) {
 		action, _ := change["action"].(string)
 		entities[entity] = append(entities[entity], action)
 	}
-	assert.Equal(t, []string{"upsert", "tombstone", "upsert"}, entities["debtor"])
-	assert.Equal(t, []string{"upsert", "upsert", "tombstone"}, entities["debt_operation"])
+	assert.Equal(t,
+		[]string{"upsert", "upsert", "tombstone", "tombstone", "upsert"},
+		entities["debtor"])
+	assert.Equal(t,
+		[]string{"upsert", "upsert", "tombstone", "upsert", "tombstone"},
+		entities["debt_operation"])
 
 	// The errored/conflicted items never touched the change log.
 	for _, id := range []string{"aaaaaaaa-cccc-4ccc-8ccc-dddddddddddd", "aaaaaaaa-dddd-4ddd-8ddd-eeeeeeeeeeee"} {

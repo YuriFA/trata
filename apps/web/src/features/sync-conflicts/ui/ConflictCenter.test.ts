@@ -50,7 +50,7 @@ const deletedDebtorConflict: LocalSyncConflict = {
   kind: 'deleted',
   baseVersion: 1,
   serverVersion: 2,
-  localState: { id: 'deb-1', name: 'Анна', note: 'colleague' },
+  localState: { id: 'deb-1', name: 'Анна' },
   serverState: { version: 2, deleted: true },
   createdAt: '2026-01-01T00:00:00Z',
 }

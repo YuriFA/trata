@@ -14,7 +14,6 @@ type Debtor struct {
 	ID     uuid.UUID
 	UserID uuid.UUID
 	Name   string
-	Note   string
 	// Immutable ledger currency: every debt operation's amount is interpreted
 	// in it. Defaults to the household's base currency at creation.
 	Currency  string
@@ -36,18 +35,16 @@ type CreateDebtorParams struct {
 	// the wire.
 	UserID uuid.UUID
 	Name   string
-	Note   string
 	// Ledger currency; nil means the household's base currency. Ignored after
 	// creation (immutable).
 	Currency *string
 }
 
-// UpdateDebtorParams holds optional PATCH fields plus the required
-// optimistic-concurrency Version. Nil means "leave unchanged"; a non-nil
-// empty string clears the field (the transaction-description convention).
+// UpdateDebtorParams holds the rename plus the required optimistic-concurrency
+// Version. The name is the only updatable debtor field; nil means "leave
+// unchanged" (the service rejects a no-op).
 type UpdateDebtorParams struct {
 	Name    *string
-	Note    *string
 	Version int
 }
 
@@ -55,7 +52,6 @@ type UpdateDebtorParams struct {
 // carry the full record, not a PATCH).
 type DebtorFullState struct {
 	Name     string `json:"name"`
-	Note     string `json:"note"`
 	Currency string `json:"currency"`
 }
 
@@ -63,7 +59,6 @@ type DebtorFullState struct {
 func (d *Debtor) FullState() *DebtorFullState {
 	return &DebtorFullState{
 		Name:     d.Name,
-		Note:     d.Note,
 		Currency: d.Currency,
 	}
 }

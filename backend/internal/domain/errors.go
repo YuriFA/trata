@@ -76,11 +76,8 @@ var (
 	ErrInvalidDebtorCurrency = errors.New(
 		"debtor currency is not in the supported catalog",
 	)
-	ErrDebtorAlreadyExists   = errors.New("debtor already exists")
-	ErrDebtorVersionConflict = errors.New("debtor version conflict")
-	ErrDebtorHasOperations   = errors.New(
-		"debtor has debt operations and cannot be deleted",
-	)
+	ErrDebtorAlreadyExists          = errors.New("debtor already exists")
+	ErrDebtorVersionConflict        = errors.New("debtor version conflict")
 	ErrDebtOperationNotFound        = errors.New("debt operation not found")
 	ErrDebtOperationAlreadyExists   = errors.New("debt operation already exists")
 	ErrDebtOperationVersionConflict = errors.New("debt operation version conflict")

@@ -295,7 +295,6 @@ func (t *syncTx) GetDebtorAny(
 		row.ID,
 		row.UserID,
 		row.Name,
-		row.Note,
 		row.Currency,
 		row.CreatedAt,
 		row.UpdatedAt,
@@ -325,7 +324,7 @@ func (t *syncTx) GetDebtOperationAny(
 	}
 	op2 := debtOperationFromFields(
 		row.ID, row.UserID, row.DebtorID, row.Direction, row.Kind,
-		row.Amount, row.Note, row.OccurredAt, row.CreatedAt, row.UpdatedAt, int(row.Version),
+		row.Amount, row.OccurredAt, row.CreatedAt, row.UpdatedAt, int(row.Version),
 	)
 	op2.DeletedAt = row.DeletedAt
 	return op2, nil
@@ -499,24 +498,6 @@ func (t *syncTx) DebtorNameTaken(
 		return false, opWrap(op, err)
 	}
 	return taken, nil
-}
-
-func (t *syncTx) HasLiveDebtOperationsForDebtor(
-	ctx context.Context,
-	scope domain.Scope,
-	debtorID uuid.UUID,
-) (bool, error) {
-	householdID := scope.HouseholdID
-	const op = "repository.postgres.syncTx.HasLiveDebtOperationsForDebtor"
-
-	inUse, err := t.q.HasLiveDebtOperationsForDebtor(ctx, db.HasLiveDebtOperationsForDebtorParams{
-		HouseholdID: householdID,
-		DebtorID:    debtorID,
-	})
-	if err != nil {
-		return false, opWrap(op, err)
-	}
-	return inUse, nil
 }
 
 func (t *syncTx) HasLivePlannedPaymentsForAccount(
@@ -913,7 +894,6 @@ func (t *syncTx) CreateDebtor(
 		HouseholdID: params.HouseholdID,
 		UserID:      params.UserID,
 		Name:        params.Name,
-		Note:        params.Note,
 	})
 	if err != nil {
 		return nil, classifyInsertErr(op, err, domain.ErrDebtorAlreadyExists)
@@ -928,7 +908,6 @@ func (t *syncTx) CreateDebtor(
 		row.ID,
 		row.UserID,
 		row.Name,
-		row.Note,
 		row.Currency,
 		row.CreatedAt,
 		row.UpdatedAt,
@@ -949,7 +928,6 @@ func (t *syncTx) ReplaceDebtor(
 		ID:          id,
 		HouseholdID: householdID,
 		Name:        st.Name,
-		Note:        st.Note,
 		BaseVersion: int32(baseVersion), //nolint:gosec // server versions are small positive ints
 	})
 	if err != nil {
@@ -977,7 +955,6 @@ func (t *syncTx) ReplaceDebtor(
 		row.ID,
 		row.UserID,
 		row.Name,
-		row.Note,
 		row.Currency,
 		row.CreatedAt,
 		row.UpdatedAt,
@@ -985,31 +962,38 @@ func (t *syncTx) ReplaceDebtor(
 	), nil
 }
 
+// TombstoneDebtor deletes the debtor and cascades over its live debt
+// operations: every tombstoned operation gets its own change_log row on the
+// batch transaction (invariants #17-#18), mirroring the REST DeleteDebtor -
+// both run cascadeDeleteDebtor, so REST and pushed deletes are one behavior.
+// Like the other tombstone twins it is idempotent: an already-tombstoned
+// debtor is returned as stored, without a re-cascade.
 func (t *syncTx) TombstoneDebtor(
 	ctx context.Context,
 	scope domain.Scope, id uuid.UUID,
 ) (*domain.Debtor, error) {
-	return tombstoneEntity(ctx, t.q, scope, id,
-		"repository.postgres.syncTx.TombstoneDebtor",
-		func() (int32, error) {
-			return t.q.SoftDeleteDebtor(
-				ctx,
-				db.SoftDeleteDebtorParams{ID: id, HouseholdID: scope.HouseholdID},
-			)
-		},
-		func() (*domain.Debtor, error) { return t.GetDebtorAny(ctx, scope, id) },
-		domain.ErrDebtorNotFound,
-		domain.SyncEntityDebtor,
-		func(version int32) *domain.Debtor {
-			now := time.Now().UTC()
-			return &domain.Debtor{
-				ID:        id,
-				UserID:    scope.ActorID,
-				Version:   int(version),
-				DeletedAt: &now,
-			}
-		},
+	const op = "repository.postgres.syncTx.TombstoneDebtor"
+
+	current, err := t.GetDebtorAny(ctx, scope, id)
+	if err != nil {
+		return nil, opWrap(op, err)
+	}
+	if current == nil {
+		return nil, domain.ErrDebtorNotFound
+	}
+	if current.Deleted() {
+		return current, nil // already tombstoned: idempotent delete
+	}
+	version, err := cascadeDeleteDebtor(
+		ctx, t.q, scope.HouseholdID, scope.ActorID, id,
 	)
+	if err != nil {
+		return nil, opWrap(op, err)
+	}
+	now := time.Now().UTC()
+	current.Version = version
+	current.DeletedAt = &now
+	return current, nil
 }
 
 func (t *syncTx) CreateDebtOperation(
@@ -1026,7 +1010,6 @@ func (t *syncTx) CreateDebtOperation(
 		Direction:   string(params.Direction),
 		Kind:        string(params.Kind),
 		Amount:      params.Amount,
-		Note:        params.Note,
 		OccurredAt:  params.OccurredAt,
 	})
 	if err != nil {
@@ -1040,7 +1023,7 @@ func (t *syncTx) CreateDebtOperation(
 	}
 	return debtOperationFromFields(
 		row.ID, row.UserID, row.DebtorID, row.Direction, row.Kind,
-		row.Amount, row.Note, row.OccurredAt, row.CreatedAt, row.UpdatedAt, int(row.Version),
+		row.Amount, row.OccurredAt, row.CreatedAt, row.UpdatedAt, int(row.Version),
 	), nil
 }
 
@@ -1060,7 +1043,6 @@ func (t *syncTx) ReplaceDebtOperation(
 		Direction:   string(st.Direction),
 		Kind:        string(st.Kind),
 		Amount:      st.Amount,
-		Note:        st.Note,
 		OccurredAt:  st.OccurredAt,
 		BaseVersion: int32(baseVersion), //nolint:gosec // server versions are small positive ints
 	})
@@ -1087,7 +1069,7 @@ func (t *syncTx) ReplaceDebtOperation(
 	}
 	return debtOperationFromFields(
 		row.ID, row.UserID, row.DebtorID, row.Direction, row.Kind,
-		row.Amount, row.Note, row.OccurredAt, row.CreatedAt, row.UpdatedAt, int(row.Version),
+		row.Amount, row.OccurredAt, row.CreatedAt, row.UpdatedAt, int(row.Version),
 	), nil
 }
 
@@ -1672,7 +1654,6 @@ func pullStateOf(
 		if d, ok := debtorsByID[id]; ok {
 			return &domain.DebtorFullState{
 				Name: d.Name,
-				Note: d.Note,
 			}
 		}
 	case domain.SyncEntityDebtOperation:
@@ -1682,7 +1663,6 @@ func pullStateOf(
 				Direction:  domain.DebtDirection(o.Direction),
 				Kind:       domain.DebtOperationKind(o.Kind),
 				Amount:     o.Amount,
-				Note:       o.Note,
 				OccurredAt: o.OccurredAt,
 			}
 		}

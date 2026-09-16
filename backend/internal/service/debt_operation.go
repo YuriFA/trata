@@ -57,7 +57,7 @@ func (s *DebtOperationService) Update(
 ) (*domain.DebtOperation, error) {
 	const op = "service.debtOperation.Update"
 
-	if params.Amount == nil && params.Note == nil && params.OccurredAt == nil {
+	if params.Amount == nil && params.OccurredAt == nil {
 		return nil, ErrNoFieldsToUpdate
 	}
 

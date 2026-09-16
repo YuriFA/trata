@@ -99,10 +99,6 @@ var errorSpecs = map[error]ErrorSpec{
 		"CATEGORY_IN_USE",
 		"category has transactions and cannot be deleted",
 	},
-	ErrDebtorHasOperations: {
-		"DEBTOR_IN_USE",
-		"debtor has debt operations and cannot be deleted",
-	},
 	ErrAccountHasPlannedPayments: {
 		"ACCOUNT_IN_USE",
 		"account has planned payments and cannot be deleted",

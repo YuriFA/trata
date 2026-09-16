@@ -35,17 +35,12 @@ func (s *Server) CreateDebtOperation(
 	if req.Body.Id != nil {
 		id = *req.Body.Id
 	}
-	note := ""
-	if req.Body.Note != nil {
-		note = *req.Body.Note
-	}
 	o, err := s.debtOps.Create(ctx, s.currentScope(ctx), domain.CreateDebtOperationParams{
 		ID:         id,
 		DebtorID:   req.Body.DebtorId,
 		Direction:  domain.DebtDirection(req.Body.Direction),
 		Kind:       domain.DebtOperationKind(req.Body.Kind),
 		Amount:     req.Body.Amount,
-		Note:       note,
 		OccurredAt: req.Body.OccurredAt,
 	})
 	if err != nil {
@@ -72,7 +67,6 @@ func (s *Server) UpdateDebtOperation(
 ) (api.UpdateDebtOperationResponseObject, error) {
 	o, err := s.debtOps.Update(ctx, s.currentScope(ctx), req.Id, domain.UpdateDebtOperationParams{
 		Amount:     req.Body.Amount,
-		Note:       req.Body.Note,
 		OccurredAt: req.Body.OccurredAt,
 		Version:    req.Body.Version,
 	})

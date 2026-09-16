@@ -974,7 +974,7 @@ func (s *Store) CreateDebtor(
 	}
 	now := time.Now().UTC()
 	d := &domain.Debtor{
-		ID: id, UserID: params.UserID, Name: params.Name, Note: params.Note,
+		ID: id, UserID: params.UserID, Name: params.Name,
 		CreatedAt: now, UpdatedAt: now, Version: 1,
 	}
 	s.debtors[d.ID] = d
@@ -1015,9 +1015,6 @@ func (s *Store) UpdateDebtor(
 		d.Name = *params.Name
 		s.debtorUnique[debtorUniqueKey(householdID, d.Name)] = struct{}{}
 	}
-	if params.Note != nil {
-		d.Note = *params.Note
-	}
 	d.UpdatedAt = time.Now().UTC()
 	d.Version++
 	s.appendChange(
@@ -1037,17 +1034,28 @@ func (s *Store) DeleteDebtor(_ context.Context, scope domain.Scope, id uuid.UUID
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	d, ok := s.debtors[id]
-	if !ok || !s.sameHousehold(d.UserID, householdID) {
+	if !ok || !s.sameHousehold(d.UserID, householdID) || d.Deleted() {
 		return domain.ErrDebtorNotFound
 	}
-	// In-use counts LIVE operations only: tombstoned ops never block.
+	// Cascade: every live operation of the debtor is tombstoned first (its
+	// own change_log row, version bumped once), then the debtor follows -
+	// the same behavior the postgres cascade runs.
+	now := time.Now().UTC()
 	for _, o := range s.debtOps {
 		if s.sameHousehold(o.UserID, householdID) && !o.Deleted() && o.DebtorID == id {
-			return domain.ErrDebtorHasOperations
+			o.DeletedAt = &now
+			o.Version++
+			s.appendChange(
+				householdID,
+				actorID,
+				domain.SyncEntityDebtOperation,
+				o.ID,
+				domain.SyncChangeTombstone,
+				o.Version,
+			)
 		}
 	}
 	delete(s.debtorUnique, debtorUniqueKey(householdID, d.Name))
-	now := time.Now().UTC()
 	d.DeletedAt = &now
 	d.Version++
 	s.appendChange(
@@ -1109,8 +1117,8 @@ func (s *Store) CreateDebtOperation(
 	o := &domain.DebtOperation{
 		ID: id, UserID: params.UserID, DebtorID: params.DebtorID,
 		Direction: params.Direction, Kind: params.Kind, Amount: params.Amount,
-		Note: params.Note, OccurredAt: params.OccurredAt,
-		CreatedAt: now, UpdatedAt: now, Version: 1,
+		OccurredAt: params.OccurredAt,
+		CreatedAt:  now, UpdatedAt: now, Version: 1,
 	}
 	s.debtOps[o.ID] = o
 	s.appendChange(
@@ -1142,9 +1150,6 @@ func (s *Store) UpdateDebtOperation(
 	}
 	if params.Amount != nil {
 		o.Amount = *params.Amount
-	}
-	if params.Note != nil {
-		o.Note = *params.Note
 	}
 	if params.OccurredAt != nil {
 		o.OccurredAt = *params.OccurredAt
@@ -1768,21 +1773,6 @@ func (t *fakeSyncTx) DebtorNameTaken(
 	return false, nil
 }
 
-func (t *fakeSyncTx) HasLiveDebtOperationsForDebtor(
-	_ context.Context,
-	scope domain.Scope, debtorID uuid.UUID,
-) (bool, error) {
-	householdID := scope.HouseholdID
-	t.store.mu.Lock()
-	defer t.store.mu.Unlock()
-	for _, o := range t.store.debtOps {
-		if !o.Deleted() && t.store.sameHousehold(o.UserID, householdID) && o.DebtorID == debtorID {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
 func (t *fakeSyncTx) CreateAccount(
 	_ context.Context,
 	params domain.CreateAccountParams,
@@ -2086,7 +2076,6 @@ func (t *fakeSyncTx) ReplaceDebtor(
 	}
 	delete(t.store.debtorUnique, debtorUniqueKey(householdID, d.Name))
 	d.Name = st.Name
-	d.Note = st.Note
 	d.UpdatedAt = time.Now().UTC()
 	d.Version++
 	t.store.debtorUnique[debtorUniqueKey(householdID, d.Name)] = struct{}{}
@@ -2102,28 +2091,50 @@ func (t *fakeSyncTx) ReplaceDebtor(
 	return &c, nil
 }
 
-func (t *fakeSyncTx) TombstoneDebtor( //nolint:dupl // thin tombstoneEntity wrapper, names differ from category
+// TombstoneDebtor cascades like the REST delete: every live operation of the
+// debtor is tombstoned with its own change_log row, then the debtor follows.
+func (t *fakeSyncTx) TombstoneDebtor(
 	_ context.Context,
 	scope domain.Scope,
 	id uuid.UUID,
 ) (*domain.Debtor, error) {
-	return tombstoneEntity(t.store, scope,
-		domain.ErrDebtorNotFound, domain.SyncEntityDebtor,
-		func() (*domain.Debtor, bool) {
-			d, ok := t.store.debtors[id]
-			if !ok || !t.store.sameHousehold(d.UserID, scope.HouseholdID) {
-				return nil, false
+	householdID, actorID := scope.HouseholdID, scope.ActorID
+	t.store.mu.Lock()
+	defer t.store.mu.Unlock()
+	d, ok := t.store.debtors[id]
+	if !ok || !t.store.sameHousehold(d.UserID, householdID) {
+		return nil, domain.ErrDebtorNotFound
+	}
+	if !d.Deleted() {
+		now := time.Now().UTC()
+		for _, o := range t.store.debtOps {
+			if t.store.sameHousehold(o.UserID, householdID) && !o.Deleted() && o.DebtorID == id {
+				o.DeletedAt = &now
+				o.Version++
+				t.store.appendChange(
+					householdID,
+					actorID,
+					domain.SyncEntityDebtOperation,
+					o.ID,
+					domain.SyncChangeTombstone,
+					o.Version,
+				)
 			}
-			return d, true
-		},
-		func(d *domain.Debtor) (uuid.UUID, int) {
-			delete(t.store.debtorUnique, debtorUniqueKey(scope.HouseholdID, d.Name))
-			now := time.Now().UTC()
-			d.DeletedAt = &now
-			d.Version++
-			return d.ID, d.Version
-		},
-	)
+		}
+		delete(t.store.debtorUnique, debtorUniqueKey(householdID, d.Name))
+		d.DeletedAt = &now
+		d.Version++
+		t.store.appendChange(
+			householdID,
+			actorID,
+			domain.SyncEntityDebtor,
+			d.ID,
+			domain.SyncChangeTombstone,
+			d.Version,
+		)
+	}
+	out := *d
+	return &out, nil
 }
 
 func (t *fakeSyncTx) CreateDebtOperation(
@@ -2156,7 +2167,6 @@ func (t *fakeSyncTx) ReplaceDebtOperation(
 	o.Direction = st.Direction
 	o.Kind = st.Kind
 	o.Amount = st.Amount
-	o.Note = st.Note
 	o.OccurredAt = st.OccurredAt
 	o.Version++
 	o.UpdatedAt = time.Now().UTC()

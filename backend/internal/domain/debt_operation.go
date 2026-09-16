@@ -36,7 +36,6 @@ type DebtOperation struct {
 	Direction  DebtDirection
 	Kind       DebtOperationKind
 	Amount     int64
-	Note       string
 	OccurredAt time.Time
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
@@ -59,17 +58,15 @@ type CreateDebtOperationParams struct {
 	Direction  DebtDirection
 	Kind       DebtOperationKind
 	Amount     int64
-	Note       string
 	OccurredAt time.Time
 }
 
 // UpdateDebtOperationParams holds optional PATCH fields plus the required
 // optimistic-concurrency Version. Pointer fields are nil to "leave
-// unchanged"; a non-nil empty Note clears it. DebtorID, Direction, and Kind
-// are immutable and therefore absent.
+// unchanged". DebtorID, Direction, and Kind are immutable and therefore
+// absent.
 type UpdateDebtOperationParams struct {
 	Amount     *int64
-	Note       *string
 	OccurredAt *time.Time
 	Version    int
 }
@@ -88,7 +85,6 @@ type DebtOperationFullState struct {
 	Direction  DebtDirection     `json:"direction"`
 	Kind       DebtOperationKind `json:"kind"`
 	Amount     int64             `json:"amount"`
-	Note       string            `json:"note"`
 	OccurredAt time.Time         `json:"occurredAt"`
 }
 
@@ -100,7 +96,6 @@ func (o *DebtOperation) FullState() *DebtOperationFullState {
 		Direction:  o.Direction,
 		Kind:       o.Kind,
 		Amount:     o.Amount,
-		Note:       o.Note,
 		OccurredAt: o.OccurredAt,
 	}
 }

@@ -88,11 +88,11 @@ export function rowToCatalogPayload(
     }
     case 'debtor': {
       const typedRow = row as DebtorRow
-      return { id: typedRow.id, name: typedRow.name, note: typedRow.note, currency: typedRow.currency }
+      return { id: typedRow.id, name: typedRow.name, currency: typedRow.currency }
     }
     case 'debt_operation': {
       const typedRow = row as DebtOperationRow
-      return { id: typedRow.id, debtorId: typedRow.debtorId, direction: typedRow.direction, kind: typedRow.kind, amount: typedRow.amount, note: typedRow.note, occurredAt: typedRow.occurredAt }
+      return { id: typedRow.id, debtorId: typedRow.debtorId, direction: typedRow.direction, kind: typedRow.kind, amount: typedRow.amount, occurredAt: typedRow.occurredAt }
     }
     case 'planned_payment': {
       const typedRow = row as PlannedPaymentRow
@@ -145,7 +145,6 @@ if (!type || !CATEGORY_TYPE_VALUES.has(type)) return null
 if (!currency || !DEBTOR_CURRENCY_VALUES.has(currency)) return null
       const data: DebtorSyncData = {
         name: asString(payload.name) ?? "",
-        note: asString(payload.note) ?? "",
         currency: currency as DebtorSyncData['currency']
       }
       return data.name ? data : null
@@ -166,7 +165,6 @@ if (!occurredAt) return null
         direction: direction as DebtOperationSyncData['direction'],
         kind: kind as DebtOperationSyncData['kind'],
         amount,
-        note: asString(payload.note) ?? "",
         occurredAt
       }
       return data
@@ -298,7 +296,6 @@ if (!type || !CATEGORY_TYPE_VALUES.has(type)) return null
 if (!currency || !DEBTOR_CURRENCY_VALUES.has(currency)) return null
       return {
         name: asString(payload.name) ?? "",
-        note: asString(payload.note) ?? "",
         currency
       }
     }
@@ -318,7 +315,6 @@ if (!occurredAt) return null
         direction,
         kind,
         amount,
-        note: asString(payload.note) ?? "",
         occurredAt
       }
     }
@@ -460,12 +456,10 @@ if (!color) return fail('color')
     case 'debtor': {
       const name = asNonEmpty(state.name)
 if (!name) return fail('name')
-      const note = asString(state.note) ?? undefined
       const currency = asString(state.currency)
 if (!currency || !DEBTOR_CURRENCY_VALUES.has(currency)) return fail('currency')
       return ok({
         name,
-        ...(note !== undefined ? { note } : {}),
         currency
       })
     }
@@ -480,14 +474,12 @@ if (!kind || !DEBT_OPERATION_KIND_VALUES.has(kind)) return fail('kind')
 if (amount === null || amount < 1) return fail('amount')
       const occurredAt = asNonEmpty(state.occurredAt)
 if (!occurredAt) return fail('occurredAt')
-      const note = asString(state.note) ?? undefined
       return ok({
         debtorId,
         direction,
         kind,
         amount,
-        occurredAt,
-        ...(note !== undefined ? { note } : {})
+        occurredAt
       })
     }
     case 'planned_payment': {
@@ -602,8 +594,8 @@ export function catalogConflictSubject(
       return name
     }
     case 'debt_operation': {
-      const note = typeof source?.note === 'string' ? source.note : ''
-      return note
+      
+      return ''
     }
     case 'planned_payment': {
       const name = typeof source?.name === 'string' ? source.name : ''

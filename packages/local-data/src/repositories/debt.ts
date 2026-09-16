@@ -3,9 +3,10 @@
 // operation in one transaction; `version` bumps by exactly 1 per mutation
 // while `serverVersion` stays untouched, so the record is DIRTY until the
 // sync engine confirms it. Domain rules mirror the backend: unique live
-// debtor names, debtor references validated against live debtors, a
-// live-only in-use guard on debtor delete, tombstone deletes, and the shared
-// machine-readable error codes.
+// debtor names, debtor references validated against live debtors, cascade
+// debtor delete (the debtor and all its live operations tombstone together),
+// single-operation tombstone deletes, and the shared machine-readable error
+// codes.
 
 import { and, asc, eq, isNull } from 'drizzle-orm'
 import { DEFAULT_CURRENCY, isCurrencyCode } from '@trata/money'
@@ -14,7 +15,6 @@ import {
   AlreadyExistsError,
   InvalidPayloadError,
   NotFoundError,
-  ReferentialIntegrityError,
   UnknownReferencesError,
   VersionConflictError,
   type DebtDirection,
@@ -46,7 +46,6 @@ function toDebtor(row: DebtorRow): Debtor {
   return {
     id: row.id,
     name: row.name,
-    note: row.note,
     currency: row.currency as Debtor['currency'],
     version: row.version,
   }
@@ -59,7 +58,6 @@ function toDebtOperation(row: DebtOperationRow): DebtOperation {
     direction: row.direction as DebtDirection,
     kind: row.kind as DebtOperationKind,
     amount: row.amount,
-    note: row.note,
     occurredAt: row.occurredAt,
     version: row.version,
     authorId: row.userId ?? null,
@@ -136,6 +134,37 @@ function deleteWithTombstone(
   })
 }
 
+/**
+ * Cascade debtor delete (debts capability): tombstones the debtor AND all of
+ * its live (non-deleted) operations and enqueues one sync delete per
+ * tombstoned record, all in ONE local transaction - the local mirror of the
+ * server's atomic cascade. Every record goes through the shared
+ * tombstone-or-wipe rule, so unborn records vanish while published ones
+ * travel as tombstones. Already-tombstoned operations keep their own delete
+ * trail and are not touched.
+ */
+export async function cascadeDeleteDebtor(db: LocalDatabase, id: string): Promise<void> {
+  db.transaction((tx) => {
+    const debtor = tx.select().from(debtors).where(eq(debtors.id, id)).get()
+    if (!debtor || debtor.deletedAt) throw new NotFoundError('Debtor not found')
+
+    const liveOperations = tx
+      .select()
+      .from(debtOperations)
+      .where(and(eq(debtOperations.debtorId, id), isNull(debtOperations.deletedAt)))
+      .all()
+    for (const operation of liveOperations) {
+      deleteWithTombstone(tx, 'debt_operation', operation, (next) => {
+        tx.update(debtOperations).set(next).where(eq(debtOperations.id, operation.id)).run()
+      })
+    }
+
+    deleteWithTombstone(tx, 'debtor', debtor, (next) => {
+      tx.update(debtors).set(next).where(eq(debtors.id, id)).run()
+    })
+  })
+}
+
 export function createLocalDebtorRepository(db: LocalDatabase): DebtorRepository {
   return {
     async getAll() {
@@ -184,7 +213,6 @@ export function createLocalDebtorRepository(db: LocalDatabase): DebtorRepository
           id,
           userId: getOwnerUserId(db),
           name,
-          note: payload.note ?? '',
           currency,
           version: 1,
           serverVersion: 0,
@@ -204,11 +232,11 @@ export function createLocalDebtorRepository(db: LocalDatabase): DebtorRepository
     },
 
     async update(id: string, payload: UpdateDebtorPayload) {
-      const hasFields = payload.name !== undefined || payload.note !== undefined
-      if (!hasFields) throw new InvalidPayloadError('No fields to update')
-      if (payload.name !== undefined && !payload.name.trim()) {
-        throw new InvalidPayloadError('Debtor name is required')
-      }
+      // Rename-only: the name is the debtor's single updatable field.
+      if (payload.name === undefined) throw new InvalidPayloadError('No fields to update')
+      if (!payload.name.trim()) throw new InvalidPayloadError('Debtor name is required')
+
+      const name = payload.name.trim()
 
       return db.transaction((tx) => {
         const row = tx.select().from(debtors).where(eq(debtors.id, id)).get()
@@ -221,8 +249,10 @@ export function createLocalDebtorRepository(db: LocalDatabase): DebtorRepository
           })
         }
 
-        const name = payload.name !== undefined ? payload.name.trim() : row.name
-        if (name !== row.name && hasDuplicateDebtorName(tx, name, id)) {
+        // Rename-only, so the same name is a no-op update - rejected before it
+        // can dirty the record with a sync op the backend would refuse.
+        if (name === row.name) throw new InvalidPayloadError('No fields to update')
+        if (hasDuplicateDebtorName(tx, name, id)) {
           throw new AlreadyExistsError('Debtor already exists', {
             apiCode: 'DEBTOR_ALREADY_EXISTS',
           })
@@ -231,8 +261,6 @@ export function createLocalDebtorRepository(db: LocalDatabase): DebtorRepository
         const next: DebtorRow = {
           ...row,
           name,
-          // Absent note keeps the value; an empty string clears it (D3).
-          note: payload.note !== undefined ? payload.note : row.note,
           version: row.version + 1,
         }
         tx.update(debtors).set(next).where(eq(debtors.id, id)).run()
@@ -248,27 +276,9 @@ export function createLocalDebtorRepository(db: LocalDatabase): DebtorRepository
     },
 
     async remove(id: string) {
-      db.transaction((tx) => {
-        const row = tx.select().from(debtors).where(eq(debtors.id, id)).get()
-        if (!row || row.deletedAt) throw new NotFoundError('Debtor not found')
-
-        // In-use guard counts only LIVE operations: tombstoned operations
-        // never block debtor deletion (debts capability, deletion rules).
-        const referenced = tx
-          .select({ id: debtOperations.id })
-          .from(debtOperations)
-          .where(and(eq(debtOperations.debtorId, id), isNull(debtOperations.deletedAt)))
-          .get()
-        if (referenced) {
-          throw new ReferentialIntegrityError('Debtor has debt operations', {
-            apiCode: 'DEBTOR_IN_USE',
-          })
-        }
-
-        deleteWithTombstone(tx, 'debtor', row, (next) => {
-          tx.update(debtors).set(next).where(eq(debtors.id, id)).run()
-        })
-      })
+      // The debtor-in-use guard is gone: deletion cascades over the live
+      // operations (debts capability, cascade deletion rules).
+      await cascadeDeleteDebtor(db, id)
     },
   }
 }
@@ -335,7 +345,6 @@ export function createLocalDebtOperationRepository(db: LocalDatabase): DebtOpera
           direction: payload.direction,
           kind: payload.kind,
           amount: payload.amount,
-          note: payload.note ?? '',
           occurredAt: payload.occurredAt,
           version: 1,
           serverVersion: 0,
@@ -354,10 +363,7 @@ export function createLocalDebtOperationRepository(db: LocalDatabase): DebtOpera
     },
 
     async update(id: string, payload: UpdateDebtOperationPayload) {
-      const hasFields =
-        payload.amount !== undefined ||
-        payload.occurredAt !== undefined ||
-        payload.note !== undefined
+      const hasFields = payload.amount !== undefined || payload.occurredAt !== undefined
       if (!hasFields) throw new InvalidPayloadError('No fields to update')
       if (
         payload.amount !== undefined &&
@@ -381,7 +387,6 @@ export function createLocalDebtOperationRepository(db: LocalDatabase): DebtOpera
           ...row,
           amount: payload.amount ?? row.amount,
           occurredAt: payload.occurredAt ?? row.occurredAt,
-          note: payload.note !== undefined ? payload.note : row.note,
           version: row.version + 1,
         }
         tx.update(debtOperations).set(next).where(eq(debtOperations.id, id)).run()

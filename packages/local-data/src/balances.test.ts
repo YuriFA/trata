@@ -16,7 +16,6 @@ const op = (
   direction: overrides.direction ?? 'receivable',
   kind: overrides.kind ?? 'debt',
   amount: overrides.amount ?? 100_000,
-  note: '',
   occurredAt: '2026-01-02T00:00:00.000Z',
   version: 1,
 })

@@ -46,7 +46,6 @@ export function createMockDebtorRepository(initial: Debtor[] = []): MockDebtorRe
       const debtor: Debtor = {
         id: payload.id ?? `debtor-${nextId++}`,
         name: payload.name,
-        note: payload.note ?? '',
         // The local repository's default (household base is unknown here;
         // tests pass an explicit currency to exercise other currencies).
         currency: payload.currency ?? 'RUB',
@@ -62,12 +61,19 @@ export function createMockDebtorRepository(initial: Debtor[] = []): MockDebtorRe
       if (payload.version !== items[index].version) {
         throw new VersionConflictError('Debtor was modified concurrently')
       }
+      // The backend's rename rule: another live debtor may already own the
+      // name (DEBTOR_ALREADY_EXISTS).
+      if (
+        payload.name !== undefined &&
+        items.some((debtor) => debtor.id !== id && debtor.name === payload.name)
+      ) {
+        throw new AlreadyExistsError('Debtor exists', { apiCode: 'DEBTOR_ALREADY_EXISTS' })
+      }
       const { version, ...rest } = payload
       void version
       items[index] = {
         ...items[index],
         ...rest,
-        note: rest.note ?? items[index].note,
         version: items[index].version + 1,
       }
       return { ...items[index] }
@@ -141,7 +147,6 @@ export function createMockDebtOperationRepository(
       items[index] = {
         ...items[index],
         ...rest,
-        note: rest.note ?? items[index].note,
         version: items[index].version + 1,
       }
       return { ...items[index] }

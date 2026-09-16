@@ -22,7 +22,8 @@ type debtorTx interface {
 var _ debtorTx = repository.SyncTx(nil)
 
 // debtorAdapter is the debtor's half of the push engine: the live-name
-// uniqueness pre-check, the in-use delete guard, and no immutable fields.
+// uniqueness pre-check, the cascading delete (the tombstone also removes the
+// debtor's live debt operations), and no immutable fields.
 type debtorAdapter struct {
 	syncAdapterDefaults[debtorTx, *domain.Debtor, domain.DebtorFullState]
 }
@@ -97,7 +98,7 @@ func (debtorAdapter) create(
 	ctx context.Context, t debtorTx, scope domain.Scope, id uuid.UUID, data domain.DebtorFullState,
 ) (*domain.Debtor, error) {
 	return t.CreateDebtor(ctx, domain.CreateDebtorParams{
-		ID: id, HouseholdID: scope.HouseholdID, UserID: scope.ActorID, Name: data.Name, Note: data.Note,
+		ID: id, HouseholdID: scope.HouseholdID, UserID: scope.ActorID, Name: data.Name,
 		Currency: &data.Currency,
 	})
 }
@@ -115,12 +116,10 @@ func (debtorAdapter) replace(
 func (debtorAdapter) tombstone(
 	ctx context.Context, t debtorTx, scope domain.Scope, id uuid.UUID,
 ) (*domain.Debtor, error) {
+	// The cascade lives in the repository contract: TombstoneDebtor also
+	// tombstones the debtor's live debt operations (each with its change_log
+	// row) on the same batch transaction - the same behavior the REST delete
+	// runs. There is no in-use guard: a pushed debtor delete with live
+	// operations is reported as applied.
 	return t.TombstoneDebtor(ctx, scope, id)
-}
-
-// inUse runs the debtor delete rule (ADR-0005) against the batch tx.
-func (debtorAdapter) inUse(
-	ctx context.Context, t debtorTx, scope domain.Scope, id uuid.UUID,
-) error {
-	return ValidateDebtorDelete(ctx, t, scope, id)
 }

@@ -684,14 +684,15 @@ export interface paths {
         post?: never;
         /**
          * Удалить должника
-         * @description 409 если есть не удалённые (live) debt operations — tombstoned
-         *     операции удаление не блокируют. Удаление мягкое (tombstone): должник
-         *     исчезает из листингов, но сохраняется для синхронизации устройств.
+         * @description Каскадное удаление: вместе с должником удаляются все его не удалённые
+         *     (live) debt operations — одним атомарным действием. Удаление мягкое
+         *     (tombstone): записи исчезают из листингов, но сохраняются для
+         *     синхронизации устройств.
          */
         delete: operations["deleteDebtor"];
         options?: never;
         head?: never;
-        /** Обновить должника (name, note) */
+        /** Обновить должника (name) */
         patch: operations["updateDebtor"];
         trace?: never;
     };
@@ -1424,7 +1425,6 @@ export interface components {
             /** Format: uuid */
             userId: string;
             name: string;
-            note: string;
             currency: components["schemas"]["Currency"];
             /** Format: date-time */
             createdAt: string;
@@ -1448,21 +1448,17 @@ export interface components {
              */
             id?: string;
             name: string;
-            /** @default  */
-            note: string;
             currency?: components["schemas"]["Currency"];
         };
         /**
          * @description Все поля кроме `version` optional. `version` — optimistic concurrency:
          *     при параллельном изменении → 409 `DEBTOR_VERSION_CONFLICT`.
-         *     `note`: отсутствует = не менять, `""` = очистить; `null` невалиден.
          *     `currency` изменению не подлежит (попытка — invalid payload).
          */
         DebtorUpdateRequest: {
             /** Format: int */
             version: number;
             name?: string;
-            note?: string;
         };
         /**
          * @description Запись долгового леджера. `direction` = receivable («мне должны»)
@@ -1487,7 +1483,6 @@ export interface components {
              * @description Положительные минорные единицы (divisor 100).
              */
             amount: number;
-            note: string;
             /** Format: date-time */
             occurredAt: string;
             /** Format: date-time */
@@ -1518,22 +1513,18 @@ export interface components {
             kind: "debt" | "repayment";
             /** Format: int64 */
             amount: number;
-            /** @default  */
-            note: string;
             /** Format: date-time */
             occurredAt: string;
         };
         /**
          * @description Все поля кроме `version` optional. `debtorId`, `direction` и `kind`
-         *     менять нельзя. `note`: отсутствует = не менять, `""` = очистить;
-         *     `null` невалиден.
+         *     менять нельзя.
          */
         DebtOperationUpdateRequest: {
             /** Format: int */
             version: number;
             /** Format: int64 */
             amount?: number;
-            note?: string;
             /** Format: date-time */
             occurredAt?: string;
         };
@@ -1738,7 +1729,6 @@ export interface components {
         /** @description Полное состояние должника в sync-операции (upsert). */
         DebtorSyncData: {
             name: string;
-            note: string;
             currency: components["schemas"]["Currency"];
         };
         /** @description Полное состояние долговой операции в sync-операции (upsert). */
@@ -1751,7 +1741,6 @@ export interface components {
             kind: "debt" | "repayment";
             /** Format: int64 */
             amount: number;
-            note: string;
             /** Format: date-time */
             occurredAt: string;
         };
@@ -2103,21 +2092,6 @@ export interface components {
                  * @example {
                  *       "code": "DEBTOR_ALREADY_EXISTS",
                  *       "message": "debtor already exists"
-                 *     }
-                 */
-                "application/json": components["schemas"]["ErrorResponse"];
-            };
-        };
-        /** @description У должника есть не удалённые debt operations, удаление невозможно. */
-        DebtorInUse: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                /**
-                 * @example {
-                 *       "code": "DEBTOR_IN_USE",
-                 *       "message": "debtor has debt operations and cannot be deleted"
                  *     }
                  */
                 "application/json": components["schemas"]["ErrorResponse"];
@@ -3720,7 +3694,6 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["DebtorNotFound"];
-            409: components["responses"]["DebtorInUse"];
             500: components["responses"]["InternalError"];
         };
     };

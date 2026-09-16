@@ -1647,7 +1647,7 @@ paths:
     patch:
       tags: [Debtors]
       operationId: updateDebtor
-      summary: Обновить должника (name, note)
+      summary: Обновить должника (name)
       requestBody:
         required: true
         content:
@@ -1691,9 +1691,10 @@ paths:
       operationId: deleteDebtor
       summary: Удалить должника
       description: |
-        409 если есть не удалённые (live) debt operations — tombstoned
-        операции удаление не блокируют. Удаление мягкое (tombstone): должник
-        исчезает из листингов, но сохраняется для синхронизации устройств.
+        Каскадное удаление: вместе с должником удаляются все его не удалённые
+        (live) debt operations — одним атомарным действием. Удаление мягкое
+        (tombstone): записи исчезают из листингов, но сохраняются для
+        синхронизации устройств.
       responses:
         "204":
           description: Удалено.
@@ -1701,8 +1702,6 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/DebtorNotFound"
-        "409":
-          $ref: "#/components/responses/DebtorInUse"
         "500":
           $ref: "#/components/responses/InternalError"
 
@@ -2420,15 +2419,6 @@ components:
           example:
             code: DEBTOR_ALREADY_EXISTS
             message: debtor already exists
-    DebtorInUse:
-      description: У должника есть не удалённые debt operations, удаление невозможно.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-          example:
-            code: DEBTOR_IN_USE
-            message: debtor has debt operations and cannot be deleted
     DebtOperationNotFound:
       description: Долговая операция не найдена (или чужая).
       content:
@@ -3181,8 +3171,6 @@ components:
           format: uuid
         name:
           type: string
-        note:
-          type: string
         currency:
           $ref: "#/components/schemas/Currency"
         createdAt:
@@ -3195,7 +3183,7 @@ components:
           type: integer
           format: int
           description: Версия должника (optimistic concurrency).
-      required: [id, userId, name, note, currency, createdAt, updatedAt, version]
+      required: [id, userId, name, currency, createdAt, updatedAt, version]
 
     DebtorCreateRequest:
       type: object
@@ -3213,9 +3201,6 @@ components:
         name:
           type: string
           minLength: 1
-        note:
-          type: string
-          default: ""
         currency:
           $ref: "#/components/schemas/Currency"
 
@@ -3224,7 +3209,6 @@ components:
       description: |
         Все поля кроме `version` optional. `version` — optimistic concurrency:
         при параллельном изменении → 409 `DEBTOR_VERSION_CONFLICT`.
-        `note`: отсутствует = не менять, `""` = очистить; `null` невалиден.
         `currency` изменению не подлежит (попытка — invalid payload).
       properties:
         version:
@@ -3234,8 +3218,6 @@ components:
         name:
           type: string
           minLength: 1
-        note:
-          type: string
       required: [version]
 
     DebtOperation:
@@ -3267,8 +3249,6 @@ components:
           format: int64
           minimum: 1
           description: Положительные минорные единицы (divisor 100).
-        note:
-          type: string
         occurredAt:
           type: string
           format: date-time
@@ -3290,7 +3270,6 @@ components:
           direction,
           kind,
           amount,
-          note,
           occurredAt,
           createdAt,
           updatedAt,
@@ -3321,9 +3300,6 @@ components:
           type: integer
           format: int64
           minimum: 1
-        note:
-          type: string
-          default: ""
         occurredAt:
           type: string
           format: date-time
@@ -3332,8 +3308,7 @@ components:
       type: object
       description: |
         Все поля кроме `version` optional. `debtorId`, `direction` и `kind`
-        менять нельзя. `note`: отсутствует = не менять, `""` = очистить;
-        `null` невалиден.
+        менять нельзя.
       properties:
         version:
           type: integer
@@ -3343,8 +3318,6 @@ components:
           type: integer
           format: int64
           minimum: 1
-        note:
-          type: string
         occurredAt:
           type: string
           format: date-time
@@ -3627,11 +3600,9 @@ components:
       type: object
       additionalProperties: false
       description: Полное состояние должника в sync-операции (upsert).
-      required: [name, note, currency]
+      required: [name, currency]
       properties:
         name:
-          type: string
-        note:
           type: string
         currency:
           $ref: "#/components/schemas/Currency"
@@ -3640,7 +3611,7 @@ components:
       type: object
       additionalProperties: false
       description: Полное состояние долговой операции в sync-операции (upsert).
-      required: [debtorId, direction, kind, amount, note, occurredAt]
+      required: [debtorId, direction, kind, amount, occurredAt]
       properties:
         debtorId:
           type: string
@@ -3655,8 +3626,6 @@ components:
           type: integer
           format: int64
           minimum: 1
-        note:
-          type: string
         occurredAt:
           type: string
           format: date-time

@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/yurifa/trata/backend/internal/domain"
-	"github.com/yurifa/trata/backend/internal/repository"
 )
 
 // Debtor + debt operation repository mechanics against real Postgres: partial
 // live-name uniqueness, CAS update classification (tombstoned = not-found,
-// live mismatch = version conflict), the live-only in-use guard, tombstone
+// live mismatch = version conflict), the cascading delete (debtor + live
+// operations tombstoned together, one change_log row per record), tombstone
 // versioning, and the CHECK constraints on direction/kind/amount.
 
 func TestRepository_Debtors_CRUDAndGuards(t *testing.T) {
@@ -26,11 +26,10 @@ func TestRepository_Debtors_CRUDAndGuards(t *testing.T) {
 
 	created, err := testRepo.CreateDebtor(ctx, domain.CreateDebtorParams{
 		HouseholdID: userHH,
-		UserID:      user.ID, Name: "Анна", Note: "colleague",
+		UserID:      user.ID, Name: "Анна",
 	})
 	require.NoError(t, err)
 	assert.Equal(t, 1, created.Version)
-	assert.Equal(t, "colleague", created.Note)
 
 	t.Run("duplicate live name rejected", func(t *testing.T) {
 		_, err := testRepo.CreateDebtor(
@@ -62,19 +61,24 @@ func TestRepository_Debtors_CRUDAndGuards(t *testing.T) {
 			},
 		)
 		require.ErrorIs(t, err, domain.ErrDebtorNotFound)
+		require.ErrorIs(
+			t,
+			testRepo.DeleteDebtor(ctx, domain.Scope{HouseholdID: intruderHH, ActorID: intruder.ID}, created.ID),
+			domain.ErrDebtorNotFound,
+		)
 	})
 
-	t.Run("update CAS and note semantics", func(t *testing.T) {
+	t.Run("update CAS", func(t *testing.T) {
 		updated, err := testRepo.UpdateDebtor(
 			ctx,
 			domain.Scope{HouseholdID: userHH, ActorID: user.ID},
 			created.ID,
 			domain.UpdateDebtorParams{
-				Note: new(""), Version: 1,
+				Name: new("Анна П."), Version: 1,
 			},
 		)
 		require.NoError(t, err)
-		assert.Empty(t, updated.Note, "empty string clears")
+		assert.Equal(t, "Анна П.", updated.Name)
 		assert.Equal(t, 2, updated.Version)
 
 		_, err = testRepo.UpdateDebtor(
@@ -82,13 +86,13 @@ func TestRepository_Debtors_CRUDAndGuards(t *testing.T) {
 			domain.Scope{HouseholdID: userHH, ActorID: user.ID},
 			created.ID,
 			domain.UpdateDebtorParams{
-				Note: new("stale"), Version: 1,
+				Name: new("stale"), Version: 1,
 			},
 		)
 		require.ErrorIs(t, err, domain.ErrDebtorVersionConflict)
 	})
 
-	t.Run("in-use guard counts live operations only", func(t *testing.T) {
+	t.Run("delete cascades over live operations only", func(t *testing.T) {
 		op, err := testRepo.CreateDebtOperation(ctx, domain.CreateDebtOperationParams{
 			HouseholdID: userHH,
 			UserID:      user.ID, DebtorID: created.ID,
@@ -97,31 +101,21 @@ func TestRepository_Debtors_CRUDAndGuards(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		require.ErrorIs(
-			t,
-			testRepo.DeleteDebtor(ctx, domain.Scope{HouseholdID: userHH, ActorID: user.ID}, created.ID),
-			domain.ErrDebtorHasOperations,
-		)
-
-		// Tombstone the operation through the sync surface; the guard clears.
-		require.NoError(
-			t,
-			testRepo.WithinHouseholdTx(ctx, domain.Scope{HouseholdID: userHH}, func(tx repository.SyncTx) error {
-				_, err := tx.TombstoneDebtOperation(ctx, domain.Scope{HouseholdID: userHH, ActorID: user.ID}, op.ID)
-				return err
-			}),
-		)
+		// There is no in-use guard: the delete tombstones the debtor and its
+		// live operation in one transaction.
 		require.NoError(t, testRepo.DeleteDebtor(ctx, domain.Scope{HouseholdID: userHH, ActorID: user.ID}, created.ID))
 
 		// Tombstoned reads classify as not-found; updates and deletes too.
 		_, err = testRepo.GetDebtor(ctx, domain.Scope{HouseholdID: userHH}, created.ID)
 		require.ErrorIs(t, err, domain.ErrDebtorNotFound)
+		_, err = testRepo.GetDebtOperation(ctx, domain.Scope{HouseholdID: userHH}, op.ID)
+		require.ErrorIs(t, err, domain.ErrDebtOperationNotFound, "the live operation is cascaded")
 		_, err = testRepo.UpdateDebtor(
 			ctx,
 			domain.Scope{HouseholdID: userHH, ActorID: user.ID},
 			created.ID,
 			domain.UpdateDebtorParams{
-				Note: new("x"), Version: 2,
+				Name: new("x"), Version: 3,
 			},
 		)
 		require.ErrorIs(t, err, domain.ErrDebtorNotFound)
@@ -130,6 +124,27 @@ func TestRepository_Debtors_CRUDAndGuards(t *testing.T) {
 			testRepo.DeleteDebtor(ctx, domain.Scope{HouseholdID: userHH, ActorID: user.ID}, created.ID),
 			domain.ErrDebtorNotFound,
 		)
+
+		// One tombstone per cascaded record, each carrying the bumped
+		// version; no extra rows for the re-delete.
+		changes, err := testRepo.PullChanges(ctx, domain.Scope{HouseholdID: userHH}, 0, 100)
+		require.NoError(t, err)
+		var debtorTombstones, opTombstones int
+		for _, change := range changes {
+			if change.Action != domain.SyncChangeTombstone {
+				continue
+			}
+			switch {
+			case change.Entity == domain.SyncEntityDebtor && change.ID == created.ID:
+				debtorTombstones++
+				assert.Equal(t, 3, change.Version, "debtor tombstone carries the bumped version")
+			case change.Entity == domain.SyncEntityDebtOperation && change.ID == op.ID:
+				opTombstones++
+				assert.Equal(t, 2, change.Version, "operation tombstone carries the bumped version")
+			}
+		}
+		assert.Equal(t, 1, debtorTombstones)
+		assert.Equal(t, 1, opTombstones)
 
 		// The freed name can be recreated.
 		_, err = testRepo.CreateDebtor(

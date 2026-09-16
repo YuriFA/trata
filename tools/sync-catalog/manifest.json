@@ -187,7 +187,6 @@
         "rowType": "DebtorRow",
         "payloadFields": [
           "name",
-          "note",
           "currency"
         ]
       },
@@ -197,11 +196,6 @@
         "fields": [
           {
             "name": "name",
-            "kind": "string",
-            "default": ""
-          },
-          {
-            "name": "note",
             "kind": "string",
             "default": ""
           },
@@ -238,10 +232,6 @@
             "name": "name",
             "kind": "string",
             "nonEmpty": true
-          },
-          {
-            "name": "note",
-            "kind": "optionalString"
           },
           {
             "name": "currency",
@@ -278,9 +268,7 @@
       "goInvalidDataMessage": "invalid debt operation data",
       "webConflictLabelKey": "sync.conflicts.entity.debt_operation",
       "mobileConflictLabelRu": "Долговая операция",
-      "subjectFields": [
-        "note"
-      ],
+      "subjectFields": [],
       "row": {
         "table": "debtOperations",
         "rowType": "DebtOperationRow",
@@ -289,7 +277,6 @@
           "direction",
           "kind",
           "amount",
-          "note",
           "occurredAt"
         ]
       },
@@ -322,11 +309,6 @@
             "kind": "int",
             "required": true,
             "min": 1
-          },
-          {
-            "name": "note",
-            "kind": "string",
-            "default": ""
           },
           {
             "name": "occurredAt",
@@ -368,10 +350,6 @@
             "name": "occurredAt",
             "kind": "string",
             "nonEmpty": true
-          },
-          {
-            "name": "note",
-            "kind": "optionalString"
           }
         ]
       }

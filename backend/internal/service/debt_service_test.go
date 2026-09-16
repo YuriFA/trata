@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/yurifa/trata/backend/internal/domain"
-	"github.com/yurifa/trata/backend/internal/repository"
 	"github.com/yurifa/trata/backend/internal/service"
 	"github.com/yurifa/trata/backend/internal/service/fakes"
 )
@@ -45,11 +44,10 @@ func TestDebtorService_CreateAndUpdate(t *testing.T) {
 	created, err := debtorSvc.Create(
 		ctx,
 		domain.Scope{HouseholdID: userHH, ActorID: user.ID},
-		domain.CreateDebtorParams{Name: "Анна", Note: "colleague"},
+		domain.CreateDebtorParams{Name: "Анна"},
 	)
 	require.NoError(t, err)
 	assert.Equal(t, "Анна", created.Name)
-	assert.Equal(t, "colleague", created.Note)
 	assert.Equal(t, 1, created.Version)
 
 	t.Run("duplicate name rejected", func(t *testing.T) {
@@ -98,15 +96,29 @@ func TestDebtorService_CreateAndUpdate(t *testing.T) {
 		require.ErrorIs(t, err, service.ErrNoFieldsToUpdate)
 	})
 
-	t.Run("version conflict on concurrent edit", func(t *testing.T) {
+	t.Run("no-op rename rejected", func(t *testing.T) {
 		t.Parallel()
 		fresh := seedDebtor(t, debtorSvc, userHH, user.ID, "Ольга")
+		_, err := debtorSvc.Update(
+			ctx,
+			domain.Scope{HouseholdID: userHH, ActorID: user.ID},
+			fresh.ID,
+			domain.UpdateDebtorParams{
+				Name: strPtr("Ольга"), Version: fresh.Version,
+			},
+		)
+		require.ErrorIs(t, err, service.ErrNoFieldsToUpdate)
+	})
+
+	t.Run("version conflict on concurrent edit", func(t *testing.T) {
+		t.Parallel()
+		fresh := seedDebtor(t, debtorSvc, userHH, user.ID, "Игорь")
 		updated, err := debtorSvc.Update(
 			ctx,
 			domain.Scope{HouseholdID: userHH, ActorID: user.ID},
 			fresh.ID,
 			domain.UpdateDebtorParams{
-				Note: strPtr("updated"), Version: fresh.Version,
+				Name: strPtr("Игорь Р."), Version: fresh.Version,
 			},
 		)
 		require.NoError(t, err)
@@ -117,34 +129,14 @@ func TestDebtorService_CreateAndUpdate(t *testing.T) {
 			domain.Scope{HouseholdID: userHH, ActorID: user.ID},
 			fresh.ID,
 			domain.UpdateDebtorParams{
-				Note: strPtr("stale"), Version: fresh.Version,
+				Name: strPtr("Игорь С."), Version: fresh.Version,
 			},
 		)
 		require.ErrorIs(t, err, domain.ErrDebtorVersionConflict)
 	})
-
-	t.Run("empty note clears", func(t *testing.T) {
-		t.Parallel()
-		fresh, err := debtorSvc.Create(
-			ctx,
-			domain.Scope{HouseholdID: userHH, ActorID: user.ID},
-			domain.CreateDebtorParams{Name: "Игорь", Note: "keep me"},
-		)
-		require.NoError(t, err)
-		cleared, err := debtorSvc.Update(
-			ctx,
-			domain.Scope{HouseholdID: userHH, ActorID: user.ID},
-			fresh.ID,
-			domain.UpdateDebtorParams{
-				Note: strPtr(""), Version: fresh.Version,
-			},
-		)
-		require.NoError(t, err)
-		assert.Empty(t, cleared.Note)
-	})
 }
 
-func TestDebtorService_DeleteInUseCountsLiveOperationsOnly(t *testing.T) {
+func TestDebtorService_DeleteCascadesOverLiveOperations(t *testing.T) {
 	t.Parallel()
 	debtorSvc, opSvc, store := debtServices(t)
 	ctx := context.Background()
@@ -152,35 +144,57 @@ func TestDebtorService_DeleteInUseCountsLiveOperationsOnly(t *testing.T) {
 	user := seedFakeUser(t, store)
 	userHH := householdOf(t, store, user.ID)
 	debtor := seedDebtor(t, debtorSvc, userHH, user.ID, "Анна")
-
-	op, err := opSvc.Create(ctx, domain.Scope{HouseholdID: userHH, ActorID: user.ID}, domain.CreateDebtOperationParams{
-		DebtorID: debtor.ID, Direction: domain.DebtDirectionReceivable,
-		Kind: domain.DebtOperationKindDebt, Amount: 500000, OccurredAt: time.Now().UTC(),
+	other := seedDebtor(t, debtorSvc, userHH, user.ID, "Михаил")
+	otherOp, err := opSvc.Create(ctx, domain.Scope{HouseholdID: userHH, ActorID: user.ID}, domain.CreateDebtOperationParams{
+		DebtorID: other.ID, Direction: domain.DebtDirectionReceivable,
+		Kind: domain.DebtOperationKindDebt, Amount: 1000, OccurredAt: time.Now().UTC(),
 	})
 	require.NoError(t, err)
 
-	// A live operation blocks deletion.
-	require.ErrorIs(
-		t,
-		debtorSvc.Delete(ctx, domain.Scope{HouseholdID: userHH, ActorID: user.ID}, debtor.ID),
-		domain.ErrDebtorHasOperations,
-	)
+	// Two live operations on the debtor (a delete must not require an empty
+	// ledger) and one operation tombstoned beforehand.
+	var liveOps []*domain.DebtOperation
+	for _, amount := range []int64{500000, 250000} {
+		op, err := opSvc.Create(ctx, domain.Scope{HouseholdID: userHH, ActorID: user.ID}, domain.CreateDebtOperationParams{
+			DebtorID: debtor.ID, Direction: domain.DebtDirectionReceivable,
+			Kind: domain.DebtOperationKindDebt, Amount: amount, OccurredAt: time.Now().UTC(),
+		})
+		require.NoError(t, err)
+		liveOps = append(liveOps, op)
+	}
+	deadOp := liveOps[0]
+	require.NoError(t, opSvc.Delete(ctx, domain.Scope{HouseholdID: userHH, ActorID: user.ID}, deadOp.ID))
 
-	// Tombstone the operation via the sync surface (delete-wins path).
-	require.NoError(
-		t,
-		store.WithinHouseholdTx(ctx, domain.Scope{HouseholdID: userHH}, func(tx repository.SyncTx) error {
-			_, err := tx.TombstoneDebtOperation(ctx, domain.Scope{HouseholdID: userHH, ActorID: user.ID}, op.ID)
-			return err
-		}),
-	)
-
-	// Only tombstoned operations remain: the debtor is deletable.
+	// There is no in-use guard: the delete cascades over the LIVE operations.
 	require.NoError(t, debtorSvc.Delete(ctx, domain.Scope{HouseholdID: userHH, ActorID: user.ID}, debtor.ID))
 
-	// The deleted debtor is gone; the name is reusable.
+	// The debtor and its live operations are gone.
 	_, err = debtorSvc.Get(ctx, domain.Scope{HouseholdID: userHH}, debtor.ID)
 	require.ErrorIs(t, err, domain.ErrDebtorNotFound)
+	for _, op := range liveOps[1:] {
+		_, err := opSvc.Get(ctx, domain.Scope{HouseholdID: userHH}, op.ID)
+		require.ErrorIs(t, err, domain.ErrDebtOperationNotFound, "live operation must be cascaded")
+	}
+
+	// The change log carries the expected tombstones: the debtor and the
+	// one live operation (the cascade), plus deadOp's own pre-delete. Each
+	// carries the record's bumped version, and nothing is re-tombstoned.
+	changes, err := store.PullChanges(ctx, domain.Scope{HouseholdID: userHH}, 0, 100)
+	require.NoError(t, err)
+	tombstones := map[uuid.UUID]int{}
+	for _, c := range changes {
+		if c.Action == domain.SyncChangeTombstone {
+			tombstones[c.ID]++
+			assert.Equalf(t, 2, c.Version, "tombstone of %s carries the bumped version", c.ID)
+		}
+	}
+	assert.Len(t, tombstones, 3)
+	assert.Equal(t, 1, tombstones[debtor.ID])
+	assert.Equal(t, 1, tombstones[liveOps[1].ID])
+	assert.Equal(t, 1, tombstones[deadOp.ID], "only its own pre-delete tombstone - the cascade skips dead operations")
+	assert.NotContains(t, tombstones, other.ID, "another debtor is untouched")
+	assert.NotContains(t, tombstones, otherOp.ID, "another debtor's operation is untouched")
+	// The freed name can be recreated.
 	_, err = debtorSvc.Create(
 		ctx,
 		domain.Scope{HouseholdID: userHH, ActorID: user.ID},

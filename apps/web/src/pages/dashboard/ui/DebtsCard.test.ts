@@ -16,15 +16,14 @@ function operation(overrides: Partial<DebtOperation>): DebtOperation {
     kind: 'debt',
     amount: 1000,
     occurredAt: '2026-08-01T12:00:00Z',
-    note: '',
     version: 1,
     ...overrides,
   } as DebtOperation
 }
 
 const debtors: Debtor[] = [
-  { id: 'd1', name: 'Анна Петровна', note: '', currency: 'RUB', version: 1 },
-  { id: 'd2', name: 'Пётр', note: '', currency: 'RUB', version: 1 },
+  { id: 'd1', name: 'Анна Петровна', currency: 'RUB', version: 1 },
+  { id: 'd2', name: 'Пётр', currency: 'RUB', version: 1 },
 ]
 
 function mountCard(operations: DebtOperation[]) {

@@ -11,7 +11,6 @@ export interface OperationFormValues {
   kind: 'debt' | 'repayment'
   amount: number
   occurredAt: string
-  note: string
 }
 
 export interface DebtorDebtFormValues {
@@ -20,12 +19,10 @@ export interface DebtorDebtFormValues {
   currency: CurrencyCode
   amount: number
   occurredAt: string
-  note: string
 }
 
-export interface DebtorFormValues {
+export interface RenameDebtorFormValues {
   name: string
-  note: string
 }
 
 export const createOperationSchema = () => {
@@ -36,7 +33,6 @@ export const createOperationSchema = () => {
       .number({ error: t('validation.enter', { field: t('fields.amount') }) })
       .positive(t('validation.mustBePositive', { field: t('fields.amount') })),
     occurredAt: z.string().min(1, t('validation.select', { field: t('fields.date') })),
-    note: z.string(),
   })
 }
 
@@ -57,17 +53,15 @@ export const createDebtorDebtSchema = () => {
       .number({ error: t('validation.enter', { field: t('fields.amount') }) })
       .positive(t('validation.mustBePositive', { field: t('fields.amount') })),
     occurredAt: z.string().min(1, t('validation.select', { field: t('fields.date') })),
-    note: z.string(),
   })
 }
 
-export const createDebtorSchema = () => {
+export const createRenameDebtorSchema = () => {
   const { t } = i18n.global
   return z.object({
     name: z
       .string()
       .trim()
       .min(1, t('validation.enter', { field: t('fields.name') })),
-    note: z.string(),
   })
 }

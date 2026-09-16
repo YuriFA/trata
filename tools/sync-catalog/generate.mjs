@@ -337,7 +337,9 @@ function renderLocalDataTs() {
       const declarations = entity.subjectFields
         .map((field) => `const ${field} = typeof source?.${field} === 'string' ? source.${field} : ''`)
         .join('\n      ')
-      return `    case '${entity.id}': {\n      ${declarations}\n      return ${entity.subjectFields.join(' || ')}\n    }`
+      // No subject fields (e.g. debt operations lost their note) render as
+      // an empty subject: the conflict UI falls back to the entity label.
+      return `    case '${entity.id}': {\n      ${declarations}\n      return ${entity.subjectFields.join(' || ') || "''"}\n    }`
     })
     .join('\n')
 

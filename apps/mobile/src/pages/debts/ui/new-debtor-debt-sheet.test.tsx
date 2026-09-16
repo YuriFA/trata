@@ -29,7 +29,7 @@ jest.mock('@/entities/household', () => ({
   useHousehold: () => ({ data: undefined }),
 }))
 
-const ANNA: Debtor = { id: 'debtor-anna', name: 'Анна', note: '', currency: 'RUB', version: 1 }
+const ANNA: Debtor = { id: 'debtor-anna', name: 'Анна', currency: 'RUB', version: 1 }
 
 function renderForm(direction: DebtDirection = 'receivable', { debtors = [] as Debtor[] } = {}) {
   const debtorRepository = createMockDebtorRepository(debtors)
@@ -98,8 +98,6 @@ describe('NewDebtorDebtForm', () => {
   it('creates the contact and their initial debt in one submit', async () => {
     const { debtorRepository, debtOperationRepository } = renderForm('payable')
 
-    fireEvent.press(screen.getByTestId('debts-new-debt-note-button'))
-    fireEvent.changeText(screen.getByTestId('debts-new-debt-note-input'), 'за обед')
     fillValidForm()
 
     await waitFor(() => expect(screen.getByTestId('debts-new-debt-submit')).toBeEnabled())
@@ -113,7 +111,6 @@ describe('NewDebtorDebtForm', () => {
       direction: 'payable',
       kind: 'debt',
       amount: 250_000,
-      note: 'за обед',
     })
   })
 

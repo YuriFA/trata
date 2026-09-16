@@ -150,7 +150,8 @@ type TransactionRepository interface {
 }
 
 // DebtorRepository owns household debtors. Balances are derived (never
-// stored); delete is guarded by the live-operations in-use check.
+// stored); DeleteDebtor cascades - the debtor and its live debt operations
+// are tombstoned together.
 type DebtorRepository interface {
 	CreateDebtor(ctx context.Context, params domain.CreateDebtorParams) (*domain.Debtor, error)
 	UpdateDebtor(
@@ -370,8 +371,10 @@ type TransactionSyncTx interface {
 }
 
 // DebtorSyncTx is the debtor's push contract: the tombstone-inclusive read,
-// the create/replace/tombstone writes, the live-name uniqueness pre-check,
-// the live-existence reference read, and the delete in-use guard.
+// the create/replace/tombstone writes, and the live-name uniqueness
+// pre-check. TombstoneDebtor cascades: it also tombstones every live debt
+// operation of the debtor (each with its change_log row), the same cascade
+// the REST delete runs.
 type DebtorSyncTx interface {
 	// Read including tombstones (nil, nil when the id was never created).
 	GetDebtorAny(ctx context.Context, scope domain.Scope, id uuid.UUID) (*domain.Debtor, error)
@@ -384,12 +387,6 @@ type DebtorSyncTx interface {
 		scope domain.Scope,
 		name string,
 		exceptID uuid.UUID,
-	) (bool, error)
-	// In-use guard for deletes.
-	HasLiveDebtOperationsForDebtor(
-		ctx context.Context,
-		scope domain.Scope,
-		debtorID uuid.UUID,
 	) (bool, error)
 	// Writes; each appends its change_log row on the same transaction. The
 	// Replace/Tombstone methods enforce the CAS/liveness invariants and return

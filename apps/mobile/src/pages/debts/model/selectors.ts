@@ -73,7 +73,6 @@ interface DebtHistoryRowView {
   kind: DebtOperationKind
   /** Signed display text: debt grows («+»), repayment shrinks («−»). */
   amountText: string
-  note: string
   /**
    * Compact authorship marker (household-ux 2.4); null renders nothing
    * (own/unknown author, single-member household).
@@ -120,7 +119,6 @@ export function debtorHistoryGroups(
       id: op.id,
       kind: op.kind,
       amountText: `${op.kind === 'debt' ? '+' : '−'}\u00A0${formatAmount(op.amount, currency)}`,
-      note: op.note,
       authorLabel: author ? authorLabel(op.authorId, author.members, author.currentUserId) : null,
     }
     const current = groups[groups.length - 1]

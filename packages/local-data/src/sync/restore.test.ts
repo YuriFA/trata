@@ -119,7 +119,6 @@ async function seedDebtor(name = 'Иван') {
     id,
     userId: null,
     name,
-    note: '',
     version: 1,
     serverVersion: 1,
     deletedAt: null,
@@ -237,7 +236,7 @@ describe('restoreConflictAsNew - happy path', () => {
         kind: 'deleted',
         baseVersion: 1,
         serverVersion: 2,
-        localState: { id: oldId, name: 'Анна', note: 'colleague', currency: 'RUB' },
+        localState: { id: oldId, name: 'Анна', currency: 'RUB' },
         serverState: { version: 2, deleted: true },
       }),
     )
@@ -250,7 +249,6 @@ describe('restoreConflictAsNew - happy path', () => {
     const rows = db.select().from(debtors).all()
     expect(rows).toHaveLength(1)
     expect(rows[0]?.name).toBe('Анна')
-    expect(rows[0]?.note).toBe('colleague')
     expect(listUnresolvedConflicts(db)).toHaveLength(0)
   })
 
@@ -271,7 +269,6 @@ describe('restoreConflictAsNew - happy path', () => {
           direction: 'receivable',
           kind: 'debt',
           amount: 10000,
-          note: '',
           occurredAt: '2026-01-01T00:00:00.000Z',
         },
         serverState: { version: 2, deleted: true },

@@ -90,7 +90,6 @@ function toCreatePayload(
     // The schema's refine guarantees parseability; the fallback only
     // satisfies the parser's `number | null` return type.
     amount: parseMajorUnitsToMinor(values.amount) ?? 0,
-    note: values.note.trim(),
     occurredAt: values.occurredAt,
   }
 }

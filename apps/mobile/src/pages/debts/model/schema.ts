@@ -1,7 +1,7 @@
 // Zod schemas for the debts page forms (conventions forms.md §1): the amount
 // stays a digit string; the schema only checks parseability to positive minor
 // units - conversion happens once in the values→payload mappers (forms.md §4).
-
+// Debtors and debt operations carry no note (simplify-debt-domain).
 import { z } from 'zod'
 import { nowIso } from '@trata/dates'
 import { parseMajorUnitsToMinor } from '@/shared/lib/money/parse'
@@ -20,7 +20,6 @@ export const operationSchema = z.object({
   debtorId: z.string().min(1, 'Выберите должника'),
   amount: amountField,
   occurredAt: z.string().min(1, 'Выберите дату'),
-  note: z.string(),
 })
 
 export type OperationFormValues = z.infer<typeof operationSchema>
@@ -34,14 +33,13 @@ export function operationDefaultValues(
     debtorId: '',
     amount: '',
     occurredAt: nowIso(),
-    note: '',
     ...overrides,
   }
 }
 
+/** The debtor is rename-only (simplify-debt-domain): a non-empty name is all. */
 export const debtorSchema = z.object({
   name: z.string().trim().min(1, 'Введите имя'),
-  note: z.string(),
 })
 
 export type DebtorFormValues = z.infer<typeof debtorSchema>
@@ -53,7 +51,6 @@ export const debtorDebtSchema = z.object({
   name: z.string().trim().min(1, 'Введите имя'),
   amount: amountField,
   occurredAt: z.string().min(1, 'Выберите дату'),
-  note: z.string(),
 })
 
 export type DebtorDebtFormValues = z.infer<typeof debtorDebtSchema>
@@ -65,7 +62,6 @@ export function debtorDebtDefaultValues(
     name: '',
     amount: '',
     occurredAt: nowIso(),
-    note: '',
     ...overrides,
   }
 }

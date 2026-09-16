@@ -34,7 +34,6 @@ func (r *Repository) CreateDebtOperation(
 			Direction:   string(params.Direction),
 			Kind:        string(params.Kind),
 			Amount:      params.Amount,
-			Note:        params.Note,
 			OccurredAt:  params.OccurredAt,
 		})
 		if err != nil {
@@ -59,7 +58,7 @@ func (r *Repository) CreateDebtOperation(
 	}
 	return debtOperationFromFields(
 		row.ID, row.UserID, row.DebtorID, row.Direction, row.Kind,
-		row.Amount, row.Note, row.OccurredAt, row.CreatedAt, row.UpdatedAt, int(row.Version),
+		row.Amount, row.OccurredAt, row.CreatedAt, row.UpdatedAt, int(row.Version),
 	), nil
 }
 
@@ -78,7 +77,6 @@ func (r *Repository) UpdateDebtOperation(
 			ID:          id,
 			HouseholdID: householdID,
 			Amount:      params.Amount,
-			Note:        params.Note,
 			OccurredAt:  params.OccurredAt,
 			Version:     int32(params.Version), //nolint:gosec // optimistic version is a small positive int
 		})
@@ -104,7 +102,7 @@ func (r *Repository) UpdateDebtOperation(
 	}
 	return debtOperationFromFields(
 		row.ID, row.UserID, row.DebtorID, row.Direction, row.Kind,
-		row.Amount, row.Note, row.OccurredAt, row.CreatedAt, row.UpdatedAt, int(row.Version),
+		row.Amount, row.OccurredAt, row.CreatedAt, row.UpdatedAt, int(row.Version),
 	), nil
 }
 
@@ -161,7 +159,7 @@ func (r *Repository) GetDebtOperation(
 	}
 	return debtOperationFromFields(
 		row.ID, row.UserID, row.DebtorID, row.Direction, row.Kind,
-		row.Amount, row.Note, row.OccurredAt, row.CreatedAt, row.UpdatedAt, int(row.Version),
+		row.Amount, row.OccurredAt, row.CreatedAt, row.UpdatedAt, int(row.Version),
 	), nil
 }
 
@@ -186,7 +184,7 @@ func (r *Repository) GetDebtOperations(
 			out,
 			*debtOperationFromFields(
 				row.ID, row.UserID, row.DebtorID, row.Direction, row.Kind,
-				row.Amount, row.Note, row.OccurredAt, row.CreatedAt, row.UpdatedAt, int(row.Version),
+				row.Amount, row.OccurredAt, row.CreatedAt, row.UpdatedAt, int(row.Version),
 			),
 		)
 	}
@@ -200,7 +198,6 @@ func debtOperationFromFields(
 	id, userID, debtorID uuid.UUID,
 	direction, kind string,
 	amount int64,
-	note string,
 	occurredAt, createdAt, updatedAt time.Time,
 	version int,
 ) *domain.DebtOperation {
@@ -211,7 +208,6 @@ func debtOperationFromFields(
 		Direction:  domain.DebtDirection(direction),
 		Kind:       domain.DebtOperationKind(kind),
 		Amount:     amount,
-		Note:       note,
 		OccurredAt: occurredAt,
 		CreatedAt:  createdAt,
 		UpdatedAt:  updatedAt,

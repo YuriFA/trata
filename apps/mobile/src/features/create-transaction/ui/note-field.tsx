@@ -14,7 +14,7 @@ import { BottomSheetInput } from '@/shared/ui/bottom-sheet'
  * button subscribes to the note text on its own - the toolbar around it never
  * re-renders for a keystroke.
  */
-export function NoteButton({
+function NoteButton({
   open,
   hasNote,
   onToggle,

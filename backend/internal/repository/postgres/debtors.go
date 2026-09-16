@@ -12,10 +12,11 @@ import (
 
 // Every mutation runs inside withinLockedTx: entity write + change_log append
 // commit atomically, and the per-household advisory lock keeps change_log seq
-// order equal to commit order. Deletes are tombstones guarded by the
-// live-operations in-use check; live-name uniqueness is enforced by the
-// per-household partial unique index. householdID scopes every query; actorID
-// is the acting member whose id lands on the change_log row as authorship.
+// order equal to commit order. Deletes are cascading tombstones: the debtor
+// and every live debt operation are tombstoned together (each with its own
+// change_log row); live-name uniqueness is enforced by the per-household
+// partial unique index. householdID scopes every query; actorID is the acting
+// member whose id lands on the change_log row as authorship.
 
 func (r *Repository) CreateDebtor(
 	ctx context.Context,
@@ -32,7 +33,6 @@ func (r *Repository) CreateDebtor(
 			HouseholdID: params.HouseholdID,
 			UserID:      params.UserID,
 			Name:        params.Name,
-			Note:        params.Note,
 			Currency:    params.Currency,
 		})
 		if err != nil {
@@ -61,7 +61,6 @@ func (r *Repository) CreateDebtor(
 		row.ID,
 		row.UserID,
 		row.Name,
-		row.Note,
 		row.Currency,
 		row.CreatedAt,
 		row.UpdatedAt,
@@ -84,7 +83,6 @@ func (r *Repository) UpdateDebtor(
 			ID:          id,
 			HouseholdID: householdID,
 			Name:        params.Name,
-			Note:        params.Note,
 			Version:     int32(params.Version), //nolint:gosec // optimistic version is a small positive int
 		})
 		if err != nil {
@@ -114,7 +112,6 @@ func (r *Repository) UpdateDebtor(
 		row.ID,
 		row.UserID,
 		row.Name,
-		row.Note,
 		row.Currency,
 		row.CreatedAt,
 		row.UpdatedAt,
@@ -126,45 +123,72 @@ func (r *Repository) DeleteDebtor(ctx context.Context, scope domain.Scope, id uu
 	householdID, actorID := scope.HouseholdID, scope.ActorID
 	const op = "repository.postgres.DeleteDebtor"
 
-	// Same rule as service.ValidateDebtorDelete (ADR-0005), enforced here
-	// inside the transaction for REST atomicity.
-
+	// A debt is its ledger and its name: deleting the debtor tombstones its
+	// live operations in the same transaction (no in-use guard).
 	err := r.withinLockedTx(ctx, householdID, func(q *db.Queries) error {
-		inUse, err := q.HasLiveDebtOperationsForDebtor(ctx, db.HasLiveDebtOperationsForDebtorParams{
-			HouseholdID: householdID,
-			DebtorID:    id,
-		})
-		if err != nil {
-			return err
-		}
-		if inUse {
-			return domain.ErrDebtorHasOperations
-		}
-		version, err := q.SoftDeleteDebtor(
-			ctx,
-			db.SoftDeleteDebtorParams{ID: id, HouseholdID: householdID},
-		)
-		if err != nil {
-			if errNoRows(err) {
-				return classifyDebtorWrite(ctx, q, householdID, id)
-			}
-			return err
-		}
-		return appendChangeLog(
-			ctx,
-			q,
-			householdID,
-			actorID,
-			id,
-			domain.SyncEntityDebtor,
-			domain.SyncChangeTombstone,
-			int(version),
-		)
+		_, err := cascadeDeleteDebtor(ctx, q, householdID, actorID, id)
+		return err
 	})
 	if err != nil {
 		return opWrap(op, err)
 	}
 	return nil
+}
+
+// cascadeDeleteDebtor tombstones the debtor together with every live debt
+// operation on the caller's transaction: the debtor row is locked FOR UPDATE,
+// each live operation is tombstoned (deleted_at = now(), version = version +
+// 1) with its own change_log row, then the debtor follows; every change-log
+// tombstone carries the record's new version (change-log atomicity
+// invariant). Never-existed and already-tombstoned debtors both read as
+// not-found. Returns the debtor's new (post-tombstone) version. Shared
+// verbatim by the REST delete and the sync batch tombstone.
+func cascadeDeleteDebtor(
+	ctx context.Context,
+	q *db.Queries,
+	householdID, actorID, id uuid.UUID,
+) (int, error) {
+	deletedAt, err := q.LockDebtorForDelete(
+		ctx, db.LockDebtorForDeleteParams{ID: id, HouseholdID: householdID},
+	)
+	if err != nil {
+		if errNoRows(err) {
+			return 0, domain.ErrDebtorNotFound
+		}
+		return 0, err
+	}
+	if deletedAt != nil {
+		return 0, domain.ErrDebtorNotFound
+	}
+	operations, err := q.SoftDeleteDebtOperationsForDebtor(
+		ctx,
+		db.SoftDeleteDebtOperationsForDebtorParams{HouseholdID: householdID, DebtorID: id},
+	)
+	if err != nil {
+		return 0, err
+	}
+	for _, operation := range operations {
+		if err := appendChangeLog(
+			ctx, q, householdID, actorID, operation.ID,
+			domain.SyncEntityDebtOperation, domain.SyncChangeTombstone, int(operation.Version),
+		); err != nil {
+			return 0, err
+		}
+	}
+	version, err := q.SoftDeleteDebtor(
+		ctx,
+		db.SoftDeleteDebtorParams{ID: id, HouseholdID: householdID},
+	)
+	if err != nil {
+		return 0, err
+	}
+	if err := appendChangeLog(
+		ctx, q, householdID, actorID, id,
+		domain.SyncEntityDebtor, domain.SyncChangeTombstone, int(version),
+	); err != nil {
+		return 0, err
+	}
+	return int(version), nil
 }
 
 // classifyDebtorWrite distinguishes the zero-row outcomes of a CAS write for
@@ -197,7 +221,6 @@ func (r *Repository) GetDebtor(
 		row.ID,
 		row.UserID,
 		row.Name,
-		row.Note,
 		row.Currency,
 		row.CreatedAt,
 		row.UpdatedAt,
@@ -217,7 +240,7 @@ func (r *Repository) GetDebtors(ctx context.Context, scope domain.Scope) ([]doma
 	for _, row := range rows {
 		out = append(
 			out,
-			*debtorFromFields(row.ID, row.UserID, row.Name, row.Note, row.Currency, row.CreatedAt, row.UpdatedAt, int(row.Version)),
+			*debtorFromFields(row.ID, row.UserID, row.Name, row.Currency, row.CreatedAt, row.UpdatedAt, int(row.Version)),
 		)
 	}
 	return out, nil
@@ -228,7 +251,7 @@ func (r *Repository) GetDebtors(ctx context.Context, scope domain.Scope) ([]doma
 // centralized here.
 func debtorFromFields(
 	id, userID uuid.UUID,
-	name, note, currency string,
+	name, currency string,
 	createdAt, updatedAt time.Time,
 	version int,
 ) *domain.Debtor {
@@ -236,7 +259,6 @@ func debtorFromFields(
 		ID:        id,
 		UserID:    userID,
 		Name:      name,
-		Note:      note,
 		Currency:  currency,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,

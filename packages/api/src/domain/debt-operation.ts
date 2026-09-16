@@ -10,8 +10,6 @@ export interface DebtOperation {
   kind: DebtOperationKind
   /** Positive minor units (divisor 100). */
   amount: number
-  /** Optional free-form note; always a string on the wire (never null). */
-  note: string
   occurredAt: string
   /** Optimistic-concurrency revision (bumped on every server update). */
   version: number

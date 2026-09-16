@@ -2,10 +2,10 @@
 // dual-total summary («Мне должны» / «Я должен», no period navigation), two
 // direction sections of debtor rows that always render (empty hints + the
 // per-section «+» opening the combined contact+debt sheet, design D9),
-// settled debtors behind reveal rows, and the sheet flows - debtor history,
-// fixed-context new/edit operation, edit debtor. A stack destination without
-// the tab bar, so the collapsible ScreenHeader carries the title and back
-// affordance.
+// settled debtors behind reveal rows, and the sheet flows - debtor history
+// (with its header rename + delete), fixed-context new/edit operation, and
+// the rename-only debtor sheet. A stack destination without the tab bar, so
+// the collapsible ScreenHeader carries the title and back affordance.
 //
 // Performance invariant (design D7): the whole overview derives from ONE
 // `useDebtOperations()` read - every figure is an in-memory selector; the
@@ -25,8 +25,8 @@ import { ScreenHeader, ScreenScrollView } from '@/shared/ui/screen-header'
 import type { BottomSheetRef } from '@/shared/ui/bottom-sheet'
 import { DEBTS_COPY } from '../model/kind'
 import { debtorSection } from '../model/selectors'
-import { DebtorFormSheet } from './debtor-form-sheet'
 import { DebtorHistorySheet } from './debtor-history-sheet'
+import { DebtorRenameSheet } from './debtor-rename-sheet'
 import { DebtorSection } from './debtor-section'
 import { DebtsSummaryCard } from './debts-summary-card'
 import { NewDebtorDebtSheet } from './new-debtor-debt-sheet'
@@ -55,8 +55,8 @@ export function DebtsScreen() {
   const [newDebtContext, setNewDebtContext] = useState<
     { direction: DebtDirection; session: number } | undefined
   >(undefined)
-  const editDebtorRef = useRef<BottomSheetRef>(null)
-  const [editingDebtor, setEditingDebtor] = useState<Debtor | undefined>(undefined)
+  const renameDebtorRef = useRef<BottomSheetRef>(null)
+  const [renamingDebtor, setRenamingDebtor] = useState<Debtor | undefined>(undefined)
   const newOperationRef = useRef<BottomSheetRef>(null)
   const [newOperationFixed, setNewOperationFixed] = useState<{
     debtorId: string
@@ -111,9 +111,9 @@ export function DebtsScreen() {
     setEditingOperation(operation)
     editOperationRef.current?.present()
   }
-  const openEditDebtor = (debtor: Debtor) => {
-    setEditingDebtor(debtor)
-    editDebtorRef.current?.present()
+  const openRenameDebtor = (debtor: Debtor) => {
+    setRenamingDebtor(debtor)
+    renameDebtorRef.current?.present()
   }
 
   return (
@@ -149,13 +149,13 @@ export function DebtsScreen() {
         operations={operations}
         author={author}
         onEditOperation={openEditOperation}
-        onEditDebtor={openEditDebtor}
+        onRenameDebtor={openRenameDebtor}
         onNewOperation={openNewOperation}
       />
       {newDebtContext ? (
         <NewDebtorDebtSheet key={newDebtContext.session} direction={newDebtContext.direction} />
       ) : null}
-      {editingDebtor ? <DebtorFormSheet ref={editDebtorRef} debtor={editingDebtor} /> : null}
+      {renamingDebtor ? <DebtorRenameSheet ref={renameDebtorRef} debtor={renamingDebtor} /> : null}
       <OperationSheet ref={newOperationRef} fixed={newOperationFixed} />
       {editingOperation ? (
         <OperationSheet ref={editOperationRef} operation={editingOperation} />

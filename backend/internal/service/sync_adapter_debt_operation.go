@@ -109,7 +109,7 @@ func (debtOperationAdapter) create(
 	return t.CreateDebtOperation(ctx, domain.CreateDebtOperationParams{
 		ID: id, HouseholdID: scope.HouseholdID, UserID: scope.ActorID,
 		DebtorID: data.DebtorID, Direction: data.Direction, Kind: data.Kind,
-		Amount: data.Amount, Note: data.Note, OccurredAt: data.OccurredAt,
+		Amount: data.Amount, OccurredAt: data.OccurredAt,
 	})
 }
 

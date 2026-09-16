@@ -14,12 +14,12 @@ import (
 
 const createDebtor = `-- name: CreateDebtor :one
 
-INSERT INTO debtors (id, household_id, user_id, name, note, currency)
+INSERT INTO debtors (id, household_id, user_id, name, currency)
 VALUES (
-    $1, $2, $3, $4, $5,
-    COALESCE($6::text, (SELECT currency FROM households WHERE id = $2))
+    $1, $2, $3, $4,
+    COALESCE($5::text, (SELECT currency FROM households WHERE id = $2))
 )
-RETURNING id, user_id, name, note, currency, created_at, updated_at, version
+RETURNING id, user_id, name, currency, created_at, updated_at, version
 `
 
 type CreateDebtorParams struct {
@@ -27,7 +27,6 @@ type CreateDebtorParams struct {
 	HouseholdID uuid.UUID
 	UserID      uuid.UUID
 	Name        string
-	Note        string
 	Currency    *string
 }
 
@@ -35,7 +34,6 @@ type CreateDebtorRow struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID
 	Name      string
-	Note      string
 	Currency  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -54,7 +52,6 @@ func (q *Queries) CreateDebtor(ctx context.Context, arg CreateDebtorParams) (Cre
 		arg.HouseholdID,
 		arg.UserID,
 		arg.Name,
-		arg.Note,
 		arg.Currency,
 	)
 	var i CreateDebtorRow
@@ -62,7 +59,6 @@ func (q *Queries) CreateDebtor(ctx context.Context, arg CreateDebtorParams) (Cre
 		&i.ID,
 		&i.UserID,
 		&i.Name,
-		&i.Note,
 		&i.Currency,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -96,7 +92,7 @@ func (q *Queries) DebtorNameTaken(ctx context.Context, arg DebtorNameTakenParams
 }
 
 const getDebtor = `-- name: GetDebtor :one
-SELECT id, user_id, name, note, currency, created_at, updated_at, version
+SELECT id, user_id, name, currency, created_at, updated_at, version
 FROM debtors
 WHERE id = $1 AND household_id = $2 AND deleted_at IS NULL
 `
@@ -110,7 +106,6 @@ type GetDebtorRow struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID
 	Name      string
-	Note      string
 	Currency  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -124,7 +119,6 @@ func (q *Queries) GetDebtor(ctx context.Context, arg GetDebtorParams) (GetDebtor
 		&i.ID,
 		&i.UserID,
 		&i.Name,
-		&i.Note,
 		&i.Currency,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -134,7 +128,7 @@ func (q *Queries) GetDebtor(ctx context.Context, arg GetDebtorParams) (GetDebtor
 }
 
 const getDebtorAny = `-- name: GetDebtorAny :one
-SELECT id, user_id, name, note, currency, created_at, updated_at, version, deleted_at
+SELECT id, user_id, name, currency, created_at, updated_at, version, deleted_at
 FROM debtors
 WHERE id = $1 AND household_id = $2
 `
@@ -148,7 +142,6 @@ type GetDebtorAnyRow struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID
 	Name      string
-	Note      string
 	Currency  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -164,7 +157,6 @@ func (q *Queries) GetDebtorAny(ctx context.Context, arg GetDebtorAnyParams) (Get
 		&i.ID,
 		&i.UserID,
 		&i.Name,
-		&i.Note,
 		&i.Currency,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -175,7 +167,7 @@ func (q *Queries) GetDebtorAny(ctx context.Context, arg GetDebtorAnyParams) (Get
 }
 
 const getDebtors = `-- name: GetDebtors :many
-SELECT id, user_id, name, note, currency, created_at, updated_at, version
+SELECT id, user_id, name, currency, created_at, updated_at, version
 FROM debtors
 WHERE household_id = $1 AND deleted_at IS NULL
 ORDER BY created_at, id
@@ -185,7 +177,6 @@ type GetDebtorsRow struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID
 	Name      string
-	Note      string
 	Currency  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -205,7 +196,6 @@ func (q *Queries) GetDebtors(ctx context.Context, householdID uuid.UUID) ([]GetD
 			&i.ID,
 			&i.UserID,
 			&i.Name,
-			&i.Note,
 			&i.Currency,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -221,26 +211,27 @@ func (q *Queries) GetDebtors(ctx context.Context, householdID uuid.UUID) ([]GetD
 	return items, nil
 }
 
-const hasLiveDebtOperationsForDebtor = `-- name: HasLiveDebtOperationsForDebtor :one
-SELECT EXISTS(
-    SELECT 1
-    FROM debt_operations
-    WHERE household_id = $1 AND deleted_at IS NULL AND debtor_id = $2
-) AS in_use
+const lockDebtorForDelete = `-- name: LockDebtorForDelete :one
+SELECT deleted_at
+FROM debtors
+WHERE id = $1 AND household_id = $2
+FOR UPDATE
 `
 
-type HasLiveDebtOperationsForDebtorParams struct {
+type LockDebtorForDeleteParams struct {
+	ID          uuid.UUID
 	HouseholdID uuid.UUID
-	DebtorID    uuid.UUID
 }
 
-// In-use guard counts LIVE operations only: tombstoned operations never
-// block debtor deletion.
-func (q *Queries) HasLiveDebtOperationsForDebtor(ctx context.Context, arg HasLiveDebtOperationsForDebtorParams) (bool, error) {
-	row := q.db.QueryRow(ctx, hasLiveDebtOperationsForDebtor, arg.HouseholdID, arg.DebtorID)
-	var in_use bool
-	err := row.Scan(&in_use)
-	return in_use, err
+// Row lock for the cascade delete: FOR UPDATE pins the debtor row against
+// concurrent mutations for the rest of the transaction, and the deleted_at
+// read classifies a tombstone (deleted = not-found) before any dependant is
+// touched.
+func (q *Queries) LockDebtorForDelete(ctx context.Context, arg LockDebtorForDeleteParams) (*time.Time, error) {
+	row := q.db.QueryRow(ctx, lockDebtorForDelete, arg.ID, arg.HouseholdID)
+	var deleted_at *time.Time
+	err := row.Scan(&deleted_at)
+	return deleted_at, err
 }
 
 const softDeleteDebtor = `-- name: SoftDeleteDebtor :one
@@ -263,7 +254,7 @@ func (q *Queries) SoftDeleteDebtor(ctx context.Context, arg SoftDeleteDebtorPara
 }
 
 const syncDebtorsByIDs = `-- name: SyncDebtorsByIDs :many
-SELECT id, user_id, name, note, currency, version, deleted_at
+SELECT id, user_id, name, currency, version, deleted_at
 FROM debtors
 WHERE household_id = $1 AND id = ANY($2::uuid[])
 `
@@ -277,7 +268,6 @@ type SyncDebtorsByIDsRow struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID
 	Name      string
-	Note      string
 	Currency  string
 	Version   int32
 	DeletedAt *time.Time
@@ -296,7 +286,6 @@ func (q *Queries) SyncDebtorsByIDs(ctx context.Context, arg SyncDebtorsByIDsPara
 			&i.ID,
 			&i.UserID,
 			&i.Name,
-			&i.Note,
 			&i.Currency,
 			&i.Version,
 			&i.DeletedAt,
@@ -315,16 +304,14 @@ const syncReplaceDebtor = `-- name: SyncReplaceDebtor :one
 UPDATE debtors
 SET
     name       = $1,
-    note       = $2,
     version    = version + 1,
     updated_at = now()
-WHERE id = $3 AND household_id = $4 AND deleted_at IS NULL AND version = $5
-RETURNING id, user_id, name, note, currency, created_at, updated_at, version
+WHERE id = $2 AND household_id = $3 AND deleted_at IS NULL AND version = $4
+RETURNING id, user_id, name, currency, created_at, updated_at, version
 `
 
 type SyncReplaceDebtorParams struct {
 	Name        string
-	Note        string
 	ID          uuid.UUID
 	HouseholdID uuid.UUID
 	BaseVersion int32
@@ -334,7 +321,6 @@ type SyncReplaceDebtorRow struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID
 	Name      string
-	Note      string
 	Currency  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -345,7 +331,6 @@ type SyncReplaceDebtorRow struct {
 func (q *Queries) SyncReplaceDebtor(ctx context.Context, arg SyncReplaceDebtorParams) (SyncReplaceDebtorRow, error) {
 	row := q.db.QueryRow(ctx, syncReplaceDebtor,
 		arg.Name,
-		arg.Note,
 		arg.ID,
 		arg.HouseholdID,
 		arg.BaseVersion,
@@ -355,7 +340,6 @@ func (q *Queries) SyncReplaceDebtor(ctx context.Context, arg SyncReplaceDebtorPa
 		&i.ID,
 		&i.UserID,
 		&i.Name,
-		&i.Note,
 		&i.Currency,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -368,16 +352,14 @@ const updateDebtor = `-- name: UpdateDebtor :one
 UPDATE debtors
 SET
     name       = COALESCE($1, name),
-    note       = COALESCE($2, note),
     version    = version + 1,
     updated_at = now()
-WHERE id = $3 AND household_id = $4 AND deleted_at IS NULL AND version = $5
-RETURNING id, user_id, name, note, currency, created_at, updated_at, version
+WHERE id = $2 AND household_id = $3 AND deleted_at IS NULL AND version = $4
+RETURNING id, user_id, name, currency, created_at, updated_at, version
 `
 
 type UpdateDebtorParams struct {
 	Name        *string
-	Note        *string
 	ID          uuid.UUID
 	HouseholdID uuid.UUID
 	Version     int32
@@ -387,7 +369,6 @@ type UpdateDebtorRow struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID
 	Name      string
-	Note      string
 	Currency  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -395,12 +376,12 @@ type UpdateDebtorRow struct {
 }
 
 // Optimistic concurrency: the WHERE clause includes version = @version (and
-// liveness) so a concurrent update yields zero rows. PATCH fields use
-// COALESCE for nil = keep; a non-nil empty note clears it.
+// liveness) so a concurrent update yields zero rows. The name is the only
+// updatable field; PATCH uses COALESCE for nil = keep (the service rejects a
+// no-op before the write).
 func (q *Queries) UpdateDebtor(ctx context.Context, arg UpdateDebtorParams) (UpdateDebtorRow, error) {
 	row := q.db.QueryRow(ctx, updateDebtor,
 		arg.Name,
-		arg.Note,
 		arg.ID,
 		arg.HouseholdID,
 		arg.Version,
@@ -410,7 +391,6 @@ func (q *Queries) UpdateDebtor(ctx context.Context, arg UpdateDebtorParams) (Upd
 		&i.ID,
 		&i.UserID,
 		&i.Name,
-		&i.Note,
 		&i.Currency,
 		&i.CreatedAt,
 		&i.UpdatedAt,

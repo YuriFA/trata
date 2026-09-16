@@ -100,7 +100,6 @@ export const transactions = sqliteTable(
 export const debtors = sqliteTable('debtors', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  note: text('note').notNull().default(''),
   /**
    * Immutable ledger currency (ISO code from the 18-currency catalog): every
    * debt operation's amount is interpreted in it. RUB backfills the
@@ -126,7 +125,6 @@ export const debtOperations = sqliteTable(
     kind: text('kind').notNull(),
     /** Integer minor units, always >= 1. */
     amount: integer('amount').notNull(),
-    note: text('note').notNull().default(''),
     /** Canonical UTC ISO-8601 (`new Date(...).toISOString()`). */
     occurredAt: text('occurred_at').notNull(),
     version: integer('version').notNull().default(1),

@@ -85,7 +85,6 @@ type DebtOperation struct {
 	Direction   string
 	Kind        string
 	Amount      int64
-	Note        string
 	OccurredAt  time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
@@ -98,7 +97,6 @@ type Debtor struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID
 	Name        string
-	Note        string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	Version     int32

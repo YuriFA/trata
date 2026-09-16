@@ -1,13 +1,16 @@
 // Debtor history sheet: the remaining balance of one debtor-direction
 // ledger, the day-grouped operation history («Долг» / «Списание» with
-// sign-colored amounts), a debtor edit affordance in the header, a row tap
-// opening the edit-operation sheet, and the «Новая операция» footer CTA
-// opening the fixed-context operation form (design D9). Pure presentation:
-// the page passes the derived views and callbacks down (invariant #15 - the
-// page owns all sheet composition).
-
-import { View } from 'react-native'
+// sign-colored amounts), the header's rename + destructive delete-debtor
+// affordances (simplify-debt-domain: deletion lives here - the confirmation
+// shows the live-operation count and warns on a non-zero net balance, and
+// the confirmed remove cascades in the repository), a row tap opening the
+// edit-operation sheet, and the «Новая операция» footer CTA opening the
+// fixed-context operation form (design D9). Rename flows up to the page
+// (invariant #15 - the page owns the sheet composition); the delete mutation
+// runs here, its success closing this sheet.
+import { Alert, View } from 'react-native'
 import type { DebtDirection, DebtOperation, Debtor } from '@trata/api'
+import { useDeleteDebtor } from '@/entities/debt'
 import {
   BottomSheet,
   BottomSheetHeader,
@@ -21,6 +24,7 @@ import { Pressable } from '@/shared/ui/pressable'
 import { Text } from '@/shared/ui/text'
 import { cn } from '@/shared/lib/utils'
 import { formatAmount } from '@/shared/lib/format/format'
+import { getRepositoryErrorText } from '@/shared/lib/data/repository-errors-ru'
 import { balanceInDirection } from '@trata/local-data'
 import { DEBTS_COPY, DEBT_DIRECTION_VIEWS, DEBT_KIND_LABELS } from '../model/kind'
 import { debtorHistoryGroups, type DebtAuthorContext } from '../model/selectors'
@@ -35,7 +39,7 @@ export interface DebtorHistorySheetProps {
   /** Authorship context for the row markers (household-ux 2.4). */
   author?: DebtAuthorContext
   onEditOperation: (operation: DebtOperation) => void
-  onEditDebtor: (debtor: Debtor) => void
+  onRenameDebtor: (debtor: Debtor) => void
   onNewOperation: (debtorId: string, direction: DebtDirection) => void
 }
 
@@ -46,16 +50,52 @@ export function DebtorHistorySheet({
   operations,
   author,
   onEditOperation,
-  onEditDebtor,
+  onRenameDebtor,
   onNewOperation,
 }: DebtorHistorySheetProps) {
   // The sheet element mounts with the first selection and presents itself
   // (presentOnMount); later opens and debtor swaps go through the page's
   // imperative present() while the sheet stays mounted.
+  const deleteDebtor = useDeleteDebtor()
 
   if (!debtor) return null
 
+  const dismiss = () => {
+    // TODO(sheet-dismiss): see the matching TODO in
+    // features/cashflow-overview/ui/edit-category-sheet.tsx.
+    if (ref && typeof ref !== 'function') ref.current?.dismiss()
+  }
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteDebtor.mutateAsync(debtor.id)
+      dismiss()
+    } catch (cause) {
+      Alert.alert('Не удалось удалить должника', getRepositoryErrorText(cause))
+    }
+  }
+
   const groups = debtorHistoryGroups(operations, debtor.id, direction, debtor.currency, author)
+  // The cascade deletes the debtor's WHOLE ledger: the confirmation counts
+  // every live operation (both directions) and warns on the debtor's net
+  // balance (receivable − payable), the only single figure of the debt left
+  // behind. Formatting follows the app's money convention (minor units).
+  const liveOperationCount = operations.filter((op) => op.debtorId === debtor.id).length
+  const netBalance =
+    balanceInDirection(operations, debtor.id, 'receivable') -
+    balanceInDirection(operations, debtor.id, 'payable')
+  const deleteMessage =
+    `Должник будет удалён вместе со всеми своими операциями (${liveOperationCount}).` +
+    (netBalance !== 0 ? ` Баланс ненулевой (${formatAmount(netBalance, debtor.currency)}).` : '')
+
+  const handleDeleteDebtor = () => {
+    // TODO(i18n): RU wording until mobile i18n wiring lands
+    // (debts.deleteDebtorTitle / deleteDebtorMessage / deleteDebtorBalanceWarning).
+    Alert.alert('Удалить должника?', deleteMessage, [
+      { text: 'Отмена', style: 'cancel' },
+      { text: 'Удалить', style: 'destructive', onPress: () => void handleDeleteConfirm() },
+    ])
+  }
 
   return (
     <BottomSheet
@@ -71,14 +111,25 @@ export function DebtorHistorySheet({
         <BottomSheetHeader
           title={debtor.name}
           right={
-            <IconButton
-              icon="create-outline"
-              size="md"
-              colorClassName="accent-muted-foreground"
-              accessibilityLabel="Редактировать контакт"
-              testID="debts-history-edit-debtor"
-              onPress={() => onEditDebtor(debtor)}
-            />
+            <View className="flex-row items-center gap-1">
+              <IconButton
+                icon="create-outline"
+                size="md"
+                colorClassName="accent-muted-foreground"
+                accessibilityLabel="Переименовать должника"
+                testID="debts-history-rename-debtor"
+                onPress={() => onRenameDebtor(debtor)}
+              />
+              <IconButton
+                icon="trash-outline"
+                size="md"
+                colorClassName="accent-destructive"
+                accessibilityLabel="Удалить должника"
+                testID="debts-history-delete-debtor"
+                disabled={deleteDebtor.isPending}
+                onPress={handleDeleteDebtor}
+              />
+            </View>
           }
         />
         <BottomSheetScrollView testID="debts-history-list">
@@ -119,7 +170,7 @@ export function DebtorHistorySheet({
                     >
                       <View className="flex-1 gap-0.5">
                         <Text variant="body" className="text-foreground" numberOfLines={1}>
-                          {row.note || DEBT_KIND_LABELS[row.kind]}
+                          {DEBT_KIND_LABELS[row.kind]}
                         </Text>
                         {row.authorLabel ? (
                           <Text

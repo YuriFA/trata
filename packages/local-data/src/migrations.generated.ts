@@ -61,6 +61,13 @@ export const migrations = {
         "when": 1789406274701,
         "tag": "0007_melted_miss_america",
         "breakpoints": true
+      },
+      {
+        "idx": 8,
+        "version": "6",
+        "when": 1789511988636,
+        "tag": "0008_pale_hulk",
+        "breakpoints": true
       }
     ]
   },
@@ -72,6 +79,7 @@ export const migrations = {
     "m0004": "ALTER TABLE `accounts` DROP COLUMN `manual_adjustment`;",
     "m0005": "ALTER TABLE `categories` ADD `archived_at` text;",
     "m0006": "ALTER TABLE `debtors` ADD `currency` text DEFAULT 'RUB' NOT NULL;--> statement-breakpoint\nALTER TABLE `transactions` ADD `destination_amount` integer;",
-    "m0007": "CREATE TABLE `app_settings` (\n\t`key` text PRIMARY KEY NOT NULL,\n\t`value` text NOT NULL\n);\n--> statement-breakpoint\nCREATE TABLE `exchange_rates` (\n\t`code` text PRIMARY KEY NOT NULL,\n\t`base` text NOT NULL,\n\t`rate` real NOT NULL,\n\t`as_of` text NOT NULL\n);\n"
+    "m0007": "CREATE TABLE `app_settings` (\n\t`key` text PRIMARY KEY NOT NULL,\n\t`value` text NOT NULL\n);\n--> statement-breakpoint\nCREATE TABLE `exchange_rates` (\n\t`code` text PRIMARY KEY NOT NULL,\n\t`base` text NOT NULL,\n\t`rate` real NOT NULL,\n\t`as_of` text NOT NULL\n);\n",
+    "m0008": "ALTER TABLE `debt_operations` DROP COLUMN `note`;--> statement-breakpoint\nALTER TABLE `debtors` DROP COLUMN `note`;"
   }
 }

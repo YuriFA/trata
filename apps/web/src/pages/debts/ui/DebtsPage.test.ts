@@ -11,8 +11,8 @@ import { mountWithProviders } from '@/__tests__/helpers/mount-with-providers'
 import type { DebtOperation, Debtor } from '@trata/api'
 
 const debtors: Debtor[] = [
-  { id: 'd1', name: 'Анна', note: '', currency: 'RUB', version: 1 },
-  { id: 'd2', name: 'Борис', note: '', currency: 'RUB', version: 1 },
+  { id: 'd1', name: 'Анна', currency: 'RUB', version: 1 },
+  { id: 'd2', name: 'Борис', currency: 'RUB', version: 1 },
 ]
 
 const operations: DebtOperation[] = [
@@ -22,7 +22,6 @@ const operations: DebtOperation[] = [
     direction: 'receivable',
     kind: 'debt',
     amount: 500000,
-    note: 'Займ',
     occurredAt: '2026-08-20T12:00:00.000Z',
     version: 1,
   },
@@ -32,7 +31,6 @@ const operations: DebtOperation[] = [
     direction: 'receivable',
     kind: 'repayment',
     amount: 150000,
-    note: '',
     occurredAt: '2026-08-21T12:00:00.000Z',
     version: 1,
   },
@@ -42,7 +40,6 @@ const operations: DebtOperation[] = [
     direction: 'payable',
     kind: 'debt',
     amount: 200000,
-    note: '',
     occurredAt: '2026-08-22T12:00:00.000Z',
     version: 1,
   },
@@ -140,8 +137,6 @@ describe('DebtsPage', () => {
     expect(document.querySelector('[data-testid="debts-history-balance"]')!.textContent).toBe(
       '₽3,500.00',
     )
-    expect(history!.textContent).toContain('Займ')
-    // The repayment's amount renders signed.
     expect(history!.textContent).toContain('−')
     expect(document.querySelector('[data-testid="debts-new-operation"]')).not.toBeNull()
   })
@@ -154,7 +149,6 @@ describe('DebtsPage', () => {
         direction: 'receivable',
         kind: 'debt',
         amount: 100,
-        note: '',
         occurredAt: '2026-08-20T12:00:00.000Z',
         version: 1,
       },
@@ -164,7 +158,6 @@ describe('DebtsPage', () => {
         direction: 'receivable',
         kind: 'repayment',
         amount: 100,
-        note: '',
         occurredAt: '2026-08-21T12:00:00.000Z',
         version: 1,
       },

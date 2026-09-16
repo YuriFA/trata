@@ -80,8 +80,8 @@ export type SyncRowPatch =
       | 'toAccountId'
       | 'destinationAmount'
     >
-  | Pick<DebtorRow, 'name' | 'note'>
-  | Pick<DebtOperationRow, 'debtorId' | 'direction' | 'kind' | 'amount' | 'note' | 'occurredAt'>
+  | Pick<DebtorRow, 'name'>
+  | Pick<DebtOperationRow, 'debtorId' | 'direction' | 'kind' | 'amount' | 'occurredAt'>
   | Pick<
       PlannedPaymentRow,
       | 'type'

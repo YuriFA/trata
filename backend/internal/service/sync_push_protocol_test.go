@@ -329,7 +329,7 @@ func TestSyncPush_DebtorProtocol(t *testing.T) {
 		syncSvc, user, householdID := pushFixture(t)
 		res := pushOne(t, syncSvc, householdID, user.ID,
 			upsertOp(domain.SyncEntityDebtor, uuid.New(), uuid.New(), 0,
-				&domain.DebtorFullState{Name: "Анна", Note: "", Currency: "RUB"}))
+				&domain.DebtorFullState{Name: "Анна", Currency: "RUB"}))
 		assert.Equal(t, domain.SyncStatusApplied, res.Status)
 		assert.Equal(t, 1, res.Version)
 	})
@@ -339,12 +339,12 @@ func TestSyncPush_DebtorProtocol(t *testing.T) {
 		syncSvc, user, householdID := pushFixture(t)
 		created := pushOne(t, syncSvc, householdID, user.ID,
 			upsertOp(domain.SyncEntityDebtor, uuid.New(), uuid.New(), 0,
-				&domain.DebtorFullState{Name: "Анна", Note: "", Currency: "RUB"}))
+				&domain.DebtorFullState{Name: "Анна", Currency: "RUB"}))
 		require.Equal(t, domain.SyncStatusApplied, created.Status)
 
 		res := pushOne(t, syncSvc, householdID, user.ID,
 			upsertOp(domain.SyncEntityDebtor, uuid.New(), uuid.New(), 0,
-				&domain.DebtorFullState{Name: "Анна", Note: "другая", Currency: "RUB"}))
+				&domain.DebtorFullState{Name: "Анна", Currency: "RUB"}))
 		assert.Equal(t, domain.SyncStatusError, res.Status)
 		assert.Equal(t, "DEBTOR_ALREADY_EXISTS", res.Code)
 	})
@@ -357,18 +357,18 @@ func TestSyncPush_DebtorProtocol(t *testing.T) {
 			recordID := uuid.New()
 			created := pushOne(t, syncSvc, householdID, user.ID,
 				upsertOp(domain.SyncEntityDebtor, uuid.New(), recordID, 0,
-					&domain.DebtorFullState{Name: "Борис", Note: "x", Currency: "RUB"}))
+					&domain.DebtorFullState{Name: "Борис", Currency: "RUB"}))
 			require.Equal(t, domain.SyncStatusApplied, created.Status)
 
 			updated := pushOne(t, syncSvc, householdID, user.ID,
 				upsertOp(domain.SyncEntityDebtor, uuid.New(), recordID, 1,
-					&domain.DebtorFullState{Name: "Борис", Note: "y", Currency: "RUB"}))
+					&domain.DebtorFullState{Name: "Борис", Currency: "RUB"}))
 			assert.Equal(t, domain.SyncStatusApplied, updated.Status)
 			assert.Equal(t, 2, updated.Version)
 
 			unknown := pushOne(t, syncSvc, householdID, user.ID,
 				upsertOp(domain.SyncEntityDebtor, uuid.New(), uuid.New(), 3,
-					&domain.DebtorFullState{Name: "Григорий", Note: "", Currency: "RUB"}))
+					&domain.DebtorFullState{Name: "Григорий", Currency: "RUB"}))
 			assert.Equal(t, domain.SyncStatusConflict, unknown.Status)
 			assert.Equal(t, domain.SyncCodeVersionConflict, unknown.Code)
 			require.NotNil(t, unknown.ServerState)
@@ -378,32 +378,50 @@ func TestSyncPush_DebtorProtocol(t *testing.T) {
 			// name on an unknown id is DEBTOR_ALREADY_EXISTS, not a conflict.
 			precheck := pushOne(t, syncSvc, householdID, user.ID,
 				upsertOp(domain.SyncEntityDebtor, uuid.New(), uuid.New(), 3,
-					&domain.DebtorFullState{Name: "Борис", Note: "", Currency: "RUB"}))
+					&domain.DebtorFullState{Name: "Борис", Currency: "RUB"}))
 			assert.Equal(t, domain.SyncStatusError, precheck.Status)
 			assert.Equal(t, "DEBTOR_ALREADY_EXISTS", precheck.Code)
 		},
 	)
 
-	t.Run("delete of a debtor with live debt operations is a per-item error", func(t *testing.T) {
+	t.Run("delete of a debtor with live debt operations cascades and applies", func(t *testing.T) {
 		t.Parallel()
 		syncSvc, user, householdID := pushFixture(t)
 		debtorID := uuid.New()
 		created := pushOne(t, syncSvc, householdID, user.ID,
 			upsertOp(domain.SyncEntityDebtor, uuid.New(), debtorID, 0,
-				&domain.DebtorFullState{Name: "Вера", Note: "", Currency: "RUB"}))
+				&domain.DebtorFullState{Name: "Вера", Currency: "RUB"}))
 		require.Equal(t, domain.SyncStatusApplied, created.Status)
 
+		opID := uuid.New()
 		pushOne(t, syncSvc, householdID, user.ID,
-			upsertOp(domain.SyncEntityDebtOperation, uuid.New(), uuid.New(), 0,
+			upsertOp(domain.SyncEntityDebtOperation, uuid.New(), opID, 0,
 				&domain.DebtOperationFullState{
 					DebtorID: debtorID, Direction: domain.DebtDirectionPayable, Kind: domain.DebtOperationKindDebt,
 					Amount: 1000, OccurredAt: time.Now().UTC(),
 				}))
 
+		// No in-use guard: the pushed delete is reported as applied and the
+		// cascade tombstones the live operation on the same transaction.
 		res := pushOne(t, syncSvc, householdID, user.ID,
 			deleteOp(domain.SyncEntityDebtor, uuid.New(), debtorID))
-		assert.Equal(t, domain.SyncStatusError, res.Status)
-		assert.Equal(t, "DEBTOR_IN_USE", res.Code)
+		assert.Equal(t, domain.SyncStatusApplied, res.Status)
+		assert.Equal(t, 2, res.Version, "the delete item reports the debtor's new version")
+
+		// Pulling devices receive tombstones for both the debtor and its
+		// operation, each carrying the record's new version.
+		page, err := syncSvc.Pull(context.Background(),
+			domain.Scope{HouseholdID: householdID}, 0, nil)
+		require.NoError(t, err)
+		changes := page.Changes
+		tombstones := map[uuid.UUID]int{}
+		for _, c := range changes {
+			if c.Action == domain.SyncChangeTombstone {
+				tombstones[c.ID] = c.Version
+			}
+		}
+		assert.Equal(t, 2, tombstones[debtorID])
+		assert.Equal(t, 2, tombstones[opID])
 	})
 }
 
@@ -692,7 +710,7 @@ func TestSyncPush_DebtOperationProtocol(t *testing.T) {
 		t.Helper()
 		created := pushOne(t, syncSvc, householdID, userID,
 			upsertOp(domain.SyncEntityDebtor, uuid.New(), debtorID, 0,
-				&domain.DebtorFullState{Name: "Анна", Note: "", Currency: "RUB"}))
+				&domain.DebtorFullState{Name: "Анна", Currency: "RUB"}))
 		require.Equal(t, domain.SyncStatusApplied, created.Status)
 	}
 	debtOpData := func(kind domain.DebtOperationKind) *domain.DebtOperationFullState {

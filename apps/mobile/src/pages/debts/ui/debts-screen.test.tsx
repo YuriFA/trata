@@ -58,9 +58,9 @@ jest.mock('@/shared/lib/db/rates', () => ({
 const ZERO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 }
 
 const DEBTORS: Debtor[] = [
-  { id: 'debtor-anna', name: 'Анна', note: '', currency: 'RUB', version: 1 },
-  { id: 'debtor-sergey', name: 'Сергей', note: '', currency: 'RUB', version: 1 },
-  { id: 'debtor-settled', name: 'Ольга', note: '', currency: 'RUB', version: 1 },
+  { id: 'debtor-anna', name: 'Анна', currency: 'RUB', version: 1 },
+  { id: 'debtor-sergey', name: 'Сергей', currency: 'RUB', version: 1 },
+  { id: 'debtor-settled', name: 'Ольга', currency: 'RUB', version: 1 },
 ]
 
 const OPERATIONS: DebtOperation[] = [
@@ -70,7 +70,6 @@ const OPERATIONS: DebtOperation[] = [
     direction: 'receivable',
     kind: 'debt',
     amount: 500_000,
-    note: '',
     occurredAt: '2026-08-20T10:00:00.000Z',
     version: 1,
   },
@@ -80,7 +79,6 @@ const OPERATIONS: DebtOperation[] = [
     direction: 'receivable',
     kind: 'repayment',
     amount: 150_000,
-    note: '',
     occurredAt: '2026-08-21T10:00:00.000Z',
     version: 1,
   },
@@ -90,7 +88,6 @@ const OPERATIONS: DebtOperation[] = [
     direction: 'payable',
     kind: 'debt',
     amount: 200_000,
-    note: '',
     occurredAt: '2026-08-22T10:00:00.000Z',
     version: 1,
   },
@@ -100,7 +97,6 @@ const OPERATIONS: DebtOperation[] = [
     direction: 'receivable',
     kind: 'debt',
     amount: 100_000,
-    note: '',
     occurredAt: '2026-08-19T10:00:00.000Z',
     version: 1,
   },
@@ -110,7 +106,6 @@ const OPERATIONS: DebtOperation[] = [
     direction: 'receivable',
     kind: 'repayment',
     amount: 100_000,
-    note: '',
     occurredAt: '2026-08-23T10:00:00.000Z',
     version: 1,
   },

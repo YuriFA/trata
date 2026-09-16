@@ -51,7 +51,6 @@ const {
     currency: defaultCurrency.value,
     amount: undefined,
     occurredAt: calendarDayKey(new Date()),
-    note: '',
   },
 })
 
@@ -79,7 +78,6 @@ const handleSubmit = handleFormSubmit(async (data) => {
       direction: props.direction,
       kind: 'debt',
       amount: toMinorUnits(data.amount),
-      note: data.note.trim(),
       occurredAt,
     })
     notification.success(t('debts.debtAdded'))
@@ -155,19 +153,6 @@ const handleSubmit = handleFormSubmit(async (data) => {
             @update:model-value="setValue"
           />
           <FieldError v-if="errors.length" :errors="errors" />
-        </Field>
-      </VeeField>
-
-      <VeeField v-slot="{ value, setValue }" name="note">
-        <Field>
-          <FieldLabel for="debts-new-debt-note">{{ t('fields.description') }}</FieldLabel>
-          <Input
-            id="debts-new-debt-note"
-            type="text"
-            :placeholder="t('debts.notePlaceholder')"
-            :model-value="value"
-            @update:model-value="setValue"
-          />
         </Field>
       </VeeField>
     </form>

@@ -206,9 +206,7 @@ describe('DashboardPage stat card links', () => {
     // The screenshot overflow case: a debt of 1 000 100,00 must abbreviate,
     // not paint over the neighbouring card at half mobile width.
     const debtorsRepo = createMockDebtorRepository()
-    debtorsRepo.getAll.mockResolvedValue([
-      { id: 'd1', name: 'Анна', note: '', currency: 'RUB', version: 1 },
-    ])
+    debtorsRepo.getAll.mockResolvedValue([{ id: 'd1', name: 'Анна', currency: 'RUB', version: 1 }])
     const debtOperationsRepo = createMockDebtOperationRepository()
     debtOperationsRepo.query.mockResolvedValue([
       {
@@ -217,7 +215,6 @@ describe('DashboardPage stat card links', () => {
         direction: 'receivable',
         kind: 'debt',
         amount: 100_010_000,
-        note: '',
         occurredAt: new Date().toISOString(),
         version: 1,
       },

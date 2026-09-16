@@ -74,7 +74,6 @@ const { handleSubmit: handleFormSubmit, isSubmitting } = useForm<OperationFormVa
     occurredAt: props.operation
       ? calendarDayKey(new Date(props.operation.occurredAt))
       : calendarDayKey(new Date()),
-    note: props.operation?.note ?? '',
   },
 })
 
@@ -123,7 +122,6 @@ const handleSubmit = handleFormSubmit(async (data) => {
         payload: {
           version: props.operation.version,
           amount: toMinorUnits(data.amount),
-          note: data.note.trim(),
           occurredAt,
         },
       })
@@ -134,7 +132,6 @@ const handleSubmit = handleFormSubmit(async (data) => {
         direction: props.direction,
         kind: data.kind,
         amount: toMinorUnits(data.amount),
-        note: data.note.trim(),
         occurredAt,
       })
       notification.success(t('debts.operationAdded'))
@@ -240,19 +237,6 @@ const handleDelete = async () => {
             @update:model-value="setValue"
           />
           <FieldError v-if="errors.length" :errors="errors" />
-        </Field>
-      </VeeField>
-
-      <VeeField v-slot="{ value, setValue }" name="note">
-        <Field>
-          <FieldLabel for="debts-operation-note">{{ t('fields.description') }}</FieldLabel>
-          <Input
-            id="debts-operation-note"
-            type="text"
-            :placeholder="t('debts.notePlaceholder')"
-            :model-value="value"
-            @update:model-value="setValue"
-          />
         </Field>
       </VeeField>
     </form>

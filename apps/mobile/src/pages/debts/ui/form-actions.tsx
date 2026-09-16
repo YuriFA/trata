@@ -1,32 +1,29 @@
 // The debts action toolbar (the create-transaction form-actions idiom,
-// design D9): a one-row toolbar with the note toggle, the date toggle
-// (quick-date chips + always-mounted calendar sheet), and the circular
-// submit. Both debts forms — the operation form and the combined
-// contact+debt form — share it; the reactive slice it touches is the
-// structural pair `{ occurredAt, note }` both schemas carry.
+// design D9): a one-row toolbar with the date toggle (quick-date chips +
+// always-mounted calendar sheet) and the circular submit. Both debts forms —
+// the operation form and the combined contact+debt form — share it; the
+// reactive slice it touches is `occurredAt`, which both schemas carry.
 //
-// The toolbar owns only the two reveal flags; every reactive part is a
+// The toolbar owns only the date reveal flag; every reactive part is a
 // self-subscribing leaf (components-and-state §4, forms.md §8).
 
 import { memo, useCallback, useMemo, useRef, useState } from 'react'
-import { useController, useFormContext, useFormState, useWatch } from 'react-hook-form'
+import { useFormContext, useFormState, useWatch } from 'react-hook-form'
 import { View } from 'react-native'
 import { nowIso } from '@trata/dates'
 import {
   DateButton,
-  NoteButton,
   QuickDateRow,
   TransactionSubmitButton,
   occurredAtForDaysAgo,
 } from '@/features/create-transaction'
-import { BottomSheetInput, type BottomSheetRef } from '@/shared/ui/bottom-sheet'
+import type { BottomSheetRef } from '@/shared/ui/bottom-sheet'
 import { DatePickerSheet } from '@/shared/ui/date-picker-sheet'
 import { SheetContentPortal } from '@/shared/ui/sheet-content-portal'
 
 /** The reactive slice both debts schemas share with the toolbar. */
 interface DebtsFormActionsValues {
   occurredAt: string
-  note: string
 }
 
 export function DebtsFormActions({
@@ -35,25 +32,21 @@ export function DebtsFormActions({
   onSubmit,
   submitAccessibilityLabel,
 }: {
-  /** testID stem, e.g. `debts-operation` → `debts-operation-note-button`. */
+  /** testID stem, e.g. `debts-operation` → `debts-operation-date-button`. */
   testIDPrefix: string
   pending: boolean
   onSubmit: () => void
   submitAccessibilityLabel: string
 }) {
   // Ephemeral UI state only - the values themselves live in the form.
-  const [noteOpen, setNoteOpen] = useState(false)
   const [quickDatesOpen, setQuickDatesOpen] = useState(false)
-  const toggleNote = useCallback(() => setNoteOpen((open) => !open), [])
   const toggleQuickDates = useCallback(() => setQuickDatesOpen((open) => !open), [])
 
   return (
     <View className="gap-4">
       <DebtsDateField testIDPrefix={testIDPrefix} open={quickDatesOpen} />
-      {noteOpen ? <DebtsNoteInput testIDPrefix={testIDPrefix} /> : null}
 
       <View className="flex-row items-center py-2 border-t border-t-border">
-        <DebtsNoteFieldButton testIDPrefix={testIDPrefix} open={noteOpen} onToggle={toggleNote} />
         <DebtsDateFieldButton
           testIDPrefix={testIDPrefix}
           open={quickDatesOpen}
@@ -67,46 +60,6 @@ export function DebtsFormActions({
         />
       </View>
     </View>
-  )
-}
-
-/** The note's toolbar toggle: derives its filled state from the form alone. */
-const DebtsNoteFieldButton = memo(function DebtsNoteFieldButton({
-  testIDPrefix,
-  open,
-  onToggle,
-}: {
-  testIDPrefix: string
-  open: boolean
-  onToggle: () => void
-}) {
-  const { control } = useFormContext<DebtsFormActionsValues>()
-  const note = useWatch({ control, name: 'note' }) ?? ''
-
-  return (
-    <NoteButton
-      testID={`${testIDPrefix}-note-button`}
-      open={open}
-      hasNote={note.trim() !== ''}
-      onToggle={onToggle}
-    />
-  )
-})
-
-/** The revealed note input (the only native keyboard field in the form). */
-function DebtsNoteInput({ testIDPrefix }: { testIDPrefix: string }) {
-  const { control } = useFormContext<DebtsFormActionsValues>()
-  const { field } = useController({ name: 'note', control })
-
-  return (
-    <BottomSheetInput
-      autoFocus
-      className="pt-4 pb-0 px-2 border-x-0 border-b-0 rounded-none border-t border-t-border"
-      testID={`${testIDPrefix}-note-input`}
-      placeholder="Заметка"
-      value={field.value}
-      onChangeText={field.onChange}
-    />
   )
 }
 

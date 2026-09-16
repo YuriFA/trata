@@ -89,7 +89,6 @@ var domainErrorStatus = map[error]int{
 	domain.ErrPlannedPaymentVersionConflict: http.StatusConflict,
 	domain.ErrAccountHasTransactions:        http.StatusConflict,
 	domain.ErrCategoryHasTransactions:       http.StatusConflict,
-	domain.ErrDebtorHasOperations:           http.StatusConflict,
 	domain.ErrAccountHasPlannedPayments:     http.StatusConflict,
 	domain.ErrCategoryHasPlannedPayments:    http.StatusConflict,
 	domain.ErrEmailAlreadyVerified:          http.StatusConflict,

@@ -1,6 +1,6 @@
 // Operation form behavior: fixed-context create (static «Контакт» /
 // «Направление» rows, kind switch with Долг default), keypad amount
-// validation, the expandable note/quick-date toolbar, over-repayment warning
+// validation, the expandable quick-date toolbar, over-repayment warning
 // (warn, never block), repository error mapping at the root slot, and the
 // edit variant's CAS version + immutable context rows.
 
@@ -20,8 +20,8 @@ import { BottomSheetProvider } from '@/shared/ui/bottom-sheet/bottom-sheet-provi
 import { OperationForm, type OperationFormProps } from './operation-form'
 
 const DEBTORS: Debtor[] = [
-  { id: 'debtor-anna', name: 'Анна', note: '', currency: 'RUB', version: 1 },
-  { id: 'debtor-sergey', name: 'Сергей', note: '', currency: 'RUB', version: 1 },
+  { id: 'debtor-anna', name: 'Анна', currency: 'RUB', version: 1 },
+  { id: 'debtor-sergey', name: 'Сергей', currency: 'RUB', version: 1 },
 ]
 
 const EXISTING: DebtOperation[] = [
@@ -31,7 +31,6 @@ const EXISTING: DebtOperation[] = [
     direction: 'receivable',
     kind: 'debt',
     amount: 500_000,
-    note: '',
     occurredAt: '2026-08-20T10:00:00.000Z',
     version: 1,
   },
@@ -132,14 +131,12 @@ describe('OperationForm (create, fixed context)', () => {
     })
   })
 
-  it('reveals the note input and quick dates from the action toolbar', async () => {
+  it('reveals the quick dates from the action toolbar', async () => {
     const { debtOperationRepository } = renderForm({
       fixed: { debtorId: 'debtor-anna', direction: 'receivable' },
       onSuccess: jest.fn(),
     })
 
-    fireEvent.press(screen.getByTestId('debts-operation-note-button'))
-    fireEvent.changeText(screen.getByTestId('debts-operation-note-input'), 'за обед')
     fireEvent.press(screen.getByTestId('debts-operation-date-button'))
     expect(screen.getByTestId('debts-operation-quick-dates')).toBeTruthy()
     fireEvent.press(screen.getByTestId('debts-operation-quick-date-0'))
@@ -149,7 +146,7 @@ describe('OperationForm (create, fixed context)', () => {
     fireEvent.press(screen.getByTestId('debts-operation-submit'))
 
     await waitFor(() => expect(debtOperationRepository.calls.create).toBe(1))
-    expect(debtOperationRepository.snapshot().at(-1)?.note).toBe('за обед')
+    expect(debtOperationRepository.snapshot().at(-1)?.amount).toBe(10_000)
   })
 
   it('warns on over-repayment but still accepts the operation', async () => {

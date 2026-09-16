@@ -33,14 +33,9 @@ func (s *Server) CreateDebtor(
 	if req.Body.Id != nil {
 		id = *req.Body.Id
 	}
-	note := ""
-	if req.Body.Note != nil {
-		note = *req.Body.Note
-	}
 	d, err := s.debtors.Create(ctx, s.currentScope(ctx), domain.CreateDebtorParams{
 		ID:       id,
 		Name:     req.Body.Name,
-		Note:     note,
 		Currency: currencyPtr(req.Body.Currency),
 	})
 	if err != nil {
@@ -65,17 +60,8 @@ func (s *Server) UpdateDebtor(
 	ctx context.Context,
 	req api.UpdateDebtorRequestObject,
 ) (api.UpdateDebtorResponseObject, error) {
-	var name, note *string
-	if req.Body.Name != nil {
-		v := *req.Body.Name
-		name = &v
-	}
-	if req.Body.Note != nil {
-		v := *req.Body.Note
-		note = &v
-	}
 	d, err := s.debtors.Update(ctx, s.currentScope(ctx), req.Id, domain.UpdateDebtorParams{
-		Name: name, Note: note, Version: req.Body.Version,
+		Name: req.Body.Name, Version: req.Body.Version,
 	})
 	if err != nil {
 		return nil, err
