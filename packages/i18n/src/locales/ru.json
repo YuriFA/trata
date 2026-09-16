@@ -187,7 +187,6 @@
     "iconLabel": "Значок",
     "typeLabel": "Тип",
     "typeImmutableHint": "Тип категории изменить нельзя",
-    "autoColorHint": "Цвет подберётся автоматически",
     "success": "Категория обновлена",
     "createSuccess": "Категория создана"
   },

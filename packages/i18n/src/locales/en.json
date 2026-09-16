@@ -187,7 +187,6 @@
     "iconLabel": "Icon",
     "typeLabel": "Type",
     "typeImmutableHint": "The category type cannot be changed",
-    "autoColorHint": "The color is assigned automatically",
     "success": "Category updated",
     "createSuccess": "Category created"
   },
