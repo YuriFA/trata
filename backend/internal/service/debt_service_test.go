@@ -145,20 +145,28 @@ func TestDebtorService_DeleteCascadesOverLiveOperations(t *testing.T) {
 	userHH := householdOf(t, store, user.ID)
 	debtor := seedDebtor(t, debtorSvc, userHH, user.ID, "Анна")
 	other := seedDebtor(t, debtorSvc, userHH, user.ID, "Михаил")
-	otherOp, err := opSvc.Create(ctx, domain.Scope{HouseholdID: userHH, ActorID: user.ID}, domain.CreateDebtOperationParams{
-		DebtorID: other.ID, Direction: domain.DebtDirectionReceivable,
-		Kind: domain.DebtOperationKindDebt, Amount: 1000, OccurredAt: time.Now().UTC(),
-	})
+	otherOp, err := opSvc.Create(
+		ctx,
+		domain.Scope{HouseholdID: userHH, ActorID: user.ID},
+		domain.CreateDebtOperationParams{
+			DebtorID: other.ID, Direction: domain.DebtDirectionReceivable,
+			Kind: domain.DebtOperationKindDebt, Amount: 1000, OccurredAt: time.Now().UTC(),
+		},
+	)
 	require.NoError(t, err)
 
 	// Two live operations on the debtor (a delete must not require an empty
 	// ledger) and one operation tombstoned beforehand.
 	var liveOps []*domain.DebtOperation
 	for _, amount := range []int64{500000, 250000} {
-		op, err := opSvc.Create(ctx, domain.Scope{HouseholdID: userHH, ActorID: user.ID}, domain.CreateDebtOperationParams{
-			DebtorID: debtor.ID, Direction: domain.DebtDirectionReceivable,
-			Kind: domain.DebtOperationKindDebt, Amount: amount, OccurredAt: time.Now().UTC(),
-		})
+		op, err := opSvc.Create(
+			ctx,
+			domain.Scope{HouseholdID: userHH, ActorID: user.ID},
+			domain.CreateDebtOperationParams{
+				DebtorID: debtor.ID, Direction: domain.DebtDirectionReceivable,
+				Kind: domain.DebtOperationKindDebt, Amount: amount, OccurredAt: time.Now().UTC(),
+			},
+		)
 		require.NoError(t, err)
 		liveOps = append(liveOps, op)
 	}

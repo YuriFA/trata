@@ -1920,7 +1920,7 @@ func (t *fakeSyncTx) ReplaceCategory(
 	return &cc, nil
 }
 
-func (t *fakeSyncTx) TombstoneCategory( //nolint:dupl // thin tombstoneEntity wrapper, names differ from debtor
+func (t *fakeSyncTx) TombstoneCategory(
 	_ context.Context,
 	scope domain.Scope,
 	id uuid.UUID,
