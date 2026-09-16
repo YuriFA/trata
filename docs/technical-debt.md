@@ -104,6 +104,20 @@ analytics-screen.tsx` keeps the legacy text-only empty state (no chart,
   household scoping still applies to its pushes; revisit in a dedicated
   change if strict household-spec coverage is needed there.
 
+## Backend
+
+- **`debtors.note` / `debt_operations.note` are dead columns awaiting their
+  contract-phase drop** (simplify-debt-domain): no code has read or written
+  them since `3e35f43`, but the drop migration (`000013_drop_debt_notes`,
+  content in that commit) failed `scripts/check-migrations.sh` - rollback to
+  the then-deployed `v2026.09.15` still inserts `note`, so dropping would
+  break it (expand-contract, `docs/deployment.md` "Rollback"). The unshipped
+  pair was removed; production stays at schema version 12. Next deploy after
+  the expand deploy is tagged: restore the pair as `000013` (number never
+  consumed in production) and add it to `grandfathered` in
+  `scripts/check-migrations.sh` with that justification. Local dev DBs that
+  already applied the old 13 need nothing.
+
 ## Stale configuration
 
 - `backend/.sqlfluff` — `dialect = sqlite` (the project is Postgres).
